@@ -1,0 +1,55 @@
+/* src/pages/admin/css/Categories/CreateCategory.css */
+
+.category-modal-content {
+    padding: 2rem;
+}
+
+.modal-input-div {
+    margin-bottom: 1.25rem;
+}
+
+.modal-input-div label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.required-icon {
+    color: #ef4444; 
+}
+
+/* Custom form control styling */
+.form-control-category {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0; 
+    border-radius: 8px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-control-category:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    outline: none;
+}
+
+.model-submit-button {
+    background: linear-gradient(90deg, #38bdf8 0%, #0ea5e9 100%);
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    width: 100%;
+    margin-top: 1rem;
+    transition: all 0.2s;
+}
+.model-submit-button:hover {
+    box-shadow: 0 4px 10px rgba(56, 189, 248, 0.4);
+    transform: translateY(-1px);
+}
+.error-para {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}

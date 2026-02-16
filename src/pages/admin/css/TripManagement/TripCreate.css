@@ -1,0 +1,862 @@
+/* ======================================
+   BASE LAYOUT
+====================================== */
+.tour-container {
+  max-width: 1250px;
+  margin: 0 auto;
+  padding: 32px;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f9fafb; /* Light background for the overall page */
+  color: #111827;
+}
+
+.tour-container h2 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #111827;
+}
+
+.tour-container p {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* ======================================
+   HEADER
+====================================== */
+.d-flex.justify-content-between {
+  margin-bottom: 28px;
+}
+.admin-add-button.mt-0 {
+  padding: 8px 16px;
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.admin-add-button.mt-0:hover {
+  background-color: #e5e7eb;
+}
+
+/* ======================================
+   STEPPER & PROGRESS BAR
+====================================== */
+.progress-bar {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
+  transition: width 0.3s ease-in-out;
+}
+
+.stepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 36px;
+  border-bottom: 1px solid #e5e7eb; /* Separator for stepper */
+  padding-bottom: 15px;
+}
+
+.step-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+.step-button:hover {
+  background: #eef2ff;
+  transform: translateY(-2px); /* Maintain 3D-like hover */
+}
+.step-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.25s ease;
+}
+.step-active {
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+.step-inactive {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+.step-label-active {
+  font-weight: 600;
+  color: #111827;
+}
+.step-label-inactive {
+  color: #9ca3af;
+}
+
+/* ======================================
+   FORM CONTAINERS (SCOPED FIX APPLIED HERE)
+====================================== */
+/* Now only applies if .form-container or .container is INSIDE .tour-container */
+.tour-container .form-container, 
+.tour-container .container {
+  background: #fff;
+  border-radius: 14px;
+  padding: 32px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  margin-bottom: 32px;
+  transition: all 0.2s ease;
+}
+.tour-container .form-container:hover,
+.tour-container .container:hover {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08); /* Maintain 3D-like hover */
+}
+
+/* ======================================
+   FORM FIELDS (Cleaned up styling)
+====================================== */
+.form-group {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+}
+.form-group label,
+.form-label,
+.accordion-body label {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+.form-control,
+.form-select,
+.form-group input:not([type="checkbox"]):not([type="radio"]),
+.form-group textarea,
+/* Specific styling for the basic and itinerary section inputs */
+.renderItinerary .form-group input,
+.renderItinerary .form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb; /* Subtle border */
+  border-radius: 8px;
+  background: #fff; /* White background for clean look */
+  font-size: 14px;
+  color: #111827;
+  transition: all 0.25s ease;
+}
+.form-control::placeholder,
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #9ca3af;
+}
+.form-control:focus,
+.form-select:focus,
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #2563eb;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  outline: none;
+}
+
+/* Layout for Bootstrap-like grid (Basic Info, Pricing) */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -8px; /* Negative margin to counteract column padding/gap */
+}
+.row > div[class*="col-"] {
+  padding: 8px;
+}
+
+/* Column sizing (Adjusted from original for flexibility) */
+.col-md-6 {
+  flex: 0 0 50%;
+  max-width: 50%;
+}
+.col-md-4 {
+  flex: 0 0 33.333%;
+  max-width: 33.333%;
+}
+.col-md-3 {
+  flex: 0 0 25%;
+  max-width: 25%;
+}
+
+/* Small text below input */
+small.text-muted {
+  font-size: 12px;
+  color: #6b7280 !important;
+  display: block;
+  margin-top: 4px;
+}
+
+/* ======================================
+   CHECKBOXES & RADIO BUTTONS (Aligned)
+====================================== */
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #374151;
+}
+.form-check-inline {
+  margin-right: 1.5rem; /* Standard Bootstrap-like spacing */
+}
+.form-check-input {
+  accent-color: #2563eb;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin-top: 0; /* Vertical alignment fix */
+}
+.form-check-label {
+  cursor: pointer;
+  margin-bottom: 0;
+}
+
+/* ======================================
+   UPLOAD & MEDIA SECTIONS
+====================================== */
+.media-header {
+  margin-bottom: 20px;
+}
+.media-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #111827;
+}
+
+.upload-area {
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 36px 20px;
+  text-align: center;
+  color: #6b7280;
+  background: #fcfcfd;
+  transition: all 0.3s ease;
+}
+.upload-area:hover {
+  border-color: #2563eb;
+  background: #f0f5ff;
+}
+/* Existing image button styles are clean and don't need changes */
+
+/* ======================================
+   DETAILS & FAQ CARDS (Screenshot Styling)
+====================================== */
+/* Scoping here is automatically handled because .form-container is now scoped */
+.tour-container .details > div {
+  margin: 0;
+  padding: 0;
+}
+
+.tour-container .details > div > div {
+  /* Targeting the inner highlight/inclusion/exclusion/faq cards */
+  border: 1px solid #e5e7eb !important; /* Lighter border from original black */
+  border-radius: 10px;
+  padding: 20px !important;
+  width: 100% !important;
+  background: #fcfcfd; /* Light card background */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.details h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #1f2937;
+}
+
+.details label {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.details input[type="text"] {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+}
+.details input[type="text"]:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+/* GREEN BUTTON for ADD (+ icon) */
+.details button:not(.faq-delete):not([title="Remove"]):not([onClick*="setFaqs"]):not([onClick="addNewDay"]) {
+  /* Targets the '+' button for Highlights/Inclusions/Exclusions */
+  padding: 8px 15px;
+  border: none;
+  background: #10b981; /* Green color */
+  color: #fff;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  line-height: 1; /* For '+' alignment */
+}
+.details button:not(.faq-delete):not([title="Remove"]):not([onClick*="setFaqs"]):not([onClick="addNewDay"]):hover {
+  background: #059669;
+}
+
+/* FIX: RED CIRCULAR BUTTON for DELETE (x icon) in Highlights/Inclusions/Exclusions/Media */
+/* Use !important to override inline styles or high specificity from the parent structure */
+.details div > span + button,
+.upload-image-div button[title="Remove"] {
+  position: relative;
+  background: rgba(239, 68, 68, 0.85) !important; /* Red/semi-transparent, FORCED */
+  color: white !important; /* FORCED */
+  border: none !important; /* FORCED */
+  border-radius: 50% !important; /* Circular shape, FORCED */
+  width: 24px !important; /* FORCED */
+  height: 24px !important; /* FORCED */
+  font-size: 16px !important; /* FORCED */
+  line-height: 1.1 !important;
+  text-align: center !important;
+  padding: 0 !important;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.details div > span + button:hover,
+.upload-image-div button[title="Remove"]:hover {
+  background: #dc2626 !important; /* Darker red on hover, FORCED */
+}
+
+/* Style for the full-width 'Add FAQ' button (retains text, but follows green style) */
+.details .form-container button[onClick*="faqInput"] {
+  padding: 10px 15px;
+  background: #10b981;
+  color: white;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.details .form-container button[onClick*="faqInput"]:hover {
+  background: #059669;
+}
+
+
+/* RED DELETE BUTTON for FAQ (explicit style, using the small 'x' icon style) */
+.details .form-container button[onClick*="setFaqs"] {
+  /* Target the explicit 'Delete' button in FAQ section, now styled as 'x' icon */
+  background: #ef4444 !important; /* Red color */
+  color: white !important;
+  border: none !important;
+  padding: 0 !important;
+  cursor: pointer;
+  border-radius: 50% !important;
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 16px !important;
+  line-height: 1.1 !important;
+  text-align: center !important;
+}
+.details .form-container button[onClick*="setFaqs"]:hover {
+  background: #dc2626 !important;
+}
+
+/* FAQ question/answer styling */
+.details .form-container strong {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* ======================================
+   PRICING STYLES (Radio Card Enhancement)
+====================================== */
+/* Scoping is handled by .tour-container wrapper */
+.tour-container .p-3.border.rounded {
+  border-color: #e5e7eb !important; /* Default subtle border */
+  border-radius: 10px !important;
+  transition: all 0.2s ease;
+  background: #fcfcfd;
+}
+/* Active state for the radio button card */
+.tour-container .p-3.border.rounded.border-primary {
+  border-color: #2563eb !important; /* Blue border for active state */
+  background: #eff6ff !important; /* Light blue background for active state */
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.1);
+}
+.tour-container .p-3.border.rounded:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.small.text-muted {
+  font-size: 13px !important;
+}
+
+/* Fixed Departure Package Accordion (Added for clarity/consistency) */
+.destination-faq {
+  border-radius: 12px;
+  padding: 16px;
+  background: #f3f4f6; /* Very light gray background for the overall accordion section */
+}
+.accordion-item {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.accordion-button {
+  background: #e5e7eb;
+  color: #1f2937;
+  font-weight: 600;
+  border: none;
+  padding: 12px 18px;
+  font-size: 15px;
+}
+.accordion-body {
+  background: #fff;
+  padding: 20px;
+}
+
+/* Fixed Departure Add/Delete Buttons (using icon style) */
+.destination-faq-add {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: bold;
+}
+.destination-faq-add:not(.faq-delete) {
+  background: #10b981; /* Green for Add */
+  color: white;
+}
+.destination-faq-add:not(.faq-delete):hover {
+  background: #059669;
+}
+.faq-delete {
+  background: #ef4444; /* Red for Delete */
+  color: white;
+}
+.faq-delete:hover {
+  background: #dc2626;
+}
+
+/* ======================================
+   ITINERARY ACCORDION
+====================================== */
+/* Base Day Container */
+.tour-container .renderItinerary > div > div {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 10px !important;
+    margin-bottom: 12px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+/* Header/Title bar */
+.tour-container .renderItinerary > div > div > div:first-child {
+    background: #f3f4f6 !important;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* Day Content Padding */
+.tour-container .renderItinerary > div > div > div:last-child {
+    padding: 16px !important;
+}
+
+/* Itinerary Form Group Styling (Overriding generic form-group) */
+.renderItinerary .form-group {
+    margin-bottom: 15px;
+}
+.renderItinerary .form-group label {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+.renderItinerary .form-group input,
+.renderItinerary .form-group textarea {
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+}
+
+/* Add Another Day Button */
+.form-container button[onClick="addNewDay"] {
+    padding: 10px 18px !important;
+    background: #2563eb !important;
+    color: white;
+    border: none;
+    border-radius: 8px !important;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s ease;
+}
+.form-container button[onClick="addNewDay"]:hover {
+    background: #1e40af !important;
+}
+
+
+/* ======================================
+   BUTTONS (General)
+====================================== */
+.button {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+}
+.button-green {
+  background: linear-gradient(90deg, #10b981, #059669);
+  color: white;
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);
+}
+.button-green:hover {
+  background: linear-gradient(90deg, #059669, #047857);
+  transform: translateY(-1px);
+}
+.button-green:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ======================================
+   FOOTER
+====================================== */
+.tour-container > div:last-of-type {
+  margin-top: 32px !important;
+  padding: 16px 32px;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+.tour-container > div:last-of-type > span {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* ======================================
+   RESPONSIVE
+====================================== */
+@media (max-width: 1024px) {
+  .tour-container .form-container, 
+  .tour-container .container {
+    padding: 24px;
+  }
+  .row {
+    gap: 0;
+  }
+  .col-md-6, .col-md-4, .col-md-3 {
+    flex: 0 0 100%;
+    max-width: 100%;
+    margin-bottom: 12px;
+  }
+  .row > div[class*="col-"] {
+    padding: 6px 0;
+  }
+  .stepper {
+    justify-content: center;
+  }
+}
+@media (max-width: 768px) {
+  .tour-container {
+    padding: 16px;
+  }
+  .tour-container .form-container,
+  .tour-container .container {
+    padding: 20px;
+  }
+  .stepper {
+    gap: 8px;
+  }
+  .step-label {
+    display: none;
+  }
+  .details > div {
+    flex-direction: column;
+    gap: 16px !important;
+    margin: 0 !important;
+  }
+  .tour-container > div:last-of-type {
+    padding: 16px;
+  }
+}
+
+/* ======================================
+   PRICING STYLES (Radio Card Enhancement)
+====================================== */
+/* Scoping is handled by .tour-container wrapper */
+.tour-container .p-3.border.rounded {
+  border-color: #e5e7eb !important; /* Default subtle border */
+  border-radius: 10px !important;
+  transition: all 0.2s ease;
+  background: #fcfcfd;
+}
+/* Active state for the radio button card */
+.tour-container .p-3.border.rounded.border-primary {
+  border-color: #2563eb !important; /* Blue border for active state */
+  background: #eff6ff !important; /* Light blue background for active state */
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.1);
+}
+.tour-container .p-3.border.rounded:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.small.text-muted {
+  font-size: 13px !important;
+}
+
+/* ======================================
+   FIXED DEPARTURE PRICING - ENHANCED LAYOUT
+====================================== */
+/* Main container for slots and packages */
+.tour-container .fixed-departure-container {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f9fafb;
+  padding: 24px;
+  margin-top: 20px;
+}
+
+/* Header with title and Add Slot button */
+.tour-container .fixed-departure-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.tour-container .fixed-departure-header h5 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Individual Slot Container */
+.tour-container .slot-container {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.tour-container .slot-container:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Slot 1 gets special green accent */
+.tour-container .slot-container:first-child {
+  border-top: 3px solid #10b981;
+  background: linear-gradient(to bottom, #f0fff4 0%, #ffffff 100%);
+}
+
+/* Slot header with indicator and delete button */
+.tour-container .slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tour-container .slot-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tour-container .slot-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.tour-container .slot-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Costing Packages Section */
+.tour-container .costing-packages-section {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 24px;
+}
+
+.tour-container .costing-packages-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.tour-container .costing-packages-header h6 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #374151;
+}
+
+/* Individual Package Card */
+.tour-container .package-card {
+  background: #ffffff;
+  border: 1px dashed #9ca3af;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+}
+
+.tour-container .package-card:hover {
+  border-color: #10b981;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+}
+
+.tour-container .package-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.tour-container .package-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+}
+
+/* Button Styling - GREEN for Add, RED for Delete */
+.tour-container .btn-add-slot,
+.tour-container .btn-add-package {
+  background: #10b981 !important;
+  color: white !important;
+  border: none !important;
+  padding: 8px 20px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tour-container .btn-add-slot:hover,
+.tour-container .btn-add-package:hover {
+  background: #059669 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.tour-container .btn-delete-slot,
+.tour-container .btn-delete-package {
+  background: #ef4444 !important;
+  color: white !important;
+  border: none !important;
+  padding: 6px 14px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tour-container .btn-delete-slot:hover,
+.tour-container .btn-delete-package:hover {
+  background: #dc2626 !important;
+  box-shadow: 0 3px 10px rgba(239, 68, 68, 0.3);
+}
+
+/* Form fields in pricing section */
+.tour-container .pricing-form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.tour-container .pricing-form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.tour-container .pricing-form-input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  outline: none;
+}
+
+.tour-container .pricing-form-input:read-only {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+/* Responsive adjustments for pricing */
+@media (max-width: 768px) {
+  .tour-container .fixed-departure-header,
+  .tour-container .slot-header,
+  .tour-container .costing-packages-header,
+  .tour-container .package-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .tour-container .btn-add-slot,
+  .tour-container .btn-add-package {
+    width: 100%;
+    justify-content: center;
+  }
+}

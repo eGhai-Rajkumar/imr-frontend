@@ -1,0 +1,91 @@
+/* src/pages/admin/css/DashboardOverview.css */
+
+/* KPI Card */
+.kpi-card {
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Specific KPI Colors - Based on screenshot */
+.kpi-card-packages {
+    background: linear-gradient(45deg, #1E3A8A, #3B82F6); /* Blue */
+}
+
+.kpi-card-hotels {
+    background: linear-gradient(45deg, #047857, #10B981); /* Green */
+}
+
+.kpi-card-activities {
+    background: linear-gradient(45deg, #9D174D, #EC4899); /* Pink/Purple */
+}
+
+/* Quick Actions */
+.quick-action-button {
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    border: 1px solid #e2e8f0;
+}
+
+.quick-action-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.quick-action-icon {
+    width: 32px;
+    height: 32px;
+    padding: 8px;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+/* Quick Action Colors - Based on screenshot colors */
+.qa-add-trip { background-color: #e0f2f1; color: #008080; } /* Teal */
+.qa-manage-leads { background-color: #f0fff4; color: #059669; } /* Emerald */
+.qa-view-bookings { background-color: #fff1f2; color: #e11d48; } /* Rose */
+.qa-email-campaigns { background-color: #fffbeb; color: #f59e0b; } /* Amber */
+.qa-page-builder { background-color: #ede9fe; color: #7c3aed; } /* Violet */
+.qa-settings { background-color: #f3f4f6; color: #4b5563; } /* Gray */
+
+/* Recent Leads */
+.lead-item {
+    transition: all 0.3s ease;
+}
+
+.lead-item:hover {
+    background-color: #f7fafc;
+}
+
+.lead-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+/* Lead Status Colors */
+.status-new { background-color: #38bdf8; color: #fff; }
+.status-interested { background-color: #f59e0b; color: #fff; }
+.status-booked { background-color: #10b981; color: #fff; }
+.status-pending { background-color: #94a3b8; color: #fff; }

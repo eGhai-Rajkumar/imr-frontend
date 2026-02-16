@@ -1,0 +1,195 @@
+/* src/pages/admin/modules/Destinations/DestinationCreate.css */
+
+/* --- GENERAL LAYOUT AND TYPOGRAPHY --- */
+.tour-container {
+    padding: 24px;
+    background-color: #f7f9fc; /* Light background for the dashboard area */
+}
+
+.destination-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 15px;
+}
+
+.destination-header h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1f2937; /* Dark text */
+}
+
+/* --- CARD STRUCTURE (Primary Visual Element) --- */
+.destination-card {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.03);
+    margin-bottom: 24px;
+    border: 1px solid #e5e7eb;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 10px;
+}
+
+/* --- FORM INPUTS & LABELS --- */
+.admin-input-div {
+    margin-bottom: 20px;
+}
+
+.admin-input-div label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+/* Style for all input fields (text, select, textarea) */
+.admin-input-div input[type="text"],
+.admin-input-div textarea,
+.admin-input-div select,
+/* Target react-select wrapper for consistent style */
+.admin-input-div .react-select-container .react-select__control { 
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-size: 1rem;
+}
+
+.admin-input-div input[type="text"]:focus,
+.admin-input-div textarea:focus,
+.admin-input-div select:focus,
+.admin-input-div .react-select-container .react-select__control--is-focused {
+    border-color: #3b82f6; /* Blue focus color */
+    box-shadow: 0 0 0 1px #3b82f6;
+    outline: none;
+}
+
+.error-para {
+    color: #ef4444; /* Red error color */
+    font-size: 0.85rem;
+    margin-top: 4px;
+}
+
+/* --- IMAGE UPLOAD & PREVIEW --- */
+.image-preview-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.image-preview-item {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.image-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.delete-image-icon {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #dc3545; /* Red */
+    color: white;
+    border-radius: 0 0 0 8px; /* Rounded corner opposite the top right */
+    width: 25px;
+    height: 25px;
+    text-align: center;
+    cursor: pointer;
+    line-height: 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.delete-image-icon:hover {
+    background-color: #c82333;
+}
+
+/* --- CUSTOM PACKAGE ACCORDION STYLES --- */
+.custom-package-item {
+    padding: 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background-color: #f9fafb;
+    margin-top: 15px;
+}
+
+.custom-package-item .d-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.custom-package-item .font-semibold {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.custom-package-actions button {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.custom-package-actions .add-btn {
+    background-color: #10b981; /* Green */
+    color: white;
+    border: none;
+}
+
+.custom-package-actions .delete-btn {
+    background-color: #ef4444; /* Red */
+    color: white;
+    border: none;
+}
+
+/* --- SUBMIT BUTTON --- */
+.create-common-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    background-color: #3b82f6; /* Blue */
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+    transition: background-color 0.2s, box-shadow 0.2s;
+    margin-top: 20px;
+}
+
+.create-common-btn:hover {
+    background-color: #2563eb;
+    box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
+}
+
+.create-common-btn:disabled {
+    background-color: #93c5fd;
+    cursor: not-allowed;
+    box-shadow: none;
+}

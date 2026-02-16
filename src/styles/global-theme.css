@@ -1,0 +1,288 @@
+/* global.css
+   Theme tuned to Holidays Planners logo:
+   - Warm sunset yellow, deep ocean blue, aqua wave, palm green.
+   - Friendly script-ish accent + clean sans headings/body.
+*/
+
+/* -------------------------
+   1) Google fonts (add to index.html or import here)
+   ------------------------- */
+/* In your index.html <head>:
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+*/
+
+/* -------------------------
+   2) CSS variables (palette + helpers)
+   ------------------------- */
+:root{
+  /* Primary brand colors (logo-inspired) */
+  --brand-blue: #0b52b0;        /* deep blue for logo 'Holidays' & CTAs */
+  --brand-accent: #007ea8;      /* aqua/turquoise wave accent */
+  --sun-yellow: #ffd24d;        /* warm sunset for background accents */
+  --palm-green: #2f8f45;        /* palm tree/green tagline */
+  --tagline-green: #a6c93a;     /* lighter green used in tagline */
+  --dark: #1b1f23;             /* page text dark */
+  --muted: #6b7280;            /* gray-muted */
+  --bg: #ffffff;
+  --glass: rgba(255,255,255,0.8);
+
+  /* Shadows and radius */
+  --card-radius: 12px;
+  --btn-radius: 8px;
+  --elevation-sm: 0 1px 4px rgba(11,82,176,0.08);
+  --elevation-md: 0 8px 24px rgba(11,82,176,0.12);
+
+  /* Typography scale */
+  --font-sans: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  --font-accent: "Pacifico", cursive;
+  --base-font-size: 16px;
+}
+
+/* -------------------------
+   3) Global resets + base
+   ------------------------- */
+* { box-sizing: border-box; }
+html,body,#root { height:100%; }
+html { font-size: var(--base-font-size); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+body {
+  margin:0;
+  font-family: var(--font-sans);
+  color: var(--dark);
+  background: linear-gradient(180deg, #f9fbff 0%, #ffffff 100%);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Links */
+a { color: var(--brand-blue); text-decoration:none; }
+a:hover { text-decoration:underline; }
+
+/* -------------------------
+   4) Headings + accent brand word style
+   ------------------------- */
+h1,h2,h3,h4,h5 {
+  margin:0 0 0.6rem 0;
+  color: var(--dark);
+  line-height:1.15;
+  font-weight:700;
+  font-family: var(--font-sans);
+}
+
+.brand {
+  display:inline-flex;
+  align-items:center;
+  gap:0.6rem;
+}
+
+/* word that should use friendly script (like "Planners") */
+.brand-accent {
+  font-family: var(--font-accent);
+  color: var(--brand-blue);
+  font-size: 1.6rem;
+  letter-spacing:0;
+  display:inline-block;
+}
+
+/* small tagline style (Your Travelling Buddy) */
+.tagline {
+  display:block;
+  font-size:0.95rem;
+  color: var(--tagline-green);
+  font-weight:600;
+  margin-top:0.15rem;
+}
+
+/* -------------------------
+   5) Navbar
+   ------------------------- */
+.site-nav{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  padding:1rem 1.25rem;
+  background: linear-gradient(90deg, rgba(255,210,77,0.06), rgba(0,0,0,0));
+  backdrop-filter: blur(4px);
+  box-shadow: var(--elevation-sm);
+}
+
+/* nav links */
+.site-nav .links { display:flex; gap:1rem; align-items:center; }
+.site-nav a.nav-link {
+  padding:0.5rem 0.75rem;
+  border-radius:8px;
+  color: var(--brand-blue);
+  font-weight:600;
+}
+.site-nav a.nav-link:hover { background: rgba(11,82,176,0.06); }
+
+/* -------------------------
+   6) Buttons (primary/secondary/ghost)
+   ------------------------- */
+.btn {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:0.5rem;
+  padding:0.6rem 1.1rem;
+  font-weight:600;
+  border-radius: var(--btn-radius);
+  cursor:pointer;
+  border: none;
+  transition: transform .12s ease, box-shadow .12s ease;
+  user-select:none;
+}
+
+.btn:active { transform: translateY(1px); }
+
+/* Primary CTA — deep blue with subtle shadow */
+.btn-primary {
+  background: linear-gradient(180deg, var(--brand-blue), #083f8b);
+  color: white;
+  box-shadow: var(--elevation-md);
+}
+
+/* Accent CTA — aqua */
+.btn-accent {
+  background: linear-gradient(180deg, var(--brand-accent), #006a85);
+  color: white;
+}
+
+/* Outline/Ghost button */
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(11,82,176,0.12);
+  color: var(--brand-blue);
+}
+
+/* Small helper */
+.btn-sm { padding:0.4rem 0.75rem; font-size:0.9rem; }
+
+/* -------------------------
+   7) Hero section helpers
+   ------------------------- */
+.hero {
+  display:grid;
+  grid-template-columns: 1fr 420px;
+  gap:2rem;
+  align-items:center;
+  padding:3.5rem 2rem;
+  background:
+    linear-gradient(180deg, rgba(255,210,77,0.12) 0%, rgba(0,0,0,0) 30%);
+}
+
+/* hero card to hold search or quick CTA */
+.hero-card {
+  background: var(--bg);
+  border-radius: var(--card-radius);
+  box-shadow: var(--elevation-sm);
+  padding:1.25rem;
+}
+
+/* wave accent strip (mimics logo wave) */
+.wave-accent {
+  height:6px;
+  width:100%;
+  border-radius:999px;
+  background: linear-gradient(90deg, var(--brand-accent), var(--sun-yellow));
+}
+
+/* -------------------------
+   8) Cards + listing
+   ------------------------- */
+.card {
+  background: white;
+  border-radius: var(--card-radius);
+  padding:1rem;
+  box-shadow: var(--elevation-sm);
+  overflow:hidden;
+}
+
+.card .meta {
+  font-size:0.9rem;
+  color:var(--muted);
+}
+
+/* tags */
+.tag {
+  display:inline-block;
+  padding:0.25rem 0.6rem;
+  border-radius:999px;
+  font-size:0.8rem;
+  background: rgba(46,143,69,0.08);
+  color: var(--palm-green);
+  font-weight:600;
+}
+
+/* -------------------------
+   9) Forms / Inputs
+   ------------------------- */
+.input, textarea, select {
+  width:100%;
+  padding:0.75rem;
+  border-radius:10px;
+  border:1px solid #e6e9ef;
+  font-size:1rem;
+  outline:none;
+  transition: box-shadow .12s ease, border-color .12s ease;
+}
+.input:focus, textarea:focus, select:focus {
+  border-color: var(--brand-blue);
+  box-shadow: 0 6px 18px rgba(11,82,176,0.06);
+}
+
+/* Inline form row helpers */
+.form-row { display:flex; gap:0.75rem; }
+.form-row > * { flex:1; }
+
+/* -------------------------
+   10) Footer
+   ------------------------- */
+.site-footer {
+  padding:2rem 1.5rem;
+  background: linear-gradient(180deg,#f3f7ff, #ffffff);
+  border-top: 1px solid #eef2ff;
+  color: var(--muted);
+  font-size:0.95rem;
+}
+
+/* -------------------------
+   11) Utilities
+   ------------------------- */
+.container { max-width:1200px; margin:0 auto; padding:0 1rem; }
+.center { display:flex; align-items:center; justify-content:center; }
+.row { display:flex; gap:1rem; flex-wrap:wrap; }
+.mt-1 { margin-top:0.5rem; } .mt-2 { margin-top:1rem; } .mt-3 { margin-top:1.6rem; }
+
+/* small responsive helpers */
+@media (max-width:900px){
+  .hero { grid-template-columns: 1fr; padding:2rem 1rem; }
+  .site-nav { padding:0.75rem 1rem; }
+}
+
+/* -------------------------
+   12) Accessibility reminders (non-css)
+   ------------------------- */
+/*
+ - Ensure all CTAs have accessible labels and focus states.
+ - Use color contrast checks for text on brand-blue backgrounds (white text is used on CTAs).
+ - If using brand colors for small text, ensure the contrast ratio is at least 4.5:1.
+*/
+
+/* -------------------------
+   13) Example component snippets (for quick copy-paste)
+   ------------------------- */
+/* header brand usage:
+<div class="brand">
+  <img src="/path/to/logo.png" alt="Holidays Planners" style="height:44px;"/>
+  <div>
+    <span class="brand-accent">Planners</span>
+    <small class="tagline">Your Travelling Buddy</small>
+  </div>
+</div>
+*/
+
+/* CTA example:
+<button class="btn btn-primary">Book Now</button>
+<button class="btn btn-accent">Explore Deals</button>
+*/

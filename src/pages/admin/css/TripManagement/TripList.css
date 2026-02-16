@@ -1,0 +1,63 @@
+/* src/pages/admin/css/TripManagement/TripList.css */
+
+.trip-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+/* Styles for individual icon actions in the list table */
+.list-action-icon {
+    margin: 0 0.4rem;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: color 0.2s, transform 0.2s;
+    opacity: 0.8;
+}
+
+.list-action-icon:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.icon-edit { color: #2563eb; } /* Blue-600 */
+.icon-duplicate { color: #f59e0b; } /* Amber-500 */
+.icon-preview { color: #10b981; } /* Emerald-500 */
+.icon-delete { color: #ef4444; } /* Red-500 */
+
+/* Custom Modal Styles (Luxury dark overlay) */
+.custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.delete-model-view-main {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 400px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.modal-btn-base {
+    padding: 10px 15px;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.2s;
+    width: 100%;
+    border: none;
+    margin-top: 15px;
+}
+.modal-btn-confirm { background-color: #ef4444; color: white; }
+.modal-btn-confirm:hover { background-color: #dc2626; }
+.modal-btn-cancel { background-color: #e5e7eb; color: #4b5563; }
+.modal-btn-cancel:hover { background-color: #d1d5db; }

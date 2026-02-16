@@ -1,0 +1,351 @@
+/* ============================================================================
+   ADMIN HEADER - With Toggle Button & Expand Fix
+   ============================================================================ */
+
+.admin-header {
+  position: fixed;
+  top: 0;
+  left: 280px; /* Start after sidebar when open */
+  right: 0;
+  height: 70px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 900;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ✅ HEADER EXPAND FIX: When sidebar is collapsed - header expands to fill space */
+body.sidebar-collapsed .admin-header {
+  left: 80px; /* Sidebar collapsed width - Header expands! */
+}
+
+/* Mobile - full width */
+@media (max-width: 1024px) {
+  .admin-header {
+    left: 0 !important;
+  }
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 24px;
+  gap: 16px;
+  max-width: 100%;
+}
+
+/* ============================================================================
+   TOGGLE BUTTON - Inside Header (Like Screenshot)
+   ============================================================================ */
+
+.header-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  color: #1f2937;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.header-toggle-btn:hover {
+  background: #e5e7eb;
+  color: #3b82f6;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.header-toggle-btn:active {
+  transform: translateY(0);
+  background: #d1d5db;
+}
+
+/* ============================================================================
+   SEARCH BAR
+   ============================================================================ */
+
+.search-wrapper {
+  flex: 1;
+  min-width: 0;
+  max-width: 600px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 18px;
+  color: #9ca3af;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.search-input {
+  width: 100%;
+  height: 46px;
+  padding: 0 20px 0 50px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 400;
+  background: #f9fafb;
+  color: #1f2937;
+  transition: all 0.2s ease;
+}
+
+.search-input:hover {
+  border-color: #d1d5db;
+  background: #f3f4f6;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+}
+
+/* ============================================================================
+   HEADER RIGHT SIDE
+   ============================================================================ */
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ============================================================================
+   NOTIFICATION BUTTON
+   ============================================================================ */
+
+.header-icon-btn {
+  position: relative;
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.header-icon-btn:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 12px;
+  line-height: 1;
+  min-width: 18px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+/* ============================================================================
+   USER PROFILE
+   ============================================================================ */
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 16px 6px 6px;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.user-profile:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   LOGOUT BUTTON
+   ============================================================================ */
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+  white-space: nowrap;
+}
+
+.logout-button:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+
+.logout-button:active {
+  transform: translateY(0);
+}
+
+/* ============================================================================
+   RESPONSIVE - TABLET
+   ============================================================================ */
+
+@media (max-width: 1024px) {
+  .header-container {
+    gap: 12px;
+    padding: 0 20px;
+  }
+
+  .search-wrapper {
+    max-width: none;
+  }
+
+  .user-name {
+    display: none;
+  }
+
+  .logout-button span {
+    display: none;
+  }
+
+  .logout-button {
+    padding: 10px;
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE - MOBILE
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .admin-header {
+    height: 64px;
+  }
+
+  .header-container {
+    padding: 0 16px;
+    gap: 10px;
+  }
+
+  .header-toggle-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .search-wrapper {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .search-input {
+    height: 42px;
+    font-size: 13px;
+    padding: 0 16px 0 44px;
+  }
+
+  .search-icon {
+    left: 14px;
+  }
+
+  .user-profile {
+    padding: 6px;
+  }
+
+  .user-name {
+    display: none;
+  }
+
+  .header-icon-btn {
+    padding: 8px;
+  }
+
+  .logout-button {
+    padding: 8px;
+  }
+
+  .logout-button span {
+    display: none;
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE - VERY SMALL
+   ============================================================================ */
+
+@media (max-width: 480px) {
+  .header-right {
+    gap: 8px;
+  }
+
+  .user-profile {
+    display: none;
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY
+   ============================================================================ */
+
+.header-toggle-btn:focus-visible,
+.header-icon-btn:focus-visible,
+.user-profile:focus-visible,
+.logout-button:focus-visible,
+.search-input:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
