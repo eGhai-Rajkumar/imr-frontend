@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, Loader2, X, Users } from 'lucide-react';
+import { Search, MapPin, Loader2, X, Users, Compass, ArrowRight } from 'lucide-react';
 
 const API_URL = "https://api.yaadigo.com/secure/api";
 const API_KEY = "bS8WV0lnLRutJH-NbUlYrO003q30b_f8B4VGYy9g45M";
@@ -8,7 +8,7 @@ const IMAGE_BASE_URL = "https://api.yaadigo.com/uploads/";
 
 // ✅ ADD YOUR BACKGROUND IMAGES HERE
 const HERO_IMAGES = [
-  './hero-section-banners/hero-bg-kerala-backwaters-holidaysplanners.webp',
+  './hero-section-banners/hero-bg-kerala-backwaters-indianmountainrovers.webp',
   './hero-section-banners/hero-image-kullu-manali-holidays-planners.jpg',
   './hero-section-banners/hero-image-spiti-valley-holidays-planners.jpg',
 ];
@@ -40,11 +40,11 @@ export default function HeroSection() {
   // ✅ Image slider state
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // ✅ Auto-slide images every 5 seconds
+  // ✅ Auto-slide images every 6 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % HERO_IMAGES.length);
-    }, 5000);
+    }, 6000);
     return () => clearInterval(interval);
   }, []);
 
@@ -57,11 +57,6 @@ export default function HeroSection() {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const json = await response.json();
       const fetchedList = json.data || [];
-
-      // Debug log
-      if (fetchedList.length > 0) {
-        console.log("Sample destination:", fetchedList[0]);
-      }
 
       const standardizedList = fetchedList.map((d) => ({
         id: d.id,
@@ -91,11 +86,6 @@ export default function HeroSection() {
       const json = await response.json();
       const fetchedList = json.data || [];
 
-      // Debug log
-      if (fetchedList.length > 0) {
-        console.log("Sample trip:", fetchedList[0]);
-      }
-
       const standardizedList = fetchedList.map((t) => ({
         id: t.id,
         name: t.title || t.name || 'Unknown Trip',
@@ -105,11 +95,11 @@ export default function HeroSection() {
         duration: t.duration || 'N/A',
         price: t.price || 'Contact for pricing',
         image: getFullImageUrl(
-          t.image || 
-          t.images?.[0]?.path || 
-          t.images?.[0] || 
-          t.thumbnail || 
-          t.hero_image || 
+          t.image ||
+          t.images?.[0]?.path ||
+          t.images?.[0] ||
+          t.thumbnail ||
+          t.hero_image ||
           ''
         ),
       }));
@@ -195,11 +185,11 @@ export default function HeroSection() {
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: 'easeOut' },
+      transition: { duration: 0.8, ease: 'easeOut' },
     },
   };
 
@@ -208,13 +198,10 @@ export default function HeroSection() {
 
   return (
     <section
-      className="relative z-[1] h-[600px] md:h-[700px] flex items-center justify-center overflow-visible"
-      style={{
-        fontFamily: 'Segoe UI, -apple-system, BlinkMacSystemFont, sans-serif',
-      }}
+      className="relative z-[1] min-h-[85vh] flex items-center justify-center overflow-hidden"
     >
-      {/* ✅ Background Image Slider */}
-      <div className="absolute inset-0 overflow-hidden">
+      {/* ✅ Background Image Slider with Ken Burns Effect */}
+      <div className="absolute inset-0 overflow-hidden bg-gray-900">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentImageIndex}
@@ -222,204 +209,230 @@ export default function HeroSection() {
             style={{
               backgroundImage: `url(${HERO_IMAGES[currentImageIndex]})`,
             }}
-            initial={{ opacity: 0, scale: 1.1 }}
+            initial={{ opacity: 0, scale: 1.15 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 1, ease: 'easeOut' }}
+            transition={{ duration: 1.5, ease: 'easeInOut' }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/50" />
+            {/* Gradient Overlays for Readability and Mood */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/30" />
+            <div className="absolute inset-0 bg-primary/20 mix-blend-multiply" />
           </motion.div>
         </AnimatePresence>
       </div>
 
       {/* Content */}
       <motion.div
-        className="relative z-[1100] container mx-auto px-4 flex flex-col items-center justify-center h-full overflow-visible"
+        className="relative z-[10] container mx-auto px-4 flex flex-col items-center justify-center h-full text-center"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
+        <motion.div variants={itemVariants} className="mb-4">
+          <span className="inline-block py-1 px-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-accent text-xs md:text-sm font-bold tracking-widest uppercase">
+            Discover the Unseen
+          </span>
+        </motion.div>
+
         <motion.h1
-          className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 text-center leading-tight"
+          className="text-5xl md:text-7xl lg:text-8xl font-serif font-black text-white mb-6 leading-tight drop-shadow-lg"
           variants={itemVariants}
         >
-          Your Journey Begins Here
+          Indian Mountain <br />
+          Rovers
         </motion.h1>
 
         <motion.p
-          className="text-lg md:text-xl text-white/95 max-w-3xl mx-auto mb-12 text-center leading-relaxed"
+          className="text-lg md:text-xl text-gray-200 max-w-2xl mx-auto mb-12 leading-relaxed font-light"
           variants={itemVariants}
         >
-          Handpicked destinations and expertly curated tours await. 
-          <span className="block mt-2 font-semibold">Start exploring your next adventure today.</span>
+          Crafting exclusive journeys through the majestic landscapes of India.
+          Experience nature in its purest form, wrapped in luxury.
         </motion.p>
 
-        {/* ✅ Compact Search Bar */}
+        {/* ✅ Glassmorphism Search Bar */}
         <motion.div
           ref={searchRef}
-          className="bg-white/95 backdrop-blur-sm rounded-full shadow-2xl px-5 py-2 max-w-2xl mx-auto relative w-full overflow-visible"
+          className="w-full max-w-3xl mx-auto relative group"
           variants={itemVariants}
-          whileHover={{ 
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
-            backgroundColor: 'rgba(255, 255, 255, 1)'
-          }}
-          transition={{ duration: 0.3 }}
         >
-          <div className="flex items-center gap-2">
+          <div className="relative flex items-center bg-white/15 backdrop-blur-md border border-white/20 rounded-full p-2 shadow-2xl hover:bg-white/20 transition-all duration-300 ring-1 ring-white/10 group-hover:ring-white/30">
+
             {/* Location Icon */}
-            <MapPin className="h-5 w-5 text-blue-500 flex-shrink-0" />
+            <div className="pl-4 pr-3 text-accent">
+              <Compass className="h-6 w-6" />
+            </div>
 
             {/* Input */}
-            <motion.div
-              className="relative flex-1"
-              whileHover={{ y: -1 }}
-              transition={{ type: 'spring', stiffness: 300 }}
-            >
-              <input
-                type="text"
-                placeholder="Search destinations, trips, or experiences..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                onFocus={() =>
-                  searchQuery.length > 0 && setShowResults(true)
-                }
-                className="w-full py-2 bg-transparent border-none focus:outline-none text-gray-800 placeholder-gray-500 text-sm md:text-base"
-              />
-              {searchQuery && (
-                <button
-                  onClick={clearSearch}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-              {isSearching && (
-                <Loader2 className="absolute right-0 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-500 animate-spin" />
-              )}
-            </motion.div>
+            <input
+              type="text"
+              placeholder="Where is your next adventure?"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              onFocus={() => searchQuery.length > 0 && setShowResults(true)}
+              className="flex-1 bg-transparent border-none focus:outline-none text-white placeholder-gray-300 text-lg py-3 font-medium"
+            />
 
-            {/* Search Icon Button */}
-            <motion.button
+            {/* Clear Button */}
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="p-2 text-gray-300 hover:text-white transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
+
+            {/* Loader */}
+            {isSearching && (
+              <div className="p-2 text-accent">
+                <Loader2 className="h-5 w-5 animate-spin" />
+              </div>
+            )}
+
+            {/* Search Button */}
+            <button
               onClick={handleSearch}
-              className="h-10 w-10 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-full flex items-center justify-center flex-shrink-0 transition-all"
-              whileHover={{
-                scale: 1.08,
-                boxShadow: '0 8px 20px rgba(37, 99, 235, 0.4)',
-              }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: 'spring', stiffness: 300 }}
+              className="ml-2 bg-gradient-nature text-white rounded-full px-8 py-3.5 font-bold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 flex items-center gap-2"
             >
-              <Search className="h-4 w-4" />
-            </motion.button>
+              <span>Explore</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
           </div>
 
-          {/* Results */}
+          {/* Results Dropdown */}
           <AnimatePresence>
             {showResults && totalResults > 0 && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.98 }}
                 transition={{ duration: 0.2 }}
-                className="absolute left-0 right-0 top-full mt-2 bg-white rounded-lg shadow-2xl max-h-96 overflow-y-auto z-[9998]"
+                className="absolute left-0 right-0 top-full mt-4 bg-white/95 backdrop-blur-xl rounded-2xl shadow-glass border border-white/20 max-h-[400px] overflow-y-auto overflow-x-hidden z-[9998] custom-scrollbar"
               >
                 {/* Destinations */}
                 {filteredResults.destinations.length > 0 && (
                   <div className="p-4">
-                    <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-2">
                       Destinations
                     </h3>
-                    {filteredResults.destinations.map((dest) => (
-                      <div
-                        key={dest.id}
-                        onClick={() => handleResultClick(dest)}
-                        className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition"
-                      >
-                        {dest.image ? (
-                          <img
-                            src={dest.image}
-                            alt={dest.name}
-                            className="w-12 h-12 rounded-lg object-cover"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center">
-                            <MapPin className="h-6 w-6 text-gray-400" />
+                    <div className="space-y-2">
+                      {filteredResults.destinations.map((dest) => (
+                        <div
+                          key={dest.id}
+                          onClick={() => handleResultClick(dest)}
+                          className="flex items-center gap-4 p-2 hover:bg-gray-100/50 rounded-xl cursor-pointer transition-colors group"
+                        >
+                          <div className="relative w-16 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                            {dest.image ? (
+                              <img
+                                src={dest.image}
+                                alt={dest.name}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                <MapPin className="h-5 w-5 text-gray-400" />
+                              </div>
+                            )}
                           </div>
-                        )}
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-800">
-                            {dest.name}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {dest.country} • {dest.tourCount} tours
-                          </p>
+                          <div className="flex-1">
+                            <p className="font-serif font-bold text-gray-800 text-lg">
+                              {dest.name}
+                            </p>
+                            <p className="text-xs text-gray-500 flex items-center gap-1">
+                              <MapPin className="h-3 w-3" /> {dest.country}
+                              <span className="mx-1">•</span>
+                              {dest.tourCount} tours
+                            </p>
+                          </div>
                         </div>
-                        <MapPin className="h-4 w-4 text-gray-400" />
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
 
                 {/* Trips */}
                 {filteredResults.trips.length > 0 && (
-                  <div className="p-4 border-t">
-                    <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">
+                  <div className="p-4 border-t border-gray-100">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-2">
                       Trips
                     </h3>
-                    {filteredResults.trips.map((trip) => (
-                      <div
-                        key={trip.id}
-                        onClick={() => handleResultClick(trip)}
-                        className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition"
-                      >
-                        {trip.image ? (
-                          <img
-                            src={trip.image}
-                            alt={trip.name}
-                            className="w-12 h-12 rounded-lg object-cover"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center">
-                            <Users className="h-6 w-6 text-gray-400" />
+                    <div className="space-y-2">
+                      {filteredResults.trips.map((trip) => (
+                        <div
+                          key={trip.id}
+                          onClick={() => handleResultClick(trip)}
+                          className="flex items-center gap-4 p-2 hover:bg-gray-100/50 rounded-xl cursor-pointer transition-colors group"
+                        >
+                          <div className="relative w-16 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                            {trip.image ? (
+                              <img
+                                src={trip.image}
+                                alt={trip.name}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                <Users className="h-5 w-5 text-gray-400" />
+                              </div>
+                            )}
                           </div>
-                        )}
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-800">
-                            {trip.name}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {trip.destination} • {trip.duration}
-                          </p>
+                          <div className="flex-1">
+                            <p className="font-serif font-bold text-gray-800 text-lg line-clamp-1">
+                              {trip.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {trip.destination} • {trip.duration}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
               </motion.div>
             )}
-          </AnimatePresence>
 
-          {/* No Results */}
-          <AnimatePresence>
+            {/* No Results */}
             {showResults &&
               totalResults === 0 &&
               searchQuery.length > 0 &&
               !isSearching && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="absolute left-0 right-0 top-full mt-2 bg-white rounded-lg shadow-2xl p-6 text-center z-[9998]"
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute left-0 right-0 top-full mt-4 bg-white/95 backdrop-blur-xl rounded-2xl shadow-glass p-8 text-center z-[9998] border border-white/20"
                 >
-                  <p className="text-gray-500">
-                    No destinations or trips found for "{searchQuery}"
+                  <MapPin className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-600 font-medium">
+                    No adventures found for "{searchQuery}"
                   </p>
+                  <p className="text-gray-400 text-sm mt-1">Try searching for "Manali", "Kerala", or "Trekking"</p>
                 </motion.div>
               )}
           </AnimatePresence>
         </motion.div>
+
       </motion.div>
+
+      {/* Decorative Bottom Fade */}
+      <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white to-transparent z-[5]"></div>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(0,0,0,0.05);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(0,0,0,0.2);
+          border-radius: 10px;
+        }
+      `}</style>
     </section>
   );
 }

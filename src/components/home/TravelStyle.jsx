@@ -1,19 +1,15 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Backpack, Bus, Plane, Mountain, PartyPopper, Briefcase, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Backpack, Bus, Plane, Mountain, PartyPopper, Briefcase, Compass, ArrowRight } from 'lucide-react';
 
-// NOTE: These variables are assumed to be defined globally or imported elsewhere in a real application,
-// but are kept here for completeness based on the original code's context.
 const API_URL = "https://api.yaadigo.com/secure/api";
 const API_KEY = "bS8WV0lnLRutJH-NbUlYrO003q30b_f8B4VGYy9g45M";
 const IMAGE_BASE_URL = "https://api.yaadigo.com/uploads/";
 
-// Helper to construct the full image URL
-const getFullImageUrl = (path) => 
-    !path || typeof path !== "string" ? '' : 
-    path.startsWith("http") ? path : `${IMAGE_BASE_URL}${path}`;
+const getFullImageUrl = (path) =>
+    !path || typeof path !== "string" ? '' :
+        path.startsWith("http") ? path : `${IMAGE_BASE_URL}${path}`;
 
-// Helper to map slugs to Lucide Icons (as a fallback if image fetching fails)
 const iconMap = {
     'backpacking': Backpack,
     'weekend': Bus,
@@ -23,177 +19,161 @@ const iconMap = {
     'corporate': Briefcase,
 };
 
-// Simple Color/Shadow mapping based on category names (retained for hover/fallback color)
-const styleMap = {
-    'backpacking': { color: 'bg-gradient-to-br from-orange-500 to-red-500', shadowColor: 'shadow-orange-500/50', hoverColor: 'group-hover:text-orange-600' },
-    'weekend': { color: 'bg-gradient-to-br from-emerald-500 to-teal-500', shadowColor: 'shadow-emerald-500/50', hoverColor: 'group-hover:text-emerald-600' },
-    'international': { color: 'bg-gradient-to-br from-blue-500 to-indigo-600', shadowColor: 'shadow-blue-500/50', hoverColor: 'group-hover:text-blue-600' },
-    'adventure': { color: 'bg-gradient-to-br from-purple-500 to-pink-500', shadowColor: 'shadow-purple-500/50', hoverColor: 'group-hover:text-purple-600' },
-    'honeymoon': { color: 'bg-gradient-to-br from-rose-500 to-pink-600', shadowColor: 'shadow-rose-500/50', hoverColor: 'group-hover:text-rose-600' },
-    'corporate': { color: 'bg-gradient-to-br from-slate-600 to-gray-700', shadowColor: 'shadow-slate-600/50', hoverColor: 'group-hover:text-slate-600' },
-};
-
-
 export default function CategoriesSection() {
-  const [categories, setCategories] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hoveredIndex, setHoveredIndex] = useState(null);
-  // Assumes a React Router context is available, allowing navigation.
-  const navigate = useNavigate();
-  
-  const scrollRef = useRef(null);
-  const scrollStep = 200; // Pixels to scroll per click
+    const [categories, setCategories] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const navigate = useNavigate();
 
-  // --- Carousel Navigation ---
-  const scrollCategories = (direction) => {
-      if (scrollRef.current) {
-          const currentScroll = scrollRef.current.scrollLeft;
-          const newScroll = direction === 'left' ? currentScroll - scrollStep : currentScroll + scrollStep;
-          scrollRef.current.scrollTo({
-              left: newScroll,
-              behavior: 'smooth'
-          });
-      }
-  };
+    const fetchCategories = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(`${API_URL}/categories/`, {
+                headers: { "x-api-key": API_KEY }
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const json = await response.json();
+            const fetchedCategories = json.data || [];
 
+            const standardizedCategories = fetchedCategories.map((cat, index) => {
+                const slug = (cat.slug || cat.name?.toLowerCase().replace(/ /g, '-')).toLowerCase();
+                const imageUrl = Array.isArray(cat.image) && cat.image.length > 0
+                    ? getFullImageUrl(cat.image[0])
+                    : null;
 
-  const fetchCategories = useCallback(async () => {
-    setIsLoading(true);
-    try {
-        const response = await fetch(`${API_URL}/categories/`, {
-            headers: { "x-api-key": API_KEY }
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        
-        const json = await response.json();
-        const fetchedCategories = json.data || [];
-        
-        const standardizedCategories = fetchedCategories.map((cat, index) => {
-            const slug = (cat.slug || cat.name?.toLowerCase().replace(/ /g, '-')).toLowerCase();
-            const style = styleMap[slug] || {};
-            
-            // --- IMAGE INTEGRATION ---
-            const imageUrl = Array.isArray(cat.image) && cat.image.length > 0 
-                            ? getFullImageUrl(cat.image[0]) 
-                            : null;
+                return {
+                    id: cat._id || cat.id || index,
+                    name: cat.name,
+                    label: cat.label || 'Collection',
+                    slug: slug,
+                    imageUrl: imageUrl,
+                    icon: iconMap[slug] || Compass,
+                };
+            });
 
-            return {
-                id: cat._id || cat.id || index,
-                name: cat.name,
-                label: cat.label || 'Trips', 
-                slug: slug,
-                imageUrl: imageUrl, // Store the fetched image URL
-                icon: iconMap[slug] || Backpack, // Icon for fallback
-                color: style.color || 'bg-gray-500',
-                shadowColor: style.shadowColor || 'shadow-gray-500/50',
-                hoverColor: style.hoverColor || 'group-hover:text-gray-600',
-            };
-        });
+            setCategories(standardizedCategories);
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
 
-        setCategories(standardizedCategories);
-    } catch (error) {
-        console.error("Error fetching categories:", error);
-    } finally {
-        setIsLoading(false);
-    }
-  }, []);
+    useEffect(() => {
+        fetchCategories();
+    }, [fetchCategories]);
 
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+    const handleCategoryClick = (slug, id) => {
+        window.scrollTo(0, 0);
+        navigate(`/category/${slug}/${id}`);
+    };
 
+    if (isLoading) return null;
 
-  // --- UPDATED NAVIGATION HANDLER WITH SCROLL TO TOP ---
-  const handleCategoryClick = (slug, id) => {
-    // Scroll to top immediately before navigation
-    window.scrollTo(0, 0);
-    // Navigates to the new URL format: /category/:slug/:id
-    // This assumes the React Router is configured to handle this path.
-    navigate(`/category/${slug}/${id}`);
-  };
+    // --- Bento Grid Logic ---
+    // We'll highlight the first item largely, and others in a grid
+    const featuredCategory = categories[0];
+    const gridCategories = categories.slice(1);
 
-  if (isLoading) {
     return (
-        <section className="py-16 bg-white">
-            <div className="container mx-auto px-4 text-center">
-                <p className="text-gray-500">Loading categories...</p>
-            </div>
-        </section>
-    );
-  }
+        <section className="py-24 bg-surface relative overflow-hidden">
+            <div className="container mx-auto px-4 relative z-10">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                    <div className="max-w-xl">
+                        <div className="flex items-center gap-2 text-primary font-bold tracking-widest uppercase text-xs mb-3">
+                            <Compass className="h-4 w-4" />
+                            <span>Curated Collections</span>
+                        </div>
+                        <h2 className="text-4xl md:text-5xl font-serif font-bold text-primary-dark">
+                            Find Your Travel Style
+                        </h2>
+                    </div>
 
-  return (
-    <section className="py-16 bg-white">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12 animate-fade-in">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-800">
-            Find Your Travel Style
-          </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto text-lg">
-            Whether you crave adrenaline or relaxation, we've got trips for every mood
-          </p>
-        </div>
+                    <div className="hidden md:block h-px flex-1 bg-gray-200 mx-8 mb-4"></div>
 
-        {/* --- Dynamic Category Carousel Section --- */}
-        <div className="relative max-w-6xl mx-auto">
-            
-            {/* Scrollable Content Container */}
-            <div className="flex justify-center flex-wrap overflow-x-auto custom-scrollbar-hide">
-                <div 
-                    ref={scrollRef}
-                    className="flex gap-8 md:gap-12 lg:gap-16 justify-center overflow-x-auto custom-scrollbar-hide py-4 px-12"
-                    style={{ scrollBehavior: 'smooth' }}
-                >
-                    {categories.map((category, index) => {
-                        const Icon = category.icon;
-                        const isHovered = hoveredIndex === index;
-                        
+                    <p className="text-gray-500 max-w-sm text-sm text-right hidden md:block">
+                        Explore our handpicked collections designed for every kind of traveler.
+                    </p>
+                </div>
+
+                {/* --- Bento Grid Layout --- */}
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 auto-rows-[250px]">
+
+                    {/* 1. Featured Large Item (First Category) */}
+                    {featuredCategory && (
+                        <div
+                            onClick={() => handleCategoryClick(featuredCategory.slug, featuredCategory.id)}
+                            className="group relative col-span-1 md:col-span-2 lg:col-span-2 row-span-2 rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500"
+                        >
+                            {featuredCategory.imageUrl ? (
+                                <img
+                                    src={featuredCategory.imageUrl}
+                                    alt={featuredCategory.name}
+                                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                                />
+                            ) : (
+                                <div className="absolute inset-0 bg-primary flex items-center justify-center">
+                                    <featuredCategory.icon className="w-20 h-20 text-white/20" />
+                                </div>
+                            )}
+
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90" />
+
+                            <div className="absolute bottom-0 left-0 p-8">
+                                <span className="inline-block px-3 py-1 bg-accent/90 backdrop-blur-sm text-primary-dark text-xs font-bold rounded-full mb-3 shadow-glow">
+                                    Most Popular
+                                </span>
+                                <h3 className="text-4xl font-serif font-bold text-white mb-2 group-hover:text-accent transition-colors">
+                                    {featuredCategory.name}
+                                </h3>
+                                <div className="flex items-center gap-2 text-white/80 group-hover:translate-x-2 transition-transform duration-300">
+                                    <span className="text-sm font-medium uppercase tracking-wide">Explore Collection</span>
+                                    <ArrowRight className="w-4 h-4" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 2. Grid Items (Remaining Categories) */}
+                    {gridCategories.map((category, index) => {
+                        // Creating a varied grid pattern
+                        // Every 3rd item could span 2 columns if we wanted, but let's keep it simple first
+                        const isWide = index === 3; // Example: Make the 4th item wide
+                        const spanClass = isWide ? "md:col-span-2" : "col-span-1";
+
                         return (
                             <div
-                                key={category.slug}
-                                className="flex-shrink-0 opacity-0 animate-slide-up"
-                                style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}
+                                key={category.id}
+                                onClick={() => handleCategoryClick(category.slug, category.id)}
+                                className={`group relative ${spanClass} rounded-3xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-500`}
                             >
-                                <div
-                                    className="flex flex-col items-center gap-3 cursor-pointer group"
-                                    // --- UPDATED CALL SITE ---
-                                    onClick={() => handleCategoryClick(category.slug, category.id)}
-                                    onMouseEnter={() => setHoveredIndex(index)}
-                                    onMouseLeave={() => setHoveredIndex(null)}
-                                >
-                                    {/* --- DYNAMIC IMAGE/ICON CONTAINER --- */}
-                                    <div
-                                        className={`w-24 h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-out relative overflow-hidden ${
-                                            isHovered 
-                                                ? `${category.shadowColor} shadow-2xl -translate-y-2 scale-110` 
-                                                : ''
-                                            } ${!category.imageUrl ? category.color : ''}`}
-                                    >
-                                        {category.imageUrl ? (
-                                            // Render Image if URL is available
-                                            <img
-                                                src={category.imageUrl}
-                                                alt={category.name}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            // Fallback to Icon if no image
-                                            <Icon className="h-10 w-10 md:h-12 md:w-12 text-white" strokeWidth={1.5} />
-                                        )}
+                                {category.imageUrl ? (
+                                    <img
+                                        src={category.imageUrl}
+                                        alt={category.name}
+                                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale-[20%] group-hover:grayscale-0"
+                                    />
+                                ) : (
+                                    <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+                                        <category.icon className="w-12 h-12 text-gray-300" />
                                     </div>
-                                    {/* --- End DYNAMIC IMAGE/ICON CONTAINER --- */}
+                                )}
 
-                                    <div className="text-center">
-                                        <p className={`font-semibold text-gray-800 text-base md:text-lg ${category.hoverColor} transition-all duration-200 ${
-                                            isHovered ? 'scale-105' : ''
-                                        }`}>
-                                            {category.name}
-                                        </p>
-                                        <p className={`font-semibold text-gray-800 text-base md:text-lg ${category.hoverColor} transition-all duration-200 ${
-                                            isHovered ? 'scale-105' : ''
-                                        }`}>
-                                            {category.label}
-                                        </p>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+
+                                <div className="absolute bottom-0 left-0 p-6 w-full">
+                                    <div className="flex justify-between items-end">
+                                        <div>
+                                            <p className="text-xs text-accent font-bold uppercase tracking-wider mb-1 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 delay-100">
+                                                {category.label}
+                                            </p>
+                                            <h3 className="text-xl md:text-2xl font-serif font-bold text-white group-hover:text-accent transition-colors">
+                                                {category.name}
+                                            </h3>
+                                        </div>
+                                        <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 scale-0 group-hover:scale-100 transition-all duration-300">
+                                            <ArrowRight className="w-4 h-4" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -201,64 +181,6 @@ export default function CategoriesSection() {
                     })}
                 </div>
             </div>
-
-            {/* Navigation Arrows */}
-            <button
-                onClick={() => scrollCategories('left')}
-                className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-3 rounded-full shadow-lg transition-all duration-300 z-10 hidden md:block border border-gray-200"
-            >
-                <ChevronLeft className="w-6 h-6 text-gray-700" />
-            </button>
-            <button
-                onClick={() => scrollCategories('right')}
-                className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-3 rounded-full shadow-lg transition-all duration-300 z-10 hidden md:block border border-gray-200"
-            >
-                <ChevronRight className="w-6 h-6 text-gray-700" />
-            </button>
-
-        </div>
-        {/* --- End Dynamic Category Carousel Section --- */}
-      </div>
-
-      <style jsx>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(30px) scale(0.8);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-
-        .animate-fade-in {
-          animation: fade-in 0.6s ease-out;
-        }
-
-        .animate-slide-up {
-          animation: slide-up 0.5s ease-out;
-        }
-        
-        .custom-scrollbar-hide {
-            -ms-overflow-style: none; /* IE and Edge */
-            scrollbar-width: none; /* Firefox */
-        }
-        .custom-scrollbar-hide::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera */
-        }
-      `}</style>
-    </section>
-  );
+        </section>
+    );
 }

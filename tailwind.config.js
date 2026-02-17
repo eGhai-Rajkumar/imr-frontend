@@ -7,7 +7,30 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Brand Colors from Logo
+        // Nature & Luxury Palette
+        primary: {
+          DEFAULT: '#1B4D3E', // Deep Forest Green
+          light: '#2C6E58',
+          dark: '#0D2B22',
+        },
+        secondary: {
+          DEFAULT: '#8D6E63', // Earthy Brown / Wood
+          light: '#A1887F',
+          dark: '#5D4037',
+        },
+        accent: {
+          DEFAULT: '#D4AF37', // Luxury Gold
+          light: '#F4D03F',
+          dark: '#AA8C2C',
+        },
+        surface: {
+          DEFAULT: '#FAF9F6', // Off-white / Cream
+          dark: '#F5F5F0',
+        },
+        // Keeping legacy brands for compatibility but marking as legacy if needed, 
+        // or remapping them to new palette if we want total override. 
+        // For now, I'll keep them to avoid breaking existing hardcoded classes immediately, 
+        // but new components should use primary/secondary/accent.
         'brand-blue': {
           50: '#EEF0FF',
           100: '#D8DCFF',
@@ -20,64 +43,27 @@ export default {
           800: '#121560',
           900: '#090C3A',
         },
-        'palm-green': {
-          50: '#E8F5E9',
-          100: '#C8E6C9',
-          200: '#A5D6A7',
-          300: '#81C784',
-          400: '#66BB6A',
-          500: '#2D8B3C',
-          600: '#2E7D32',
-          700: '#1B5E20',
-          800: '#164A1A',
-          900: '#0D3311',
-        },
-        'accent-green': {
-          DEFAULT: '#90C347',
-          light: '#A8D96E',
-          dark: '#7AB031',
-        },
-        'sun-gold': {
-          50: '#FFFBEB',
-          100: '#FFF3C4',
-          200: '#FFE58F',
-          300: '#FFD700',
-          400: '#FFCD00',
-          500: '#FFC107',
-          600: '#FFB300',
-          700: '#FFA000',
-          800: '#FF8F00',
-          900: '#FF6F00',
-        },
-        'orange-accent': {
-          DEFAULT: '#FF8800',
-          light: '#FFA033',
-          dark: '#E67700',
-        },
-        'secondary-blue': {
-          DEFAULT: '#1E88E5',
-          light: '#42A5F5',
-          dark: '#1565C0',
-        },
       },
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
+        sans: ["'Plus Jakarta Sans'", "'Inter'", "sans-serif"],
+        serif: ["'Playfair Display'", "serif"], // For headings
+      },
+      backgroundImage: {
+        'gradient-nature': 'linear-gradient(to right, #1B4D3E, #2C6E58)',
+        'gradient-luxury': 'linear-gradient(to right, #D4AF37, #F4D03F)',
+        'gradient-dark': 'linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.3))',
+      },
+      boxShadow: {
+        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+        'soft': '0 10px 40px -10px rgba(0,0,0,0.08)',
+        'glow': '0 0 20px rgba(212, 175, 55, 0.3)',
       },
       animation: {
-        'fade-in': 'fadeIn 0.5s ease-in',
-        'fade-in-up': 'fadeInUp 0.5s ease-out',
-        'fade-in-down': 'fadeInDown 0.5s ease-out',
-        'slide-in-left': 'slideInLeft 0.5s ease-out',
-        'slide-in-right': 'slideInRight 0.5s ease-out',
-        'slide-up': 'slideUp 0.5s ease-out',
-        'scale-in': 'scaleIn 0.3s ease-out',
-        'bounce-soft': 'bounceSoft 2s infinite',
-        'pulse-glow': 'pulseGlow 2s infinite',
-        'gradient-x': 'gradientX 3s ease infinite',
-        'shimmer': 'shimmer 2s infinite',
-        'float': 'float 3s ease-in-out infinite',
-        'wave': 'wave 2s ease-in-out infinite',
-        'expand': 'expand 0.5s ease-out',
+        'fade-in': 'fadeIn 0.6s ease-out forwards',
+        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+        'slide-in-right': 'slideInRight 0.6s ease-out forwards',
+        'ken-burns': 'kenBurns 20s infinite alternate',
+        'float': 'float 6s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -85,57 +71,20 @@ export default {
           'to': { opacity: '1' },
         },
         fadeInUp: {
-          'from': { opacity: '0', transform: 'translateY(20px)' },
+          'from': { opacity: '0', transform: 'translateY(30px)' },
           'to': { opacity: '1', transform: 'translateY(0)' },
-        },
-        fadeInDown: {
-          'from': { opacity: '0', transform: 'translateY(-20px)' },
-          'to': { opacity: '1', transform: 'translateY(0)' },
-        },
-        slideInLeft: {
-          'from': { opacity: '0', transform: 'translateX(-30px)' },
-          'to': { opacity: '1', transform: 'translateX(0)' },
         },
         slideInRight: {
           'from': { opacity: '0', transform: 'translateX(30px)' },
           'to': { opacity: '1', transform: 'translateX(0)' },
         },
-        slideUp: {
-          'from': { opacity: '0', transform: 'translateY(30px)' },
-          'to': { opacity: '1', transform: 'translateY(0)' },
-        },
-        scaleIn: {
-          'from': { opacity: '0', transform: 'scale(0.9)' },
-          'to': { opacity: '1', transform: 'scale(1)' },
-        },
-        bounceSoft: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-10px)' },
-        },
-        pulseGlow: {
-          '0%, 100%': { opacity: '0.3' },
-          '50%': { opacity: '0.6' },
-        },
-        gradientX: {
-          '0%, 100%': { backgroundPosition: '0% 50%' },
-          '50%': { backgroundPosition: '100% 50%' },
-        },
-        shimmer: {
-          '0%': { backgroundPosition: '-200% 0' },
-          '100%': { backgroundPosition: '200% 0' },
+        kenBurns: {
+          '0%': { transform: 'scale(1)' },
+          '100%': { transform: 'scale(1.1)' },
         },
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-15px)' },
-        },
-        wave: {
-          '0%, 100%': { transform: 'rotate(0deg)' },
-          '25%': { transform: 'rotate(10deg)' },
-          '75%': { transform: 'rotate(-10deg)' },
-        },
-        expand: {
-          'from': { width: '0' },
-          'to': { width: '100%' },
+          '50%': { transform: 'translateY(-10px)' },
         },
       },
     },

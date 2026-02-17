@@ -22,7 +22,7 @@ import LeadGeneration from '../components/forms/LeadGeneration';
  *      subtitle="Let us help you plan the perfect getaway"
  *    />
  */
-export default function GlobalCTA({ 
+export default function GlobalCTA({
   type = 'generic',  // 'destination', 'trip', or 'generic'
   name = '',         // Name of destination or trip
   title,             // Custom title (optional)
@@ -62,11 +62,11 @@ export default function GlobalCTA({
       {/* CTA Section */}
       <section className="py-8 sm:py-12 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-gradient-to-br from-slate-900 to-blue-900 rounded-2xl sm:rounded-3xl p-8 sm:p-12 md:p-16 text-center shadow-2xl overflow-hidden relative">
+          <div className="bg-gradient-to-br from-[#1B4D3E] to-[#143d30] rounded-2xl sm:rounded-3xl p-8 sm:p-12 md:p-16 text-center shadow-2xl overflow-hidden relative border border-[#D4AF37]/20">
             {/* Decorative Background Pattern */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-0 left-0 w-64 h-64 bg-blue-400 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2" />
-              <div className="absolute bottom-0 right-0 w-64 h-64 bg-cyan-400 rounded-full blur-3xl transform translate-x-1/2 translate-y-1/2" />
+            <div className="absolute inset-0 opacity-20">
+              <div className="absolute top-0 left-0 w-64 h-64 bg-[#D4AF37] rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2" />
+              <div className="absolute bottom-0 right-0 w-64 h-64 bg-[#D4AF37] rounded-full blur-3xl transform translate-x-1/2 translate-y-1/2" />
             </div>
 
             {/* Content */}
@@ -77,7 +77,7 @@ export default function GlobalCTA({
               <p className="text-base sm:text-lg md:text-xl text-gray-200 mb-6 sm:mb-8 max-w-3xl mx-auto">
                 {displaySubtitle}
               </p>
-              
+
               {/* CTA Button */}
               <button
                 onClick={() => setIsModalOpen(true)}
@@ -104,9 +104,9 @@ export default function GlobalCTA({
       </section>
 
       {/* Lead Generation Modal */}
-      <LeadGeneration 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <LeadGeneration
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
       />
     </>
   );

@@ -41,11 +41,11 @@ export default function BookingNotification({ pageSlug, pageData }) {
 
   const processLiveNotifications = (data) => {
     console.log('🔍 Processing Live Notifications from data:', data);
-    
+
     if (data.live_notifications) {
       const liveNotifs = data.live_notifications;
       console.log('🔔 Live Notifications Config:', liveNotifs);
-      
+
       const newConfig = {
         enabled: liveNotifs.enabled !== undefined ? liveNotifs.enabled : true,
         display_duration: liveNotifs.display_duration || 5,
@@ -53,10 +53,10 @@ export default function BookingNotification({ pageSlug, pageData }) {
         position: liveNotifs.position || 'bottom-left',
         show_on_mobile: liveNotifs.show_on_mobile !== undefined ? liveNotifs.show_on_mobile : true
       };
-      
+
       console.log('⚙️ Config Set To:', newConfig);
       setConfig(newConfig);
-      
+
       // Set notifications array
       if (liveNotifs.notifications && Array.isArray(liveNotifs.notifications) && liveNotifs.notifications.length > 0) {
         console.log('📋 Notifications Array:', liveNotifs.notifications);
@@ -75,21 +75,21 @@ export default function BookingNotification({ pageSlug, pageData }) {
     try {
       const url = `${API_BASE_URL}/landing-pages/${pageSlug}`;
       console.log('🌐 Fetching from:', url);
-      
+
       const response = await fetch(url, {
         headers: { 'x-api-key': API_KEY }
       });
-      
+
       console.log('📡 Response Status:', response.status);
-      
+
       if (!response.ok) {
         console.error('❌ Failed to fetch landing page data');
         return;
       }
-      
+
       const data = await response.json();
       console.log('📦 Full API Response:', data);
-      
+
       const pageDataFromApi = data.data || data;
       processLiveNotifications(pageDataFromApi);
     } catch (error) {
@@ -104,13 +104,13 @@ export default function BookingNotification({ pageSlug, pageData }) {
     console.log('   - Notifications Count:', notifications.length);
     console.log('   - Show on Mobile:', config.show_on_mobile);
     console.log('   - Window Width:', window.innerWidth);
-    
+
     // Don't show notifications if disabled or no notifications available
     if (!config.enabled) {
       console.warn('❌ Notifications DISABLED in config');
       return;
     }
-    
+
     if (notifications.length === 0) {
       console.warn('❌ No notifications available to show');
       return;
@@ -131,7 +131,7 @@ export default function BookingNotification({ pageSlug, pageData }) {
       console.log('🎉 Showing Notification:', notif);
       setCurrentNotification(notif);
       setNotificationIndex((prev) => (prev + 1) % notifications.length);
-      
+
       // Hide after configured duration (convert to milliseconds)
       setTimeout(() => {
         console.log('👋 Hiding notification after', config.display_duration, 'seconds');
@@ -145,7 +145,7 @@ export default function BookingNotification({ pageSlug, pageData }) {
       console.log('🚀 Showing FIRST notification');
       showNotification();
     }, 3000);
-    
+
     // Then show every interval_between seconds
     console.log('⏱️ Subsequent notifications every', config.interval_between, 'seconds');
     const interval = setInterval(() => {
@@ -245,7 +245,7 @@ export default function BookingNotification({ pageSlug, pageData }) {
             </div>
 
             {/* Close button */}
-            <button 
+            <button
               onClick={() => setCurrentNotification(null)}
               className="text-slate-400 hover:text-slate-600 p-1 transition-colors"
               aria-label="Close notification"

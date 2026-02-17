@@ -1,143 +1,85 @@
-import React, { useState, useEffect } from 'react';
-import { Share2, Facebook, Twitter, Linkedin, Link2, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function DestinationOverview({ destinationData }) {
-    
-    const [showShareOptions, setShowShareOptions] = useState(false);
     const [currentDestination, setCurrentDestination] = useState(null);
-    const [showFullOverview, setShowFullOverview] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
+    const contentRef = useRef(null);
+    const [needsReadMore, setNeedsReadMore] = useState(false);
 
     useEffect(() => {
         if (destinationData) {
             const apiData = destinationData.data || destinationData;
-            const mappedData = {
-                overview: apiData.overview || 'No overview available.',
-                travelGuidelines: apiData.travel_guidelines || '',
-            };
-            setCurrentDestination(mappedData);
+            setCurrentDestination(apiData);
         }
     }, [destinationData]);
 
-    const destination = currentDestination;
-    if (!destination) return null;
-
-    const handleShare = (platform) => {
-        const url = window.location.href;
-        const shareUrls = {
-            facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-            twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}`,
-            linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
-            whatsapp: `https://wa.me/?text=${encodeURIComponent(url)}`,
-        };
-
-        if (platform === 'copy') {
-            navigator.clipboard.writeText(url);
-            alert('Link copied to clipboard!');
-        } else {
-            window.open(shareUrls[platform], '_blank', 'width=600,height=400');
+    useEffect(() => {
+        if (contentRef.current) {
+            // Check if content height exceeds the collapsed height (e.g., 200px)
+            setNeedsReadMore(contentRef.current.scrollHeight > 200);
         }
-        setShowShareOptions(false);
-    };
+    }, [currentDestination]);
 
-    const shareButtons = [
-        { name: 'Copy Link', icon: Link2, bg: 'bg-gray-700 hover:bg-gray-800', action: 'copy' },
-        { name: 'LinkedIn', icon: Linkedin, bg: 'bg-blue-700 hover:bg-blue-800', action: 'linkedin' },
-        { name: 'Twitter', icon: Twitter, bg: 'bg-sky-500 hover:bg-sky-600', action: 'twitter' },
-        { name: 'Facebook', icon: Facebook, bg: 'bg-blue-600 hover:bg-blue-700', action: 'facebook' },
-    ];
-
-    const processOverviewContent = (text) => {
-        return text
-            ?.split('\n')
-            ?.map(t => t.trim())
-            ?.filter(t => t.length > 0)
-            ?.map((line, i) => ({
-                content: line.replace(/^[0-9]+\.\s*/, ''),
-                isHeading: line.length < 60 || /^\d+\./.test(line)
-            })) || [];
-    };
-
-    const processed = processOverviewContent(destination.overview);
-    const totalLines = processed.length;
-    const initialLines = 3;
-
-    const lines = showFullOverview ? processed : processed.slice(0, initialLines);
+    if (!currentDestination) return null;
 
     return (
         <>
-            {showShareOptions && (
-                <div
-                    className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
-                    onClick={() => setShowShareOptions(false)}
-                ></div>
-            )}
+            <section className="py-8 md:py-12 px-4 bg-white" id="overview">
+                <div className="max-w-7xl mx-auto">
+                    <div className="bg-[#FDFBF7] rounded-3xl p-6 md:p-10 border border-[#D4AF37]/20 shadow-sm relative overflow-hidden">
 
-            <div className="fixed bottom-6 left-6 z-50 flex flex-col-reverse items-center gap-4">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-2xl md:text-3xl font-bold text-[#2C6B4F] font-serif">
+                                About {currentDestination.title || 'this Destination'}
+                            </h3>
 
-                <button
-                    onClick={() => setShowShareOptions(!showShareOptions)}
-                    className={`bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-full border-4 border-white shadow-2xl transition-all duration-300 hover:scale-110 ${
-                        showShareOptions ? 'rotate-90' : 'rotate-0'
-                    }`}
-                >
-                    {showShareOptions ? <X className="w-6 h-6" /> : <Share2 className="w-6 h-6" />}
-                </button>
-
-                {shareButtons.map((btn, idx) => (
-                    <button
-                        key={btn.name}
-                        onClick={() => handleShare(btn.action)}
-                        className={`${btn.bg} text-white p-4 rounded-full border-4 border-white shadow-2xl transition-all duration-300 ${
-                            showShareOptions
-                                ? 'opacity-100 scale-100 translate-y-0'
-                                : 'opacity-0 scale-0 translate-y-20 pointer-events-none'
-                        }`}
-                        style={{ transitionDelay: `${idx * 60}ms` }}
-                    >
-                        <btn.icon className="w-6 h-6" />
-                    </button>
-                ))}
-            </div>
-
-            <section className="py-10 px-4 bg-white">
-                <div className="max-w-7xl mx-auto animate-fade-in">
-
-                    <div className="animate-slide-up">
-                        <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-10 rounded-2xl border-l-4 border-blue-600 shadow-md hover:shadow-lg space-y-4">
-
-                            <h3 className="text-2xl font-semibold text-blue-900 mb-6">Overview</h3>
-
-                            {lines.map((item, i) =>
-                                item.isHeading ? (
-                                    <h4 key={i} className="text-xl font-extrabold text-blue-900 mt-5 border-t pt-3 border-blue-300">{item.content}</h4>
-                                ) : (
-                                    <p key={i} className="text-gray-800 text-lg leading-relaxed pt-1">{item.content}</p>
-                                )
-                            )}
-
-                            {totalLines > initialLines && (
+                            {/* Top Read Less Button (Visible only when expanded) */}
+                            {needsReadMore && isExpanded && (
                                 <button
-                                    onClick={() => setShowFullOverview(!showFullOverview)}
-                                    className="text-blue-700 hover:text-blue-900 font-medium flex items-center gap-1 mt-4"
+                                    onClick={() => setIsExpanded(false)}
+                                    className="hidden md:flex items-center gap-2 text-[#C5A028] hover:text-[#2C6B4F] transition-colors font-medium text-sm uppercase tracking-wide"
                                 >
-                                    {showFullOverview ? 'View Less' : `View More (${totalLines - initialLines})`}
-                                    <span className={`transition-transform ${showFullOverview ? 'rotate-180' : ''}`}>▼</span>
+                                    Read Less <ChevronUp className="w-4 h-4" />
                                 </button>
                             )}
-
                         </div>
+
+                        <div
+                            ref={contentRef}
+                            className={`relative transition-all duration-500 ease-in-out overflow-hidden`}
+                            style={{ maxHeight: isExpanded ? 'none' : '100px' }} // 100px is roughly one paragraph + heading
+                        >
+                            <div
+                                className="prose prose-lg max-w-none text-gray-700 leading-relaxed font-light"
+                                dangerouslySetInnerHTML={{ __html: currentDestination.overview || 'No overview available.' }}
+                            />
+
+                            {/* Gradient Overlay when collapsed */}
+                            {!isExpanded && needsReadMore && (
+                                <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-[#FDFBF7] to-transparent pointer-events-none" />
+                            )}
+                        </div>
+
+                        {/* Button Container (Centered at bottom) */}
+                        {needsReadMore && (
+                            <div className="mt-6 flex justify-center">
+                                <button
+                                    onClick={() => setIsExpanded(!isExpanded)}
+                                    className={`flex items-center gap-2 px-8 py-2.5 rounded-full shadow-lg transition-all font-bold tracking-wide transform hover:scale-105 active:scale-95 ${isExpanded
+                                        ? 'bg-white border-2 border-[#D4AF37] text-[#D4AF37] hover:bg-gray-50'
+                                        : 'bg-gradient-to-r from-[#2C6B4F] to-[#1B4D3E] text-white hover:shadow-xl'
+                                        }`}
+                                >
+                                    {isExpanded ? 'Read Less' : 'Read More...'}
+                                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                </button>
+                            </div>
+                        )}
+
                     </div>
                 </div>
             </section>
-
-            {/* CSS INSIDE SAME FILE */}
-            <style>{`
-                @keyframes fade-in { from { opacity:0; } to { opacity:1; } }
-                @keyframes slide-up { from { opacity:0; transform:translateY(25px);} to{opacity:1; transform: translateY(0);} }
-
-                .animate-fade-in { animation: fade-in .6s ease-out forwards; }
-                .animate-slide-up { animation: slide-up .6s ease-out forwards; }
-            `}</style>
         </>
     );
 }

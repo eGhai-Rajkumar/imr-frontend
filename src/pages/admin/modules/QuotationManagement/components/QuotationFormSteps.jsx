@@ -55,7 +55,7 @@ const BASE_FORM_DATA = {
     agent: { name: 'Agent Name', email: 'agent@example.com', contact: '+91-9876543210' },
     company: {
         name: 'Holidays Planners',
-        email: 'info@indianmountainrovers.com',
+        email: 'sales@indianmountainrovers.com',
         mobile: '+91-9988776655',
         website: 'https://indianmountainrovers.com',
         licence: 'TRV-12345',
@@ -188,7 +188,7 @@ const QuotationFormSteps = ({ activeStep, setActiveStep, handleClose, API_KEY: p
         };
         loadData();
     }, [quotation, apiKey]);
-    
+
     // Calculate totals
     const calculatePackageTotal = useCallback((pkg) => {
         return pkg.components.reduce((total, component) => {
@@ -232,7 +232,7 @@ const QuotationFormSteps = ({ activeStep, setActiveStep, handleClose, API_KEY: p
             setFormError('Please enter a trip title.');
             return;
         }
-        
+
         // 🚨 NEW: Added check for mandatory itinerary data (at least one valid day)
         if (activeStep === 3) {
             const validItinerary = (formData.itinerary || []).some(item => item.title && item.description);
@@ -241,7 +241,7 @@ const QuotationFormSteps = ({ activeStep, setActiveStep, handleClose, API_KEY: p
                 return;
             }
         }
-        
+
         // 🚨 NEW: Added check for mandatory costing data (Step 4)
         if (activeStep === 4) {
             const hasPackages = formData.costing.type === 'package' && (formData.costing.packages || []).length > 0;
@@ -374,23 +374,23 @@ const QuotationFormSteps = ({ activeStep, setActiveStep, handleClose, API_KEY: p
         const url = await handleFileUpload(e.target.files[0], 'qr');
         if (url) setFormData(prev => ({ ...prev, payment: { ...prev.payment, qr_code_url: url } }));
     };
-    
+
     // Handles multiple file upload for a component variant
     const handleComponentMultipleImageUpload = async (files, packageId, componentIndex, variantIndex) => {
         if (!files || files.length === 0) return;
         const uploadKey = `${packageId}-${componentIndex}-${variantIndex}`;
         setUploadingComponentImages(prev => ({ ...prev, [uploadKey]: true }));
-    
+
         const fd = new FormData();
         Array.from(files).forEach(file => {
             fd.append('gallery_images', file); // Use 'gallery_images' for MULTIPLE_UPLOAD_API
         });
         fd.append('storage', 'local');
-    
+
         try {
             const res = await axios.post(MULTIPLE_UPLOAD_API, fd);
             const uploadedUrls = res?.data?.files || []; // Expect an array of URLs from MULTIPLE_UPLOAD_API
-            
+
             if (uploadedUrls.length > 0) {
                 setFormData(prev => ({
                     ...prev,
@@ -416,7 +416,7 @@ const QuotationFormSteps = ({ activeStep, setActiveStep, handleClose, API_KEY: p
             setUploadingComponentImages(prev => ({ ...prev, [uploadKey]: false }));
         }
     };
-    
+
     // Removes a single image from a component variant's array
     const removeComponentImage = (packageId, componentIndex, variantIndex, imageIdx) => {
         setFormData(prev => ({
@@ -485,7 +485,7 @@ const QuotationFormSteps = ({ activeStep, setActiveStep, handleClose, API_KEY: p
                             variants: [{
                                 title: '',
                                 description: '',
-                                image_urls: [], 
+                                image_urls: [],
                                 price_per_person: 0,
                                 is_selected: pkg.components.length === 0
                             }]
@@ -657,7 +657,7 @@ const QuotationFormSteps = ({ activeStep, setActiveStep, handleClose, API_KEY: p
                             ...comp,
                             variants: comp.variants.map(v => ({
                                 ...v,
-                                image_urls: v.image_urls.filter(url => url), 
+                                image_urls: v.image_urls.filter(url => url),
                                 image_url: undefined // Ensure deprecated field is not sent
                             }))
                         }))
@@ -1058,7 +1058,7 @@ const QuotationFormSteps = ({ activeStep, setActiveStep, handleClose, API_KEY: p
                                                                         style={{ display: 'none' }}
                                                                         id={`comp-${pkg.package_id}-${compIndex}-${varIndex}`}
                                                                         type="file"
-                                                                        multiple 
+                                                                        multiple
                                                                         onChange={(e) => handleComponentMultipleImageUpload(e.target.files, pkg.package_id, compIndex, varIndex)}
                                                                         disabled={uploadingComponentImages[`${pkg.package_id}-${compIndex}-${varIndex}`]}
                                                                     />

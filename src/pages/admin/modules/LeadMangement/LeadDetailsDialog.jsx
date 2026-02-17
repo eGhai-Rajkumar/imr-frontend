@@ -25,7 +25,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 const LeadDetailsDialog = ({ lead, open, onClose, onRefresh, onLocalUpdate }) => {
   const API_KEY = 'bS8WV0lnLRutJH-NbUlYrO003q30b_f8B4VGYy9g45M';
-  const DOMAIN_NAME = 'Holidays Planners';
+  const DOMAIN_NAME = 'https://www.indianmountainrovers.com';
 
   const [isEditing, setIsEditing] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
@@ -33,7 +33,7 @@ const LeadDetailsDialog = ({ lead, open, onClose, onRefresh, onLocalUpdate }) =>
 
   useEffect(() => {
     setEditedLead(lead || {});
-    setIsEditing(lead?.type !== 'lead'); 
+    setIsEditing(lead?.type !== 'lead');
   }, [lead]);
 
   const handleInputChange = (e) => {
@@ -73,10 +73,10 @@ const LeadDetailsDialog = ({ lead, open, onClose, onRefresh, onLocalUpdate }) =>
             mobile: editedLead.mobile,
           }),
         });
-        
+
         if (response.ok) {
           setIsEditing(false);
-          onRefresh(); 
+          onRefresh();
           alert('✅ Manual Lead updated successfully!');
         } else {
           alert('❌ Failed to update manual lead via API.');
@@ -94,9 +94,9 @@ const LeadDetailsDialog = ({ lead, open, onClose, onRefresh, onLocalUpdate }) =>
         assigned_to: editedLead.assigned_to,
         follow_up_date: editedLead.follow_up_date,
       };
-      
+
       onLocalUpdate(localUpdateFields);
-      setIsEditing(false); 
+      setIsEditing(false);
       alert('✅ Status and management fields updated locally.');
     }
   };
@@ -112,31 +112,31 @@ const LeadDetailsDialog = ({ lead, open, onClose, onRefresh, onLocalUpdate }) =>
         name: lead.name || '-',
         email: lead.email || 'N/A@example.com',
         mobile: lead.mobile || '0000000000',
-        
+
         status: editedLead.status || 'new',
         priority: editedLead.priority || 'medium',
         assigned_to: editedLead.assigned_to || 'Unassigned',
-        
+
         // FIX 1: Set destination_type to a safe integer ID (0)
-        destination_type: 0, 
+        destination_type: 0,
         trip_type: lead.trip_type || 'General Trip',
 
         // FIX 2 & 3: Add missing required fields with placeholders
         pickup: lead.additional_info?.departure_city || 'N/A', // Try to use departure city if available
-        drop: 'N/A', 
+        drop: 'N/A',
 
         // CRITICAL: Include adults/children and ensure they are strings
-        adults: (lead.additional_info?.adults || 1).toString(), 
-        children: (lead.additional_info?.children || 0).toString(), 
+        adults: (lead.additional_info?.adults || 1).toString(),
+        children: (lead.additional_info?.children || 0).toString(),
 
         // FIX 4 & 5: Ensure travel dates are valid ISO strings, falling back to now if null
         // Note: For Booking Requests, item.departure_date may be useful if available.
         travel_from: (lead.additional_info?.travel_date || lead.additional_info?.departure_date || nowISO),
-        travel_to: nowISO, 
+        travel_to: nowISO,
       };
 
       const response = await fetch('https://api.yaadigo.com/secure/api/leads/', {
-        method: 'POST', 
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': API_KEY,
@@ -147,7 +147,7 @@ const LeadDetailsDialog = ({ lead, open, onClose, onRefresh, onLocalUpdate }) =>
       if (response.ok) {
         alert('✅ Lead converted successfully! The new editable lead is now in the list.');
         onClose();
-        onRefresh(); 
+        onRefresh();
       } else {
         const errorText = await response.text();
         console.error("API Conversion Error:", errorText);
@@ -176,9 +176,9 @@ const LeadDetailsDialog = ({ lead, open, onClose, onRefresh, onLocalUpdate }) =>
 
   const isManualLead = lead?.type === 'lead';
   const isReadOnlySource = !isManualLead;
-  
-  const isManagementEditable = isEditing; 
-  const isContactEditable = isEditing && isManualLead; 
+
+  const isManagementEditable = isEditing;
+  const isContactEditable = isEditing && isManualLead;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -187,9 +187,9 @@ const LeadDetailsDialog = ({ lead, open, onClose, onRefresh, onLocalUpdate }) =>
           <Typography variant="h6">Lead Details</Typography>
           <Box>
             {isReadOnlySource && (
-              <Button 
-                variant="contained" 
-                color="warning" 
+              <Button
+                variant="contained"
+                color="warning"
                 onClick={handleConvert}
                 disabled={isConverting}
                 startIcon={isConverting ? <CircularProgress size={20} color="inherit" /> : <ConvertIcon />}
@@ -198,13 +198,13 @@ const LeadDetailsDialog = ({ lead, open, onClose, onRefresh, onLocalUpdate }) =>
                 {isConverting ? 'Converting...' : 'Convert to Lead'}
               </Button>
             )}
-            
+
             {isManualLead && !isEditing && (
               <IconButton onClick={() => setIsEditing(true)} sx={{ mr: 1 }}>
                 <EditIcon />
               </IconButton>
             )}
-            
+
             <IconButton onClick={onClose}>
               <CloseIcon />
             </IconButton>
@@ -278,7 +278,7 @@ const LeadDetailsDialog = ({ lead, open, onClose, onRefresh, onLocalUpdate }) =>
                       onChange={(value) => handleDateChange('follow_up_date', value)}
                       disabled={!isManagementEditable}
                       // FIX: Replaced deprecated renderInput with component slot
-                      slotProps={{ textField: { fullWidth: true, variant: "outlined" } }} 
+                      slotProps={{ textField: { fullWidth: true, variant: "outlined" } }}
                     />
                   </LocalizationProvider>
                 </Grid>
@@ -361,24 +361,24 @@ const LeadDetailsDialog = ({ lead, open, onClose, onRefresh, onLocalUpdate }) =>
               <Paper sx={{ p: 2 }}>
                 <Typography variant="h6" gutterBottom>Additional Information</Typography>
                 <Grid container spacing={2}>
-                    {Object.entries(lead.additional_info).map(([key, value]) => {
-                        if (['domain_name'].includes(key)) return null; 
+                  {Object.entries(lead.additional_info).map(([key, value]) => {
+                    if (['domain_name'].includes(key)) return null;
 
-                        const displayValue = value instanceof Date ? value.toLocaleDateString() : value || '-';
-                        
-                        return (
-                            <Grid item={true} xs={12} sm={6} md={4} key={key}>
-                                <TextField
-                                    fullWidth
-                                    label={key.replace(/_/g, ' ').toUpperCase()}
-                                    value={displayValue}
-                                    disabled
-                                    variant="outlined"
-                                    size="small"
-                                />
-                            </Grid>
-                        );
-                    })}
+                    const displayValue = value instanceof Date ? value.toLocaleDateString() : value || '-';
+
+                    return (
+                      <Grid item={true} xs={12} sm={6} md={4} key={key}>
+                        <TextField
+                          fullWidth
+                          label={key.replace(/_/g, ' ').toUpperCase()}
+                          value={displayValue}
+                          disabled
+                          variant="outlined"
+                          size="small"
+                        />
+                      </Grid>
+                    );
+                  })}
                 </Grid>
               </Paper>
             </Grid>

@@ -36,7 +36,7 @@ export default function LandingPageRenderer() {
         }
 
         const detailResponse = await fetch(`${API_BASE_URL}/landing-pages/${pageSummary.id}`, {
-            headers: { 'x-api-key': API_KEY }
+          headers: { 'x-api-key': API_KEY }
         });
 
         if (!detailResponse.ok) throw new Error('Failed to load page details');
@@ -90,17 +90,17 @@ export default function LandingPageRenderer() {
   const renderTemplate = () => {
     // Ensure this matches the string saved in your database (e.g., 'template-one')
     const template = pageData.template || 'template-three';
-    
+
     switch (template) {
       case 'template-one': // 2. MAP MINIMAL TEMPLATE
         return <MinimalTemplate pageData={pageData} />;
-      
+
       case 'template-two': // Classic (if you have one, otherwise fallback)
-        return <ModernTemplate pageData={pageData} />; 
-      
+        return <ModernTemplate pageData={pageData} />;
+
       case 'template-three': // Modern
         return <ModernTemplate pageData={pageData} />;
-      
+
       default:
         return <ModernTemplate pageData={pageData} />;
     }

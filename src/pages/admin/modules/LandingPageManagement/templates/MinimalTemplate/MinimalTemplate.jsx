@@ -31,7 +31,12 @@ import {
   ArrowRight,
   Pause,
   Play,
+
   MapPin,
+  Heart,
+  Leaf,
+  Briefcase,
+  Eye,
 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 
@@ -44,7 +49,7 @@ import FloatingCTA from "../ModernTemplate/components/FloatingCTA";
 import PromoMediaSection from "../ModernTemplate/components/PromoMediaSection";
 
 // Social Media Icons
-import { Facebook, Instagram, Twitter } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Twitter } from "lucide-react";
 
 // =============================================================================
 // CONSTANTS
@@ -53,10 +58,18 @@ import { Facebook, Instagram, Twitter } from "lucide-react";
 const API_BASE_URL = "https://api.yaadigo.com/secure/api";
 const API_KEY = "bS8WV0lnLRutJH-NbUlYrO003q30b_f8B4VGYy9g45M";
 const DEFAULT_DOMAIN = "https://www.indianmountainrovers.com";
-const CONTACT_NUMBER = "+91-9816259997";
-const CONTACT_DISPLAY = "+91-98162 59997";
+const CONTACT_NUMBER = "+91-8278829941";
+const CONTACT_DISPLAY = "+91 82788 29941";
 const DEFAULT_HERO_IMAGE =
   "https://images.unsplash.com/photo-1626621341517-b13d52481e28?q=80&w=2000";
+
+// Brand Colors
+const BRAND = {
+  GREEN: "#2C6B4F",
+  GOLD: "#D4AF37",
+  CREAM: "#FDFBF7",
+  TEXT: "#1A1A1A",
+};
 
 const TRAVELER_AVATARS = [
   "https://randomuser.me/api/portraits/men/77.jpg",
@@ -69,31 +82,45 @@ const discountText = "50%";
 
 const DEFAULT_TRUST_BADGES = [
   {
-    id: "trust-security",
+    id: "val-honesty",
     icon: ShieldCheck,
-    title: "100% Trust & Security",
-    description: "Your data and payments are fully secured",
+    title: "Honesty",
+    description: "Honest communication & fair pricing",
   },
   {
-    id: "support-247",
-    icon: Headphones,
-    title: "24/7 Support",
-    description: "Round the clock customer assistance",
+    id: "val-transparency",
+    icon: Eye,
+    title: "Transparency",
+    description: "Clear products & processes",
   },
   {
-    id: "best-value",
+    id: "val-quality",
     icon: Award,
-    title: "Best Value Guarantee",
-    description: "Competitive prices with no hidden costs",
+    title: "Quality",
+    description: "Excellent service & top partners",
+  },
+  {
+    id: "val-personal",
+    icon: Heart,
+    title: "Personal",
+    description: "Tailored advice & friendly service",
+  },
+  {
+    id: "val-sustainable",
+    icon: Leaf,
+    title: "Sustainable",
+    description: "Responsible tourism",
+  },
+  {
+    id: "val-professional",
+    icon: Briefcase,
+    title: "Integrity & efficiency",
+    description: "Integrity & efficiency",
   },
 ];
 
 // =============================================================================
 // HELPERS
-// =============================================================================
-
-// =============================================================================
-// HELPERS - FIXED IMAGE HANDLING
 // =============================================================================
 
 const toAbsoluteUrl = (url) => {
@@ -102,7 +129,6 @@ const toAbsoluteUrl = (url) => {
 
   // Already absolute URL
   if (url.startsWith("http://") || url.startsWith("https://")) {
-    // Encode spaces and special characters in the path part only
     try {
       const urlObj = new URL(url);
       const encodedPath = urlObj.pathname.split('/').map(segment => encodeURIComponent(decodeURIComponent(segment))).join('/');
@@ -112,10 +138,9 @@ const toAbsoluteUrl = (url) => {
     }
   }
 
-  // Relative path from uploads (e.g., /uploads/xyz.jpg or uploads/xyz.jpg)
+  // Relative path from uploads
   if (url.startsWith("/uploads/") || url.startsWith("uploads/")) {
     const cleanPath = url.startsWith("/") ? url : `/${url}`;
-    // Encode each path segment
     const encodedPath = cleanPath.split('/').map(segment => encodeURIComponent(decodeURIComponent(segment))).join('/');
     return `https://api.yaadigo.com${encodedPath}`;
   }
@@ -126,7 +151,7 @@ const toAbsoluteUrl = (url) => {
     return `https://api.yaadigo.com${encodedPath}`;
   }
 
-  // Fallback: assume it's a relative upload path
+  // Fallback
   const encoded = encodeURIComponent(url);
   return `https://api.yaadigo.com/uploads/${encoded}`;
 };
@@ -138,25 +163,16 @@ const normalizeMediaArray = (arr) => {
   return arr
     .map((item) => {
       if (!item) return null;
-
-      // String URL
-      if (typeof item === "string") {
-        return toAbsoluteUrl(item);
-      }
-
-      // Object with various possible keys
+      if (typeof item === "string") return toAbsoluteUrl(item);
       if (typeof item === "object") {
         const possibleKeys = ["url", "path", "src", "image", "file", "media_url"];
         for (const key of possibleKeys) {
-          if (item[key]) {
-            return toAbsoluteUrl(item[key]);
-          }
+          if (item[key]) return toAbsoluteUrl(item[key]);
         }
       }
-
       return null;
     })
-    .filter(Boolean); // Remove nulls
+    .filter(Boolean);
 };
 
 const getTripPrice = (trip) => {
@@ -170,10 +186,7 @@ const getTripPrice = (trip) => {
 };
 
 // =============================================================================
-// HERO BACKGROUND (DYNAMIC)  ✅ FIXED
-// - slider with parallax scroll (backgroundAttachment fixed)
-// - video support (youtube + mp4)
-// - supports uploaded images/videos
+// HERO BACKGROUND (DYNAMIC)
 // =============================================================================
 
 const HeroSlider = ({ images = [], overlayOpacity = 0.4 }) => {
@@ -181,25 +194,12 @@ const HeroSlider = ({ images = [], overlayOpacity = 0.4 }) => {
   const [isPlaying, setIsPlaying] = useState(true);
   const touchStartX = useRef(0);
   const intervalRef = useRef(null);
-
   const slideImages = images?.length ? images : [DEFAULT_HERO_IMAGE];
 
-  const goToSlide = useCallback(
-    (i) => {
-      setCurrentIndex(i);
-    },
-    [setCurrentIndex]
-  );
+  const goToSlide = useCallback((i) => setCurrentIndex(i), []);
+  const goToNext = useCallback(() => setCurrentIndex((prev) => (prev + 1) % slideImages.length), [slideImages.length]);
+  const goToPrev = useCallback(() => setCurrentIndex((prev) => (prev === 0 ? slideImages.length - 1 : prev - 1)), [slideImages.length]);
 
-  const goToNext = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % slideImages.length);
-  }, [slideImages.length]);
-
-  const goToPrev = useCallback(() => {
-    setCurrentIndex((prev) => (prev === 0 ? slideImages.length - 1 : prev - 1));
-  }, [slideImages.length]);
-
-  // autoplay
   useEffect(() => {
     if (isPlaying && slideImages.length > 1) {
       intervalRef.current = setInterval(() => goToNext(), 5000);
@@ -207,10 +207,7 @@ const HeroSlider = ({ images = [], overlayOpacity = 0.4 }) => {
     return () => intervalRef.current && clearInterval(intervalRef.current);
   }, [isPlaying, slideImages.length, goToNext]);
 
-  // swipe (mobile)
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
+  const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
   const handleTouchEnd = (e) => {
     const diff = touchStartX.current - e.changedTouches[0].clientX;
     if (Math.abs(diff) > 50) diff > 0 ? goToNext() : goToPrev();
@@ -218,79 +215,29 @@ const HeroSlider = ({ images = [], overlayOpacity = 0.4 }) => {
 
   return (
     <div className="absolute inset-0 overflow-hidden" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-      {/* slides */}
       {slideImages.map((image, index) => (
-        <div
-          key={`${image}-${index}`}
-          className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
-            index === currentIndex ? "opacity-100 scale-100" : "opacity-0 scale-105"
-          }`}
-        >
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: `url(${image})`,
-              backgroundAttachment: "fixed", // ✅ Scrollable / parallax effect
-            }}
-          />
+        <div key={`${image}-${index}`} className={`absolute inset-0 transition-all duration-1000 ease-in-out ${index === currentIndex ? "opacity-100 scale-100" : "opacity-0 scale-105"}`}>
+          <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${image})`, backgroundAttachment: "fixed" }} />
         </div>
       ))}
+      <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, rgba(0,0,0,${Math.min(overlayOpacity + 0.4, 0.9)}) 0%, rgba(44,107,79,${Math.min(overlayOpacity + 0.3, 0.8)}) 50%, rgba(0,0,0,${Math.min(overlayOpacity + 0.2, 0.7)}) 100%)` }} />
 
-      {/* overlay */}
-      {/* Overlay */}
-      <div
-      className="absolute inset-0"
-      style={{
-      background: `linear-gradient(135deg, rgba(0,0,0,${Math.min(overlayOpacity + 0.4, 0.9)}) 0%, rgba(30,91,168,${Math.min(overlayOpacity + 0.3, 0.8)}) 50%, rgba(0,0,0,${Math.min(overlayOpacity + 0.2, 0.7)}) 100%)`,
-      }}
-      />
-
-      {/* arrows */}
       {slideImages.length > 1 && (
         <>
-          <button
-            onClick={goToPrev}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hover:scale-110"
-            aria-label="Previous slide"
-          >
-            <ChevronLeft size={24} />
-          </button>
-          <button
-            onClick={goToNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hover:scale-110"
-            aria-label="Next slide"
-          >
-            <ChevronRight size={24} />
-          </button>
+          <button onClick={goToPrev} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hover:scale-110" aria-label="Previous slide"><ChevronLeft size={24} /></button>
+          <button onClick={goToNext} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hover:scale-110" aria-label="Next slide"><ChevronRight size={24} /></button>
         </>
       )}
 
-      {/* indicators */}
       {slideImages.length > 1 && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
-          <button
-            onClick={() => setIsPlaying((p) => !p)}
-            className="bg-black/30 hover:bg-black/50 text-white p-2 rounded-full backdrop-blur-sm transition-all"
-            aria-label={isPlaying ? "Pause slideshow" : "Play slideshow"}
-          >
-            {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-          </button>
-
+          <button onClick={() => setIsPlaying((p) => !p)} className="bg-black/30 hover:bg-black/50 text-white p-2 rounded-full backdrop-blur-sm transition-all">{isPlaying ? <Pause size={14} /> : <Play size={14} />}</button>
           <div className="flex items-center gap-2">
             {slideImages.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`h-2.5 rounded-full transition-all duration-300 ${
-                  index === currentIndex ? "w-8 bg-white" : "w-2.5 bg-white/40 hover:bg-white/60"
-                }`}
-              />
+              <button key={index} onClick={() => goToSlide(index)} className={`h-2.5 rounded-full transition-all duration-300 ${index === currentIndex ? "w-8 bg-white" : "w-2.5 bg-white/40 hover:bg-white/60"}`} />
             ))}
           </div>
-
-          <span className="text-white/70 text-xs font-medium bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
-            {currentIndex + 1} / {slideImages.length}
-          </span>
+          <span className="text-white/70 text-xs font-medium bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">{currentIndex + 1} / {slideImages.length}</span>
         </div>
       )}
     </div>
@@ -300,138 +247,62 @@ const HeroSlider = ({ images = [], overlayOpacity = 0.4 }) => {
 const HeroVideo = ({ videos = [], overlayOpacity = 0.4 }) => {
   const videoList = videos?.length ? videos : [];
   const [currentIndex, setCurrentIndex] = useState(0);
-
   const currentVideo = videoList[currentIndex];
-  const type = getVideoType(currentVideo);
 
-  const handleVideoEnd = () => {
-    if (videoList.length > 1) setCurrentIndex((p) => (p + 1) % videoList.length);
-  };
+  const handleVideoEnd = () => { if (videoList.length > 1) setCurrentIndex((p) => (p + 1) % videoList.length); };
 
-  // fallback if no video
   if (!currentVideo) {
     return (
       <div className="absolute inset-0 overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${DEFAULT_HERO_IMAGE})`, backgroundAttachment: "fixed" }}
-        />
-        <div
-        className="absolute inset-0"
-        style={{
-        background: `linear-gradient(135deg, rgba(0,0,0,${Math.min(overlayOpacity + 0.4, 0.9)}) 0%, rgba(30,91,168,${Math.min(overlayOpacity + 0.3, 0.8)}) 50%, rgba(0,0,0,${Math.min(overlayOpacity + 0.2, 0.7)}) 100%)`,
-        }}
-        />
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${DEFAULT_HERO_IMAGE})`, backgroundAttachment: "fixed" }} />
+        <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, rgba(0,0,0,${Math.min(overlayOpacity + 0.4, 0.9)}) 0%, rgba(44,107,79,${Math.min(overlayOpacity + 0.3, 0.8)}) 50%, rgba(0,0,0,${Math.min(overlayOpacity + 0.2, 0.7)}) 100%)` }} />
       </div>
     );
   }
 
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {type === "youtube" ? (
-        <iframe
-          src={getYouTubeEmbedUrl(currentVideo)}
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-          style={{ transform: "scale(1.5)", transformOrigin: "center" }}
-          title="Hero Video"
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      ) : (
-        <video
-          src={currentVideo}
-          className="absolute inset-0 w-full h-full object-cover"
-          autoPlay
-          muted
-          loop={videoList.length === 1}
-          playsInline
-          onEnded={handleVideoEnd}
-        />
-      )}
-
-      {/* overlay */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: `linear-gradient(135deg, rgba(26,26,26,${overlayOpacity + 0.3}) 0%, rgba(30,91,168,${overlayOpacity}) 50%, rgba(0,0,0,${Math.max(
-            overlayOpacity - 0.1,
-            0.1
-          )}) 100%)`,
-        }}
-      />
+      <video src={currentVideo} className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop={videoList.length === 1} playsInline onEnded={handleVideoEnd} />
+      <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, rgba(26,26,26,${overlayOpacity + 0.3}) 0%, rgba(44,107,79,${overlayOpacity}) 50%, rgba(0,0,0,${Math.max(overlayOpacity - 0.1, 0.1)}) 100%)` }} />
     </div>
   );
 };
 
 // =============================================================================
-// FOOTER TRUST BADGES ✅ Individual Badge Cards
-// Schema support:
-// pageData.footer.trust_badges = { section_title, badges: [{title, description, icon}] }
+// FOOTER TRUST BADGES
 // =============================================================================
 
 const FooterTrustBadges = ({ pageData }) => {
   const getIconFromKey = (iconKey) => {
-    const map = {
-      ShieldCheck,
-      Headphones,
-      Award,
-      BadgeCheck,
-      CheckCircle,
-      Globe,
-      Target,
-      Wallet,
-      Star,
-      Clock,
-      Gift,
-    };
+    const map = { ShieldCheck, Headphones, Award, BadgeCheck, CheckCircle, Globe, Target, Wallet, Star, Clock, Gift };
     return map[iconKey] || ShieldCheck;
   };
 
   const trustConfig = pageData?.footer?.trust_badges;
-
   const title = trustConfig?.section_title || "Our Guarantee";
   const badges = (trustConfig?.badges || []).length
     ? trustConfig.badges.map((b, idx) => ({
-        id: b.id || `badge-${idx}`,
-        icon: typeof b.icon === "string" ? getIconFromKey(b.icon) : ShieldCheck,
-        title: b.title,
-        description: b.description,
-      }))
+      id: b.id || `badge-${idx}`,
+      icon: typeof b.icon === "string" ? getIconFromKey(b.icon) : ShieldCheck,
+      title: b.title,
+      description: b.description,
+    }))
     : DEFAULT_TRUST_BADGES;
 
   return (
     <div className="py-10">
-      <h3 className="text-sm font-bold text-[#F4C430] uppercase tracking-[0.2em] text-center mb-8">
-        {title}
-      </h3>
-
+      <h3 className="text-sm font-bold text-[#F4C430] uppercase tracking-[0.2em] text-center mb-8">{title}</h3>
       <div className="flex flex-wrap justify-center gap-4 md:gap-6">
         {badges.map((badge) => {
           const Icon = badge.icon || ShieldCheck;
           return (
-            <div
-              key={badge.id}
-              className="group flex flex-col items-center p-6 bg-[#1A1A1A]/60 rounded-2xl border border-[#F4C430]/20 hover:border-[#F4C430]/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#F4C430]/10 min-w-[160px] max-w-[220px]"
-            >
-              <div className="w-16 h-16 bg-gradient-to-br from-[#F4C430]/20 to-[#F4C430]/5 rounded-2xl flex items-center justify-center mb-4 group-hover:from-[#F4C430]/30 group-hover:to-[#F4C430]/10 transition-all duration-300 border border-[#F4C430]/30">
-                <Icon size={32} className="text-[#F4C430]" strokeWidth={1.5} />
+            <div key={badge.id} className="group flex flex-col items-center p-6 bg-white rounded-2xl border border-[#D4AF37]/20 hover:border-[#D4AF37] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#D4AF37]/10 min-w-[160px] max-w-[220px]">
+              <div className="w-16 h-16 bg-[#FDFBF7] rounded-2xl flex items-center justify-center mb-4 group-hover:bg-[#2C6B4F] transition-all duration-300 border border-[#D4AF37]/20">
+                <Icon size={32} className="text-[#D4AF37] group-hover:text-white transition-colors" strokeWidth={1.5} />
               </div>
-
-              <h4 className="text-white font-bold text-sm text-center leading-tight mb-2">
-                {badge.title}
-              </h4>
-
-              {badge.description && (
-                <p className="text-gray-400 text-[10px] text-center leading-relaxed">
-                  {badge.description}
-                </p>
-              )}
-
-              <div className="mt-3 flex items-center gap-1 text-[#F4C430]">
-                <CheckCircle size={12} className="fill-current" />
-                <span className="text-[9px] font-semibold uppercase tracking-wider">Verified</span>
-              </div>
+              <h4 className="text-[#1A1A1A] font-bold text-sm text-center leading-tight mb-2">{badge.title}</h4>
+              {badge.description && <p className="text-slate-500 text-[10px] text-center leading-relaxed">{badge.description}</p>}
+              <div className="mt-3 flex items-center gap-1 text-[#D4AF37]"><CheckCircle size={12} className="fill-current" /><span className="text-[9px] font-semibold uppercase tracking-wider">Verified</span></div>
             </div>
           );
         })}
@@ -447,7 +318,6 @@ const FooterTrustBadges = ({ pageData }) => {
 const TripCard = ({ trip, onEnquire }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const price = getTripPrice(trip);
-
   const searchText = `${trip.title} ${trip.inclusions || ""} ${trip.highlights || ""}`.toLowerCase();
   const checkActive = (keywords) => keywords.some((k) => searchText.includes(k));
 
@@ -459,161 +329,27 @@ const TripCard = ({ trip, onEnquire }) => {
     { label: "Transfers", icon: Car, active: checkActive(["transfer", "cab", "taxi", "drive", "volvo"]) },
   ];
 
-  const itineraryList = trip.itinerary || [];
-  const inclusionsList = trip.inclusions ? trip.inclusions.split(";") : [];
-  const visibleItinerary = isExpanded ? itineraryList : itineraryList.slice(0, 2);
-  const visibleInclusions = isExpanded ? inclusionsList : inclusionsList.slice(0, 2);
-
   return (
-    <div className="bg-white border border-gray-200 shadow-sm hover:shadow-xl transition-shadow duration-300 rounded-lg overflow-hidden flex flex-col h-full relative group">
-      <div className="relative h-56 overflow-hidden">
-        <img
-          src={trip.hero_image || trip.image || DEFAULT_HERO_IMAGE}
-          alt={trip.title}
-          loading="lazy"
-          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-        />
-        <div className="absolute inset-0 bg-[#1E5BA8]/20 group-hover:bg-[#1E5BA8]/30 transition-colors" />
-
-        {/* {price > 0 && (
-          <div className="absolute top-3 left-3 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-black animate-pulse shadow-lg">
-            SAVE {Math.round(((price * 1.4 - price) / (price * 1.4)) * 100)}%
-          </div>
-        )} */}
-
-        <div className="absolute bottom-[-20px] right-4 bg-white p-2 rounded-full shadow-lg border-2 border-[#F4C430] z-10 w-12 h-12 flex items-center justify-center">
-          <Star className="text-[#F4C430] w-6 h-6 fill-current" />
-        </div>
+    <div className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 rounded-none flex flex-col h-full relative group">
+      <div className="relative h-64 overflow-hidden">
+        <img src={trip.hero_image || trip.image || DEFAULT_HERO_IMAGE} alt={trip.title} loading="lazy" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 grayscale-[0.2] group-hover:grayscale-0" />
+        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+        <div className="absolute top-4 left-4 bg-[#2C6B4F] text-white text-[10px] font-bold px-3 py-1 uppercase tracking-widest shadow-sm">{trip.days} Days</div>
       </div>
-
-      <div className="p-4 pt-8 flex-1 flex flex-col">
-        <h2 className="text-xl font-bold text-[#1E5BA8] leading-tight mb-2 min-h-[56px] line-clamp-2">
-          {trip.title}
-        </h2>
-
-        <h3 className="text-sm font-semibold text-[#4A5568] mb-4 border-b border-gray-100 pb-2">
-          Duration:{" "}
-          <span className="text-[#2D5D3F] font-bold">
-            {trip.days} Days / {trip.nights} Nights
-          </span>
-        </h3>
-
-        <div className="flex justify-between items-center mb-5 px-1 bg-[#F5F7FA] py-3 rounded-lg border border-slate-100">
-          {amenities.map((item, idx) => (
-            <div key={idx} className="flex flex-col items-center gap-1">
-              <div
-                className={`p-2 rounded-full transition-all duration-300 ${
-                  item.active
-                    ? "bg-white text-[#2D5D3F] shadow-md ring-1 ring-[#2D5D3F]/20 scale-110"
-                    : "bg-transparent text-gray-300 grayscale opacity-40"
-                }`}
-              >
-                <item.icon size={16} strokeWidth={item.active ? 2.5 : 2} />
-              </div>
-              <span
-                className={`text-[9px] uppercase font-bold tracking-wide ${
-                  item.active ? "text-[#1E5BA8]" : "text-[#4A5568]"
-                }`}
-              >
-                {item.label}
-              </span>
-            </div>
+      <div className="p-6 flex-1 flex flex-col">
+        <h2 className="text-xl font-serif font-bold text-[#1A1A1A] leading-tight mb-2 min-h-[56px] line-clamp-2 group-hover:text-[#2C6B4F] transition-colors">{trip.title}</h2>
+        <div className="flex items-center gap-4 mb-4 border-b border-slate-100 pb-4">
+          {amenities.slice(0, 3).map((item, i) => (
+            <div key={i} className={`flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider ${item.active ? 'text-[#D4AF37]' : 'text-slate-300'}`}><item.icon size={12} /> {item.label}</div>
           ))}
         </div>
-
-        <div className="bg-white p-0 mb-4 flex-1">
-          <div className="mb-4">
-            <h5 className="text-xs font-black uppercase text-[#1E5BA8] mb-2 flex items-center gap-1">
-              <Calendar size={12} /> Itinerary
-            </h5>
-
-            <ul className="space-y-2.5">
-              {visibleItinerary.length > 0 ? (
-                visibleItinerary.map((day, idx) => (
-                  <li key={idx} className="text-xs leading-snug text-[#1A1A1A] font-medium">
-                    {day?.title || day}
-                  </li>
-                ))
-              ) : (
-                <li className="text-xs text-[#4A5568]">Details on request.</li>
-              )}
-            </ul>
+        <div className="mt-auto">
+          <div className="flex items-baseline justify-between mb-4">
+            <div><span className="text-[10px] text-slate-400 font-bold uppercase block mb-1">Starting From</span><div className="flex items-baseline gap-2"><span className="text-2xl font-serif font-bold text-[#2C6B4F]">{price > 0 ? `₹${price.toLocaleString()}` : "Request"}</span>{price > 0 && <span className="text-xs text-slate-400 line-through">₹{(price * 1.4).toLocaleString()}</span>}</div></div>
           </div>
-
-          <div className="mb-3">
-            <h5 className="text-xs font-black uppercase text-[#1E5BA8] mb-2 flex items-center gap-1">
-              <CheckCircle size={12} /> Inclusions
-            </h5>
-
-            <ul className="space-y-1">
-              {visibleInclusions.length > 0 ? (
-                visibleInclusions.map((inc, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs text-[#4A5568]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#2D5D3F] mt-1.5 shrink-0" />
-                    <span>{inc.trim()}</span>
-                  </li>
-                ))
-              ) : (
-                <li className="text-xs text-[#4A5568]">Inclusions on request.</li>
-              )}
-            </ul>
-          </div>
-
-          <button
-            onClick={() => setIsExpanded((v) => !v)}
-            className="w-full text-center mt-2 text-sm font-bold text-[#2D5D3F] hover:text-[#1E5BA8] flex items-center justify-center gap-1 transition-colors py-2 bg-[#F5F7FA] rounded-md"
-          >
-            {isExpanded ? "Show Less" : "Read More Details"}
-            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
-        </div>
-
-        <div className="mt-auto border-t border-dashed border-gray-300 pt-4">
-          <div className="flex items-baseline justify-between mb-3">
-            <div>
-              <div className="flex items-baseline gap-2">
-                {price > 0 && (
-                  <span className="text-sm text-gray-400 line-through">
-                    ₹{(price * 1.4).toLocaleString()}
-                  </span>
-                )}
-                <span className="text-3xl font-black text-[#1E5BA8]">
-                  {price > 0 ? `₹${price.toLocaleString()}` : "Request"}
-                </span>
-              </div>
-              <span className="text-[10px] text-[#4A5568] font-bold uppercase">Per Person</span>
-            </div>
-
-            {price > 0 && (
-            <div className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold animate-pulse">
-            SAVE UPTO {discountText}
-            </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => onEnquire(trip)}
-              className="bg-[#F4C430] hover:bg-[#e0b020] text-[#1A1A1A] text-xs font-bold px-3 py-2.5 rounded shadow-md transition-all flex items-center justify-center gap-1"
-            >
-              <Mail size={14} /> Enquire
-            </button>
-
-            <a
-              href={`https://wa.me/${CONTACT_NUMBER.replace(/[^0-9]/g, "")}?text=Hi, I'm interested in ${encodeURIComponent(
-                trip.title
-              )}`}
-              target="_blank"
-              rel="noreferrer"
-              className="bg-green-500 hover:bg-green-600 text-white text-xs font-bold px-3 py-2.5 rounded shadow-md transition-all flex items-center justify-center gap-1"
-            >
-              <MessageCircle size={14} /> WhatsApp
-            </a>
-          </div>
-
-          <div className="mt-3 flex items-center justify-center gap-2 text-[10px] text-gray-600 bg-green-50 py-1.5 rounded border border-green-100">
-            <CheckCircle size={12} className="text-green-600" />
-            <span className="font-semibold">Instant Confirmation • No Hidden Charges</span>
+          <div className="grid grid-cols-2 gap-3">
+            <button onClick={() => onEnquire(trip)} className="bg-[#2C6B4F] hover:bg-[#1B4D3E] text-white text-xs font-bold px-4 py-3 uppercase tracking-wider transition-colors">Enquire</button>
+            <button onClick={() => setIsExpanded(v => !v)} className="border border-[#2C6B4F] text-[#2C6B4F] hover:bg-[#2C6B4F] hover:text-white text-xs font-bold px-4 py-3 uppercase tracking-wider transition-all">{isExpanded ? "Close" : "Details"}</button>
           </div>
         </div>
       </div>
@@ -622,7 +358,7 @@ const TripCard = ({ trip, onEnquire }) => {
 };
 
 // =============================================================================
-// MAIN
+// MAIN COMPONENT
 // =============================================================================
 
 export default function MinimalTemplate({ pageData }) {
@@ -634,46 +370,29 @@ export default function MinimalTemplate({ pageData }) {
   const [heroSubmitting, setHeroSubmitting] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // ✅ FIXED hero config (handles any schema + uploads) - with proper fallbacks
+  // Hero config
   const heroConfig = useMemo(() => {
-  const hero = pageData?.hero || {};
-
-  console.log("=== HERO DEBUG START ===");
-  console.log("background_type:", hero.background_type);
-  console.log("background_images RAW:", hero.background_images);
-  console.log("background_videos RAW:", hero.background_videos);
-  
-  // Normalize media arrays
-  const images = normalizeMediaArray(hero.background_images);
-  const videos = normalizeMediaArray(hero.background_videos);
-
-  console.log("AFTER normalization - images:");
-  images.forEach((img, i) => console.log(`  [${i}]:`, img));
-  console.log("AFTER normalization - videos:");
-  videos.forEach((vid, i) => console.log(`  [${i}]:`, vid));
-  console.log("=== HERO DEBUG END ===");
-
-  // Use normalized images or fallback
-  const finalImages = images.length > 0 ? images : [DEFAULT_HERO_IMAGE];
-
-  return {
-    type: hero.background_type || "slider",
-    images: finalImages,
-    videos: videos,
-    overlayOpacity: hero.overlay_opacity ?? 0.4,
-    title: hero.title || pageData?.page_name || "Welcome to Your Dream Destination",
-    subtitle: hero.subtitle || "",
-    description: hero.description || "",
-    cta1: hero.cta_button_1 || { text: "Explore Destinations", link: "#packages" },
-    cta2: hero.cta_button_2 || { text: "Get Quote", link: "#contact" },
-  };
-}, [pageData]);
+    const hero = pageData?.hero || {};
+    const images = normalizeMediaArray(hero.background_images);
+    const videos = normalizeMediaArray(hero.background_videos);
+    const finalImages = images.length > 0 ? images : [DEFAULT_HERO_IMAGE];
+    return {
+      type: hero.background_type || "slider",
+      images: finalImages,
+      videos: videos,
+      overlayOpacity: hero.overlay_opacity ?? 0.4,
+      title: hero.title || pageData?.page_name || "Welcome to Your Dream Destination",
+      subtitle: hero.subtitle || "",
+      description: hero.description || "",
+      cta1: hero.cta_button_1 || { text: "Explore Destinations", link: "#packages" },
+      cta2: hero.cta_button_2 || { text: "Get Quote", link: "#contact" },
+    };
+  }, [pageData]);
 
   const showHeaderAlert = pageData?.offers?.header?.enabled;
   const showFooterAlert = pageData?.offers?.footer?.enabled;
   const alertText = pageData?.offers?.header?.text || "🔥 Special Offer: Book Now & Save Up to 50%!";
 
-  // Fetch trips
   useEffect(() => {
     const fetchTrips = async () => {
       try {
@@ -681,11 +400,8 @@ export default function MinimalTemplate({ pageData }) {
         const data = await res.json();
         const fetched = data?.data || data || [];
         setAllTrips(fetched);
-
         if (pageData?.packages?.selected_trips?.length) {
-          const selected = fetched.filter((t) =>
-            pageData.packages.selected_trips.some((st) => st.trip_id === t.id)
-          );
+          const selected = fetched.filter((t) => pageData.packages.selected_trips.some((st) => st.trip_id === t.id));
           setMainPackages(selected);
         } else {
           setMainPackages(fetched.slice(0, 6));
@@ -696,7 +412,6 @@ export default function MinimalTemplate({ pageData }) {
         setLoading(false);
       }
     };
-
     fetchTrips();
   }, [pageData]);
 
@@ -719,7 +434,6 @@ export default function MinimalTemplate({ pageData }) {
     e.preventDefault();
     if (heroSubmitting) return;
     setHeroSubmitting(true);
-
     try {
       const submissionData = {
         destination: heroFormData.destination || pageData?.page_name || "Tour",
@@ -735,51 +449,38 @@ export default function MinimalTemplate({ pageData }) {
         additional_comments: `Landing Page: ${pageData?.slug || "website"}`,
         domain_name: DEFAULT_DOMAIN,
       };
-
-      const res = await fetch(`${API_BASE_URL}/enquires`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
-        body: JSON.stringify(submissionData),
-      });
-
-      if (!res.ok) {
-        toast.error("Something went wrong. Please try again.");
-        return;
-      }
-
+      const res = await fetch(`${API_BASE_URL}/enquires`, { method: "POST", headers: { "Content-Type": "application/json", "x-api-key": API_KEY }, body: JSON.stringify(submissionData) });
+      if (!res.ok) { toast.error("Something went wrong. Please try again."); return; }
       const firstName = heroFormData.full_name?.split(" ")?.[0] || "Traveler";
       toast.success(`Thanks ${firstName}! Our team will call you within 5 minutes.`);
-
-      setHeroFormData((p) => ({
-        ...p,
-        full_name: "",
-        contact_number: "",
-        email: "",
-        destination: "",
-      }));
-    } catch (err) {
-      console.error(err);
-      toast.error("Submission failed. Check connection.");
-    } finally {
-      setHeroSubmitting(false);
-    }
+      setHeroFormData((p) => ({ ...p, full_name: "", contact_number: "", email: "", destination: "" }));
+    } catch (err) { console.error(err); toast.error("Submission failed. Check connection."); } finally { setHeroSubmitting(false); }
   };
 
-  const handleEnquire = (trip) => {
-    setSelectedTrip(trip);
-    setIsEnquiryOpen(true);
-  };
+  const handleEnquire = (trip) => { setSelectedTrip(trip); setIsEnquiryOpen(true); };
+
+
 
   // Social media links
   const socialLinks = [
-    { platform: "facebook", url: "https://www.facebook.com/people/Holidays-Planners/61569765904314/", icon: Facebook },
-    { platform: "instagram", url: "https://www.instagram.com/planners.holiday/", icon: Instagram },
-    { platform: "twitter", url: "https://x.com/Holidays_planne", icon: Twitter },
+    { platform: "facebook", url: "https://www.facebook.com/IndianMountainRovers/", icon: Facebook },
+    { platform: "instagram", url: "https://www.instagram.com/indianmountainrovers_/", icon: Instagram },
+    { platform: "linkedin", url: "https://www.linkedin.com/in/indian-mountain-rovers-4a584b328/?originalSubdomain=in", icon: Linkedin },
   ];
 
   return (
     <div className="w-full min-h-screen bg-white font-sans text-[#1A1A1A]">
+      {/* Custom Head Scripts */}
+      {pageData?.custom_scripts?.head?.enabled && pageData?.custom_scripts?.head?.content && (
+        <script type="text/javascript" dangerouslySetInnerHTML={{ __html: pageData.custom_scripts.head.content }} />
+      )}
+
       <Toaster position="top-right" />
+
+      {/* Custom Body Start Scripts */}
+      {pageData?.custom_scripts?.body_start?.enabled && pageData?.custom_scripts?.body_start?.content && (
+        <div dangerouslySetInnerHTML={{ __html: pageData.custom_scripts.body_start.content }} />
+      )}
       <PopupManager offersConfig={pageData?.offers} pageName={pageData?.page_name} pageSlug={pageData?.slug} />
       <BookingNotification pageData={pageData} />
 
@@ -788,8 +489,8 @@ export default function MinimalTemplate({ pageData }) {
         <div
           className="py-2.5 px-4 text-center sticky top-0 z-[60] shadow-md"
           style={{
-            backgroundColor: pageData?.offers?.header?.background_color || "#dc2626",
-            color: pageData?.offers?.header?.text_color || "#ffffff",
+            backgroundColor: "#2C6B4F",
+            color: "#ffffff",
           }}
         >
           <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 text-sm font-bold">
@@ -808,7 +509,7 @@ export default function MinimalTemplate({ pageData }) {
           <div className="flex justify-between items-center h-full">
             <div className="h-16 w-48 flex-shrink-0 flex items-center">
               <img
-                src={pageData?.company?.logo || "/holidaysplanners-logo.png"}
+                src={pageData?.company?.logo || "/indianmountainrovers-logo.png"}
                 alt={pageData?.company?.name || "Logo"}
                 className="h-full w-auto object-contain"
               />
@@ -816,21 +517,21 @@ export default function MinimalTemplate({ pageData }) {
 
             <div className="hidden md:flex items-center gap-6">
               <a href={`tel:${CONTACT_NUMBER}`} className="flex items-center gap-3 group">
-                <div className="w-10 h-10 rounded-full bg-[#F5F7FA] flex items-center justify-center text-[#1E5BA8] group-hover:bg-[#1E5BA8] group-hover:text-white transition-colors">
+                <div className="w-10 h-10 rounded-full bg-[#F5F7FA] flex items-center justify-center text-[#2C6B4F] group-hover:bg-[#2C6B4F] group-hover:text-white transition-colors">
                   <Phone size={18} />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-[10px] text-[#4A5568] uppercase font-bold tracking-wider leading-none mb-1">
                     Call Us
                   </span>
-                  <span className="text-sm font-black text-[#1A1A1A] group-hover:text-[#1E5BA8] leading-none">
+                  <span className="text-sm font-black text-[#1A1A1A] group-hover:text-[#2C6B4F] leading-none">
                     {CONTACT_DISPLAY}
                   </span>
                 </div>
               </a>
 
               <a
-                href={`mailto:${pageData?.company?.emails?.[0]?.value || "info@indianmountainrovers.com"}`}
+                href={`mailto:${pageData?.company?.emails?.[0]?.value || "sales@indianmountainrovers.com"}`}
                 className="flex items-center gap-3 group"
               >
                 <div className="w-10 h-10 rounded-full bg-[#F5F7FA] flex items-center justify-center text-[#2D5D3F] group-hover:bg-[#2D5D3F] group-hover:text-white transition-colors">
@@ -841,7 +542,7 @@ export default function MinimalTemplate({ pageData }) {
                     Email Us
                   </span>
                   <span className="text-sm font-black text-[#1A1A1A] group-hover:text-[#2D5D3F] leading-none">
-                    {pageData?.company?.emails?.[0]?.value || "info@indianmountainrovers.com"}
+                    {pageData?.company?.emails?.[0]?.value || "sales@indianmountainrovers.com"}
                   </span>
                 </div>
               </a>
@@ -863,7 +564,7 @@ export default function MinimalTemplate({ pageData }) {
               </button>
             </div>
 
-            <button className="md:hidden p-2 text-[#1E5BA8]" onClick={() => setIsMobileMenuOpen((v) => !v)}>
+            <button className="md:hidden p-2 text-[#2C6B4F]" onClick={() => setIsMobileMenuOpen((v) => !v)}>
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
@@ -871,7 +572,7 @@ export default function MinimalTemplate({ pageData }) {
       </header>
 
       {/* HERO */}
-      <section id="hero" className="relative overflow-hidden min-h-[85vh] md:min-h-[650px] flex items-center bg-[#1E5BA8] group">
+      <section id="hero" className="relative overflow-hidden min-h-[85vh] md:min-h-[650px] flex items-center bg-[#2C6B4F] group">
         {/* ✅ Dynamic background */}
         {heroConfig.type === "video" ? (
           <HeroVideo videos={heroConfig.videos} overlayOpacity={heroConfig.overlayOpacity} />
@@ -895,9 +596,7 @@ export default function MinimalTemplate({ pageData }) {
                       {heroConfig.subtitle}
                     </span>
                   )}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F4C430] to-yellow-200">
-                    {heroConfig.title}
-                  </span>
+                  {heroConfig.title}
                 </h1>
 
                 {heroConfig.description && (
@@ -925,12 +624,12 @@ export default function MinimalTemplate({ pageData }) {
             {/* Form */}
             <div className="w-full md:w-1/3 md:sticky md:top-24">
               <div className="bg-white rounded-xl shadow-2xl p-6 relative overflow-visible mt-6 md:mt-0">
-                <div className="absolute -top-4 -right-4 bg-[#F4C430] text-[#1A1A1A] w-16 h-16 rounded-full flex flex-col items-center justify-center shadow-lg border-4 border-[#1E5BA8] animate-pulse">
+                <div className="absolute -top-4 -right-4 bg-[#F4C430] text-[#1A1A1A] w-16 h-16 rounded-full flex flex-col items-center justify-center shadow-lg border-4 border-[#2C6B4F] animate-pulse">
                   <span className="text-xs font-bold">SAVE</span>
                   <span className="text-sm font-black leading-none">50%</span>
                 </div>
 
-                <div className="bg-[#1E5BA8] text-white text-center py-3 -mx-6 -mt-6 mb-6 rounded-t-xl">
+                <div className="bg-[#2C6B4F] text-white text-center py-3 -mx-6 -mt-6 mb-6 rounded-t-xl">
                   <h3 className="font-bold uppercase tracking-wide text-sm">Get Best Price Quote</h3>
                 </div>
 
@@ -994,7 +693,7 @@ export default function MinimalTemplate({ pageData }) {
                         />
                       ))}
                     </div>
-                    <span className="font-semibold text-[#1E5BA8]">500+ travelers booked this month</span>
+                    <span className="font-semibold text-[#2C6B4F]">500+ travelers booked this month</span>
                   </div>
                 </form>
               </div>
@@ -1018,7 +717,7 @@ export default function MinimalTemplate({ pageData }) {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
             {loading ? (
               <div className="col-span-3 text-center py-12 text-[#4A5568]">
-                <div className="w-12 h-12 border-4 border-[#1E5BA8]/30 border-t-[#1E5BA8] rounded-full animate-spin mx-auto mb-4" />
+                <div className="w-12 h-12 border-4 border-[#2C6B4F]/30 border-t-[#2C6B4F] rounded-full animate-spin mx-auto mb-4" />
                 Loading Amazing Deals...
               </div>
             ) : (
@@ -1028,161 +727,73 @@ export default function MinimalTemplate({ pageData }) {
         </div>
       </section>
 
-      {/* --- ABOUT US (AS YOU HAD) --- */}
-      <section id="about" className="py-16 bg-gradient-to-br from-white to-blue-50 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-[#1E5BA8] rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#F4C430] rounded-full blur-3xl"></div>
-        </div>
-
-        <div className="absolute top-10 right-10 opacity-5 hidden lg:block">
-          <BadgeCheck size={300} className="text-[#2D5D3F]" />
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 relative z-10">
-          <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
-            <div className="flex flex-col justify-center order-2 md:order-1">
-              <div className="inline-flex items-center gap-2 bg-[#1E5BA8]/10 text-[#1E5BA8] px-4 py-1.5 rounded-full font-bold text-xs uppercase tracking-wider mb-4 w-fit">
-                <Award size={14} /> Local Himachal Experts
-              </div>
-
-              <h2 className="text-4xl font-black text-[#1A1A1A] mb-4">
-                Why Choose <span className="text-[#1E5BA8]">Holidays Planners</span>?
-              </h2>
-
-              <p className="text-[#4A5568] leading-relaxed mb-6 text-base">
-                <span className="font-bold text-[#1E5BA8]">Based in Himachal Pradesh</span>, we're locals who know every hidden gem and secret route.
-                With over <span className="font-bold text-[#1E5BA8]">15 years of experience</span> and{" "}
-                <span className="font-bold text-[#2D5D3F]">Government Tourism approval</span>, we guarantee the best prices and authentic experiences.
-                No middlemen, just direct local expertise.
-              </p>
-
-              <ul className="space-y-3 mb-8 font-bold text-[#1A1A1A] text-base">
-                {[
-                  { icon: Target, text: 'Himachal Locals - Best Insider Knowledge' },
-                  { icon: BadgeCheck, text: 'Govt. Approved by Tourism India' },
-                  { icon: Wallet, text: 'Lowest Prices - Direct Local Rates' },
-                  { icon: Headphones, text: '24×7 Support - On-Trip Assistance' }
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 group">
-                    <div className="w-10 h-10 bg-[#F4C430] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <item.icon size={20} className="text-[#1A1A1A]" />
-                    </div>
-                    <span>{item.text}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={() => setIsEnquiryOpen(true)}
-                  className="bg-[#1E5BA8] hover:bg-[#164a8a] text-white px-8 py-4 rounded-lg shadow-lg font-bold uppercase text-sm tracking-wider transition-all flex items-center justify-center gap-2 group"
-                >
-                  Get Custom Package <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                </button>
-
-                <a
-                  href={`tel:${CONTACT_NUMBER}`}
-                  className="border-2 border-[#1E5BA8] text-[#1E5BA8] hover:bg-[#1E5BA8] hover:text-white px-8 py-4 rounded-lg font-bold uppercase text-sm tracking-wider transition-all flex items-center justify-center gap-2"
-                >
-                  <Phone size={18} /> Call Now
-                </a>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 order-1 md:order-2">
-              <div className="space-y-4">
-                <div className="relative rounded-2xl overflow-hidden shadow-xl group">
-                  <img src="https://images.travelandleisureasia.com/wp-content/uploads/sites/2/2024/03/15143552/Kalpa.jpg?w=400&h=300&fit=crop" alt="Himachal Mountains" className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-                    <span className="text-white font-bold text-sm">Breathtaking Views</span>
-                  </div>
-                </div>
-
-                <div className="relative rounded-2xl overflow-hidden shadow-xl group">
-                  <img src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&h=400&fit=crop" alt="Luxury Hotels" className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-                    <span className="text-white font-bold text-sm">Premium Hotels</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4 pt-8">
-                <div className="relative rounded-2xl overflow-hidden shadow-xl group">
-                  <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400&h=400&fit=crop" alt="Adventure Activities" className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-                    <span className="text-white font-bold text-sm">Adventure Awaits</span>
-                  </div>
-                </div>
-
-                <div className="relative rounded-2xl overflow-hidden shadow-xl group">
-                  <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&h=300&fit=crop" alt="Happy Travelers" className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-                    <span className="text-white font-bold text-sm">Happy Travelers</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+      {/* --- ABOUT US (CLEAN GRID LAYOUT) --- */}
+      <section id="about" className="py-20 bg-white relative">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <span className="text-[#D4AF37] font-bold tracking-[0.2em] text-xs uppercase mb-2 block">Our Story</span>
+            <h2 className="text-3xl md:text-5xl font-serif font-bold text-[#1A1A1A]">Why Travel With Us?</h2>
           </div>
 
-          {/* Trust Badges */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { title: "Govt. Approved", sub: "Himachal Tourism", icon: BadgeCheck, color: "#2D5D3F", bg: "from-green-50 to-emerald-50", iconBg: "bg-white" },
-              { title: "15+ Years", sub: "Industry Experience", icon: Award, color: "#F4C430", bg: "from-yellow-50 to-amber-50", iconBg: "bg-white" },
-              { title: "4.9/5 Rating", sub: "10,000+ Reviews", icon: Star, color: "#F4C430", bg: "from-yellow-50 to-orange-50", iconBg: "bg-white" },
-              { title: "24/7 Support", sub: "On-Trip Assistance", icon: Headphones, color: "#1E5BA8", bg: "from-blue-50 to-sky-50", iconBg: "bg-white" },
-            ].map((card, idx) => (
-              <div
-                key={idx}
-                className={`bg-gradient-to-br ${card.bg} p-6 rounded-2xl shadow-md border border-slate-100 flex flex-col items-center justify-center text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-xl group`}
-                style={{ minHeight: '180px' }}
-              >
-                <div className={`w-16 h-16 ${card.iconBg} rounded-full flex items-center justify-center mb-4 shadow-md group-hover:scale-110 transition-transform`}>
-                  <card.icon size={32} style={{ color: card.color }} strokeWidth={1.5} />
+              { icon: Target, title: "Local Experts", desc: "Based in Himachal, we know every hidden gem." },
+              { icon: BadgeCheck, title: "Govt. Approved", desc: "Registered with Tourism Dept. of India." },
+              { icon: Wallet, title: "Best Rates", desc: "Direct local pricing, no middlemen commissions." },
+              { icon: Headphones, title: "24/7 Support", desc: "Round-the-clock assistance during your trip." },
+            ].map((item, i) => (
+              <div key={i} className="text-center p-6 border border-slate-100 bg-[#FDFBF7] hover:shadow-lg transition-all duration-300 group">
+                <div className="w-16 h-16 mx-auto bg-white rounded-full flex items-center justify-center mb-6 shadow-sm group-hover:bg-[#2C6B4F] transition-colors">
+                  <item.icon size={28} className="text-[#2C6B4F] group-hover:text-white transition-colors" strokeWidth={1.5} />
                 </div>
-                <h4 className="font-bold text-[#1A1A1A] text-lg mb-1">{card.title}</h4>
-                <p className="text-xs text-[#4A5568] font-semibold">{card.sub}</p>
+                <h3 className="font-serif font-bold text-lg mb-3">{item.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
-      
+
+
+
 
       {/* Promo Banner */}
-      {pageData?.offers?.mid_section?.enabled && (
-        <PromoMediaSection
-          data={pageData.offers.mid_section}
-          primaryColor="#1E5BA8"
-          secondaryColor="#2D5D3F"
-        />
-      )}
+      {
+        pageData?.offers?.mid_section?.enabled && (
+          <PromoMediaSection
+            data={pageData.offers.mid_section}
+            primaryColor="#2C6B4F"
+            secondaryColor="#D4AF37"
+          />
+        )
+      }
 
       {/* Testimonials */}
-      {pageData?.testimonials?.items?.length > 0 && (
-        <section className="py-12 bg-white">
-          <div className="max-w-7xl mx-auto px-4">
-            <TestimonialCarousel testimonials={pageData.testimonials.items} />
-          </div>
-        </section>
-      )}
+      {
+        pageData?.testimonials?.items?.length > 0 && (
+          <section className="py-12 bg-white">
+            <div className="max-w-7xl mx-auto px-4">
+              <TestimonialCarousel testimonials={pageData.testimonials.items} />
+            </div>
+          </section>
+        )
+      }
 
       {/* CTA */}
-      <section className="bg-gradient-to-r from-[#1E5BA8] via-[#2D5D3F] to-[#1E5BA8] py-8">
+      <section className="bg-gradient-to-r from-[#2C6B4F] via-[#1B4D3E] to-[#2C6B4F] py-8">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left text-white">
               <h2 className="text-2xl md:text-3xl font-black mb-2">Ready for Your Adventure?</h2>
               <p className="text-lg opacity-90">
-                Book now and save up to <span className="text-[#F4C430] font-black">50%</span>
+                Book now and save up to <span className="text-[#D4AF37] font-black">50%</span>
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
               <a
                 href={`tel:${CONTACT_NUMBER}`}
-                className="bg-gradient-to-r from-[#FF6B35] to-[#FF9F00] text-white px-6 sm:px-8 py-4 rounded-full font-bold text-sm sm:text-base shadow-2xl transition-all flex items-center justify-center gap-3 animate-pulse whitespace-nowrap"
+                className="bg-gradient-to-r from-[#D4AF37] to-[#B4941F] text-white px-6 sm:px-8 py-4 rounded-full font-bold text-sm sm:text-base shadow-2xl transition-all flex items-center justify-center gap-3 animate-pulse whitespace-nowrap"
               >
                 <Phone size={20} /> Call: {CONTACT_DISPLAY}
               </a>
@@ -1190,7 +801,7 @@ export default function MinimalTemplate({ pageData }) {
                 href={`https://wa.me/${CONTACT_NUMBER.replace(/[^0-9]/g, "")}`}
                 target="_blank"
                 rel="noreferrer"
-                className="bg-green-500 hover:bg-green-600 text-white px-6 sm:px-8 py-4 rounded-full font-bold text-sm sm:text-base shadow-2xl transition-all flex items-center justify-center gap-3 whitespace-nowrap"
+                className="bg-[#2C6B4F] hover:bg-[#1B4D3E] text-white px-6 sm:px-8 py-4 rounded-full font-bold text-sm sm:text-base shadow-2xl transition-all flex items-center justify-center gap-3 whitespace-nowrap"
               >
                 <MessageCircle size={20} /> WhatsApp Us
               </a>
@@ -1200,39 +811,39 @@ export default function MinimalTemplate({ pageData }) {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-gradient-to-b from-[#0D0D0D] to-[#000000] text-white pt-12 pb-6 border-t-4 border-[#F4C430] relative overflow-hidden">
+      <footer className="bg-[#FDFBF7] text-[#1A1A1A] pt-12 pb-6 border-t-4 border-[#D4AF37] relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           {/* ✅ Individual Trust Badge Cards */}
           <FooterTrustBadges pageData={pageData} />
 
-          <div className="grid md:grid-cols-3 gap-8 items-start pt-8 border-t border-gray-800 mt-8">
+          <div className="grid md:grid-cols-3 gap-8 items-start pt-8 border-t border-gray-200 mt-8">
             <div className="flex flex-col items-center md:items-start">
-              <h4 className="font-bold text-[#F4C430] uppercase text-xs tracking-widest mb-4">Contact Us</h4>
-              <a href={`tel:${CONTACT_NUMBER}`} className="text-xl font-black text-white hover:text-[#F4C430] transition-colors tracking-wide flex items-center gap-2 mb-2">
+              <h4 className="font-bold text-[#D4AF37] uppercase text-xs tracking-widest mb-4">Contact Us</h4>
+              <a href={`tel:${CONTACT_NUMBER}`} className="text-xl font-black text-[#1A1A1A] hover:text-[#D4AF37] transition-colors tracking-wide flex items-center gap-2 mb-2">
                 <Phone size={18} /> {CONTACT_DISPLAY}
               </a>
               <a
-                href={`mailto:${pageData?.company?.emails?.[0]?.value || "info@indianmountainrovers.com"}`}
-                className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+                href={`mailto:${pageData?.company?.emails?.[0]?.value || "sales@indianmountainrovers.com"}`}
+                className="text-sm text-slate-600 hover:text-[#2C6B4F] transition-colors flex items-center gap-2"
               >
-                <Mail size={18} /> {pageData?.company?.emails?.[0]?.value || "info@indianmountainrovers.com"}
+                <Mail size={18} /> {pageData?.company?.emails?.[0]?.value || "sales@indianmountainrovers.com"}
               </a>
             </div>
 
             <div className="flex flex-col items-center">
-              <h4 className="font-bold text-[#F4C430] uppercase text-xs tracking-widest mb-4">Office</h4>
+              <h4 className="font-bold text-[#D4AF37] uppercase text-xs tracking-widest mb-4">Office</h4>
               {pageData?.company?.addresses?.[0]?.map_link ? (
                 <a
                   href={pageData.company.addresses[0].map_link}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs text-gray-400 hover:text-[#F4C430] transition-colors text-center flex items-start gap-2 group"
+                  className="text-xs text-slate-600 hover:text-[#D4AF37] transition-colors text-center flex items-start gap-2 group"
                 >
-                  <MapPin size={14} className="mt-0.5 group-hover:text-[#F4C430]" />
+                  <MapPin size={14} className="mt-0.5 group-hover:text-[#D4AF37]" />
                   <span>{pageData.company.addresses[0].street}</span>
                 </a>
               ) : (
-                <div className="text-xs text-gray-400 text-center flex items-start gap-2">
+                <div className="text-xs text-slate-600 text-center flex items-start gap-2">
                   <MapPin size={14} className="mt-0.5" />
                   <span>{pageData?.company?.addresses?.[0]?.street || "Himachal Pradesh, India"}</span>
                 </div>
@@ -1240,7 +851,7 @@ export default function MinimalTemplate({ pageData }) {
             </div>
 
             <div className="flex flex-col items-center md:items-end">
-              <h4 className="font-bold text-[#F4C430] uppercase text-xs tracking-widest mb-4">Follow Us</h4>
+              <h4 className="font-bold text-[#D4AF37] uppercase text-xs tracking-widest mb-4">Follow Us</h4>
               <div className="flex gap-3">
                 {socialLinks.map((social, idx) => {
                   const IconComponent = social.icon;
@@ -1250,7 +861,7 @@ export default function MinimalTemplate({ pageData }) {
                       href={social.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="w-10 h-10 bg-white/10 hover:bg-[#F4C430] rounded-full flex items-center justify-center transition-all group"
+                      className="w-10 h-10 bg-[#2C6B4F] hover:bg-[#D4AF37] rounded-full flex items-center justify-center transition-all group"
                       aria-label={social.platform}
                     >
                       <IconComponent size={18} className="text-white group-hover:scale-110 transition-transform" />
@@ -1261,11 +872,11 @@ export default function MinimalTemplate({ pageData }) {
             </div>
           </div>
 
-          <div className="mt-10 pt-4 border-t border-gray-900 text-center flex flex-col md:flex-row justify-between items-center gap-2">
-            <p className="text-[10px] text-gray-600 uppercase tracking-wider">
-              © Copyright {new Date().getFullYear()}, {pageData?.company?.name || "Holidays Planners"}. All Rights Reserved.
+          <div className="mt-10 pt-4 border-t border-gray-200 text-center flex flex-col md:flex-row justify-between items-center gap-2">
+            <p className="text-[10px] text-zinc-500 uppercase tracking-wider">
+              © Copyright {new Date().getFullYear()}, {pageData?.company?.name || "Indian Mountain Rovers"}. All Rights Reserved.
             </p>
-            <p className="text-[10px] text-gray-700">
+            <p className="text-[10px] text-zinc-500">
               Privacy Policy | Terms & Conditions | Cancellation Policy
             </p>
           </div>
@@ -1273,22 +884,23 @@ export default function MinimalTemplate({ pageData }) {
       </footer>
 
       {/* Footer Alert */}
-      {showFooterAlert && (
-        <div
-          className="py-3 px-4 text-center"
-          style={{
-            backgroundColor: pageData?.offers?.footer?.background_color || "#059669",
-            color: pageData?.offers?.footer?.text_color || "#ffffff",
-          }}
-        >
-          <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 text-sm font-bold">
-            <Gift size={16} className="animate-bounce" />
-            <span className="animate-pulse">{pageData?.offers?.footer?.text || alertText}</span>
+      {
+        showFooterAlert && (
+          <div
+            className="py-3 px-4 text-center"
+            style={{
+              backgroundColor: pageData?.offers?.footer?.background_color || "#059669",
+              color: pageData?.offers?.footer?.text_color || "#ffffff",
+            }}
+          >
+            <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 text-sm font-bold">
+              <Gift size={16} className="animate-bounce" />
+              <span className="animate-pulse">{pageData?.offers?.footer?.text || alertText}</span>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
-      {/* Modals */}
       <UnifiedEnquiryModal
         trip={selectedTrip}
         isOpen={isEnquiryOpen}
@@ -1306,6 +918,12 @@ export default function MinimalTemplate({ pageData }) {
         offersConfig={pageData?.offers}
         onOpenEnquiry={() => setIsEnquiryOpen(true)}
       />
-    </div>
+
+      {/* Custom Body End Scripts */}
+      {pageData?.custom_scripts?.body_end?.enabled && pageData?.custom_scripts?.body_end?.content && (
+        <div dangerouslySetInnerHTML={{ __html: pageData.custom_scripts.body_end.content }} />
+      )}
+
+    </div >
   );
 }

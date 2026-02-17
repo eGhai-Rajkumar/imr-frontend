@@ -26,33 +26,45 @@ export default function CreateActivity({
 
   // Image upload handler
   const handleImageUpload = async (e) => {
+    console.log('🟢 handleImageUpload called');
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) {
+      console.log('⚠️ No file selected');
+      return;
+    }
 
     const fileType = file.type.split("/")[1];
     const allowed = ["jpg", "jpeg", "png", "webp"];
     if (!allowed.includes(fileType)) {
+      console.log('❌ Invalid file type:', fileType);
       showAlert("Only JPG, PNG, or WEBP files are allowed", "error");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
+      console.log('❌ File too large:', file.size, 'bytes');
       showAlert("Image size should be less than 5MB", "error");
       return;
     }
 
+    console.log('📎 File to upload:', file.name, file.size, 'bytes');
     const formData = new FormData();
     formData.append("image", file);
     formData.append("storage", "local");
 
     try {
       setUploading(true);
+      console.log('📤 Uploading to: https://api.yaadigo.com/upload');
       const res = await axios.post("https://api.yaadigo.com/upload", formData);
+      console.log('📥 Upload response:', res.data);
       if (res?.data?.message === "Upload successful") {
         setActivityData((prev) => ({ ...prev, image: res.data.url }));
+        console.log('✅ Image URL set:', res.data.url);
         showAlert("Image uploaded successfully");
       }
     } catch (err) {
+      console.error('❌ Upload error:', err);
+      console.error('❌ Error response:', err.response?.data);
       showAlert("Image upload failed", "error");
     } finally {
       setUploading(false);
@@ -62,21 +74,27 @@ export default function CreateActivity({
   // Create new activity
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('🔵 handleSubmit called with data:', activityData);
 
     try {
+      console.log('📤 Sending POST request to:', API_URL);
       const res = await axios.post(
         API_URL,
         { ...activityData, tenant_id: 1 },
         { headers: { "x-api-key": API_KEY } }
       );
+      console.log('📥 Response received:', res.data);
       if (res.data.success) {
         showAlert("Activity created successfully");
         getAllActivities();
         setOpen(false);
       } else {
+        console.log('⚠️ Create failed:', res.data.message);
         showAlert(res.data.message || "Failed to create activity", "error");
       }
     } catch (err) {
+      console.error('❌ Create error:', err);
+      console.error('❌ Error response:', err.response?.data);
       showAlert("Error saving activity", "error");
     }
   };
@@ -84,21 +102,28 @@ export default function CreateActivity({
   // Update existing activity
   const handleUpdate = async (e) => {
     e.preventDefault();
+    console.log('🟡 handleUpdate called with data:', activityData);
     try {
+      const id = activityData.id || activityData._id;
+      console.log('📤 Sending PUT request to:', `${API_URL}${id}`);
       const res = await axios.put(
-        `${API_URL}${activityData.id || activityData._id}`,
+        `${API_URL}${id}`,
         { ...activityData, tenant_id: 1 },
         { headers: { "x-api-key": API_KEY } }
       );
+      console.log('📥 Response received:', res.data);
       if (res.data.success) {
         showAlert("Activity updated successfully");
         getAllActivities();
         setOpen(false);
         setIsUpdate(false);
       } else {
+        console.log('⚠️ Update failed:', res.data.message);
         showAlert(res.data.message || "Failed to update activity", "error");
       }
     } catch (err) {
+      console.error('❌ Update error:', err);
+      console.error('❌ Error response:', err.response?.data);
       showAlert("Error updating activity", "error");
     }
   };

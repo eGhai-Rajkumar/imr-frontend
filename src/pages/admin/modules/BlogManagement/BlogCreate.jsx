@@ -9,6 +9,8 @@ import axios from 'axios';
 const API_BASE_URL = 'https://api.yaadigo.com/secure/api/';
 const API_KEY = 'bS8WV0lnLRutJH-NbUlYrO003q30b_f8B4VGYy9g45M';
 const IMAGE_UPLOAD_URL = 'https://api.yaadigo.com/upload';
+const PUBLIC_DOMAIN = 'https://indianmountainrovers.com'; // ✅ Added domain constant
+const TENANT_ID = 1; // ✅ Fixed: Changed from 0 to 1
 
 const initialPostState = {
     heading: '',
@@ -25,7 +27,7 @@ const initialPostState = {
     meta_tag: '',
     meta_description: '',
     slug: '',
-    tenant_id: 0,
+    tenant_id: TENANT_ID, // ✅ Use constant instead of hardcoded 0
 };
 
 export default function BlogCreate() {
@@ -68,7 +70,7 @@ export default function BlogCreate() {
             // Check if response has nested data property or is direct array
             const categoriesData = categoriesRes.data?.data || categoriesRes.data || [];
             const tagsData = tagsRes.data?.data || tagsRes.data || [];
-            
+
             setCategories(Array.isArray(categoriesData) ? categoriesData : []);
             setTags(Array.isArray(tagsData) ? tagsData : []);
         } catch (err) {
@@ -86,7 +88,7 @@ export default function BlogCreate() {
 
             // Check if response has nested data property or is direct object
             const data = res.data?.data || res.data;
-            
+
             setPostData({
                 ...data,
                 date: data.date ? data.date.split('T')[0] : new Date().toISOString().split('T')[0],
@@ -132,9 +134,9 @@ export default function BlogCreate() {
 
             // Handle different response structures
             const imageUrl = response.data?.url || response.data?.imageUrl || response.data?.data?.url || response.data;
-            
+
             console.log('Image uploaded successfully:', imageUrl);
-            
+
             setPostData(prev => ({
                 ...prev,
                 featured_image: imageUrl
@@ -193,7 +195,7 @@ export default function BlogCreate() {
                 });
 
                 const imageUrl = response.data?.url || response.data?.imageUrl || response.data?.data?.url || response.data;
-                
+
                 // Get Quill instance and insert image
                 if (quillRef.current) {
                     const quill = quillRef.current.getEditor();
@@ -213,8 +215,8 @@ export default function BlogCreate() {
         toolbar: {
             container: [
                 [{ 'header': [1, 2, false] }],
-                ['bold', 'italic', 'underline','strike', 'blockquote'],
-                [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
+                ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
                 ['link', 'image', 'video'],
                 ['clean']
             ],
@@ -230,7 +232,7 @@ export default function BlogCreate() {
             ...prev,
             [name]: type === 'checkbox' ? checked : value
         }));
-        
+
         if (name === 'heading' && !id) {
             setPostData(prev => ({
                 ...prev,
@@ -238,17 +240,17 @@ export default function BlogCreate() {
             }));
         }
     };
-    
+
     const handleQuillChange = (content) => {
         setPostData(prev => ({ ...prev, description: content }));
     };
-    
+
     const handleTagChange = (e) => {
         const { options } = e.target;
         const selectedTags = Array.from(options)
             .filter(option => option.selected)
             .map(option => Number(option.value));
-        
+
         setPostData(prev => ({ ...prev, tag_ids: selectedTags }));
     };
 
@@ -292,7 +294,7 @@ export default function BlogCreate() {
             <h2 className="text-3xl font-semibold mb-6 text-gray-800">
                 {id ? 'Edit Blog Post' : 'Add New Blog Post'}
             </h2>
-            
+
             {error && (
                 <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
                     {error}
@@ -325,7 +327,7 @@ export default function BlogCreate() {
                                 className="w-full border border-gray-300 p-2 rounded-lg text-sm mt-2"
                             />
                         </div>
-                        
+
                         {/* Content Editor */}
                         <div className="card p-6 bg-white shadow-md rounded-lg">
                             <label className="block text-sm font-medium text-gray-700 mb-2">Content (Description)</label>
@@ -339,40 +341,40 @@ export default function BlogCreate() {
                                 modules={quillModules}
                             />
                         </div>
-                        
+
                         {/* SEO Section */}
                         <div className="card p-6 bg-white shadow-md rounded-lg mt-12">
                             <h3 className="text-xl font-semibold mb-4 border-b pb-2">SEO Settings</h3>
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Meta Title</label>
-                                    <input 
-                                        type="text" 
-                                        name="meta_title" 
-                                        value={postData.meta_title} 
-                                        onChange={handleChange} 
-                                        className="w-full border p-2 rounded" 
-                                        placeholder="SEO Title for search engines" 
+                                    <input
+                                        type="text"
+                                        name="meta_title"
+                                        value={postData.meta_title}
+                                        onChange={handleChange}
+                                        className="w-full border p-2 rounded"
+                                        placeholder="SEO Title for search engines"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Meta Tags (Keywords)</label>
-                                    <input 
-                                        type="text" 
-                                        name="meta_tag" 
-                                        value={postData.meta_tag} 
-                                        onChange={handleChange} 
-                                        className="w-full border p-2 rounded" 
-                                        placeholder="comma, separated, keywords" 
+                                    <input
+                                        type="text"
+                                        name="meta_tag"
+                                        value={postData.meta_tag}
+                                        onChange={handleChange}
+                                        className="w-full border p-2 rounded"
+                                        placeholder="comma, separated, keywords"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Meta Description</label>
-                                    <textarea 
-                                        name="meta_description" 
-                                        value={postData.meta_description} 
-                                        onChange={handleChange} 
-                                        className="w-full border p-2 rounded h-20" 
+                                    <textarea
+                                        name="meta_description"
+                                        value={postData.meta_description}
+                                        onChange={handleChange}
+                                        className="w-full border p-2 rounded h-20"
                                         placeholder="A brief summary for search results"
                                     ></textarea>
                                 </div>
@@ -407,42 +409,42 @@ export default function BlogCreate() {
                                     Featured Post
                                 </label>
                             </div>
-                            
+
                             <div className="mb-3">
                                 <label className="block text-sm font-medium text-gray-700">Date</label>
-                                <input 
-                                    type="date" 
-                                    name="date" 
-                                    value={postData.date} 
-                                    onChange={handleChange} 
-                                    className="w-full border p-2 rounded" 
+                                <input
+                                    type="date"
+                                    name="date"
+                                    value={postData.date}
+                                    onChange={handleChange}
+                                    className="w-full border p-2 rounded"
                                 />
                             </div>
                             <div className="mb-3">
                                 <label className="block text-sm font-medium text-gray-700">Author Name</label>
-                                <input 
-                                    type="text" 
-                                    name="author_name" 
-                                    value={postData.author_name} 
-                                    onChange={handleChange} 
-                                    className="w-full border p-2 rounded" 
+                                <input
+                                    type="text"
+                                    name="author_name"
+                                    value={postData.author_name}
+                                    onChange={handleChange}
+                                    className="w-full border p-2 rounded"
                                 />
                             </div>
-                            
+
                             <div className="flex justify-end space-x-3 mt-4">
-                                <button 
-                                    type="button" 
-                                    onClick={() => navigate('/admin/dashboard/blog/list')} 
+                                <button
+                                    type="button"
+                                    onClick={() => navigate('/admin/dashboard/blog/list')}
                                     className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 flex items-center"
                                 >
                                     <FontAwesomeIcon icon={faTimes} className="mr-2" /> Cancel
                                 </button>
-                                <button 
-                                    type="submit" 
-                                    disabled={loading} 
+                                <button
+                                    type="submit"
+                                    disabled={loading}
                                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center disabled:opacity-50"
                                 >
-                                    <FontAwesomeIcon icon={faSave} className="mr-2" /> 
+                                    <FontAwesomeIcon icon={faSave} className="mr-2" />
                                     {loading ? 'Saving...' : id ? 'Update Post' : 'Save Post'}
                                 </button>
                             </div>
@@ -451,14 +453,14 @@ export default function BlogCreate() {
                         {/* Featured Image */}
                         <div className="card p-6 bg-white shadow-md rounded-lg">
                             <h3 className="text-xl font-semibold mb-4 border-b pb-2">Featured Image</h3>
-                            
+
                             {/* Image Preview */}
                             {imagePreview ? (
                                 <div className="relative mb-3">
-                                    <img 
-                                        src={imagePreview} 
-                                        alt="Featured" 
-                                        className="w-full h-48 object-cover rounded" 
+                                    <img
+                                        src={imagePreview}
+                                        alt="Featured"
+                                        className="w-full h-48 object-cover rounded"
                                     />
                                     <button
                                         type="button"
@@ -474,7 +476,7 @@ export default function BlogCreate() {
                                     <p className="text-sm">No Image Selected</p>
                                 </div>
                             )}
-                            
+
                             {/* File Upload Button */}
                             <div className="mb-3">
                                 <label className="block">
@@ -500,7 +502,7 @@ export default function BlogCreate() {
                                     Accepted: JPG, PNG, GIF, WebP (Max 5MB)
                                 </p>
                             </div>
-                            
+
                             {/* Alt Tag */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Alt Tag (for SEO)</label>
@@ -514,7 +516,7 @@ export default function BlogCreate() {
                                 />
                             </div>
                         </div>
-                        
+
                         {/* Categories */}
                         <div className="card p-6 bg-white shadow-md rounded-lg">
                             <h3 className="text-xl font-semibold mb-4 border-b pb-2">Categories</h3>

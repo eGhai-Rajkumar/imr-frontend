@@ -17,7 +17,7 @@ import 'react-quill/dist/quill.snow.css';
 
 // Template Imports
 import ModernTemplate from './templates/ModernTemplate/ModernTemplate';
-import MinimalTemplate from './templates/MinimalTemplate/MinimalTemplate'; 
+import MinimalTemplate from './templates/MinimalTemplate/MinimalTemplate';
 
 // =============================================================================
 // CONFIGURATION
@@ -269,7 +269,7 @@ export default function LandingPageCreate() {
     template: 'template-three',
     is_active: true,
 
-    
+
 
     // Company Information
     company: {
@@ -312,6 +312,22 @@ export default function LandingPageCreate() {
       meta_description: '',
       meta_tags: '',
       og_image: ''
+    },
+
+    // Custom Scripts & Tracking Codes
+    custom_scripts: {
+      head: {
+        enabled: false,
+        content: ''
+      },
+      body_start: {
+        enabled: false,
+        content: ''
+      },
+      body_end: {
+        enabled: false,
+        content: ''
+      }
     },
 
     // Hero Section
@@ -494,19 +510,19 @@ export default function LandingPageCreate() {
       const response = await fetch(`${API_BASE_URL}/landing-pages/${pageId}`, {
         headers: { 'x-api-key': API_KEY }
       });
-      
+
       if (!response.ok) throw new Error('Failed to fetch landing page');
-      
+
       const data = await response.json();
       const pageData = data.data || data;
-      
+
       // Helper function to ensure arrays
       const ensureArray = (value) => {
         if (Array.isArray(value)) return value;
         if (value === null || value === undefined) return [];
         return [];
       };
-      
+
       setFormData(prev => ({
         ...prev,
         ...pageData,
@@ -542,6 +558,22 @@ export default function LandingPageCreate() {
         seo: {
           ...prev.seo,
           ...(pageData.seo || {})
+        },
+        custom_scripts: {
+          ...prev.custom_scripts,
+          ...(pageData.custom_scripts || {}),
+          head: {
+            ...prev.custom_scripts.head,
+            ...(pageData.custom_scripts?.head || {})
+          },
+          body_start: {
+            ...prev.custom_scripts.body_start,
+            ...(pageData.custom_scripts?.body_start || {})
+          },
+          body_end: {
+            ...prev.custom_scripts.body_end,
+            ...(pageData.custom_scripts?.body_end || {})
+          }
         },
         hero: {
           ...prev.hero,
@@ -1265,6 +1297,174 @@ export default function LandingPageCreate() {
                   </div>
                 </div>
 
+                {/* Custom Scripts & Tracking Codes */}
+                <h4 className="font-bold border-b pb-2 mt-8 flex items-center gap-2">
+                  <span>📊</span> Custom Scripts & Tracking Codes
+                </h4>
+                <p className="text-sm text-slate-500 mb-4">Add custom HTML, CSS, JavaScript, or tracking codes (Google Analytics, Facebook Pixel, etc.)</p>
+
+                <div className="space-y-6">
+                  {/* HEAD SCRIPTS */}
+                  <div className="border rounded-xl p-4 bg-slate-50">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="flex items-center gap-2 font-bold text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={formData.custom_scripts.head.enabled}
+                          onChange={(e) => handleDeepNestedChange('custom_scripts', 'head', 'enabled', e.target.checked)}
+                          className="w-4 h-4"
+                        />
+                        <span>Head Scripts</span>
+                        <code className="text-xs bg-slate-200 px-2 py-0.5 rounded text-slate-600">&lt;head&gt;</code>
+                      </label>
+                    </div>
+                    <small className="text-xs text-slate-500 block mb-2">Best for: Meta tags, CSS, Analytics, Google Tag Manager</small>
+                    <textarea
+                      value={formData.custom_scripts.head.content}
+                      onChange={(e) => handleDeepNestedChange('custom_scripts', 'head', 'content', e.target.value)}
+                      placeholder="<!-- Google Analytics, Meta Tags, CSS -->"
+                      className="w-full px-4 py-3 border rounded-lg font-mono text-sm bg-white"
+                      rows={6}
+                      disabled={!formData.custom_scripts.head.enabled}
+                    />
+                  </div>
+
+                  {/* BODY START SCRIPTS */}
+                  <div className="border rounded-xl p-4 bg-slate-50">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="flex items-center gap-2 font-bold text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={formData.custom_scripts.body_start.enabled}
+                          onChange={(e) => handleDeepNestedChange('custom_scripts', 'body_start', 'enabled', e.target.checked)}
+                          className="w-4 h-4"
+                        />
+                        <span>Body Start Scripts</span>
+                        <code className="text-xs bg-slate-200 px-2 py-0.5 rounded text-slate-600">After &lt;body&gt;</code>
+                      </label>
+                    </div>
+                    <small className="text-xs text-slate-500 block mb-2">Best for: GTM noscript, Above-fold content</small>
+                    <textarea
+                      value={formData.custom_scripts.body_start.content}
+                      onChange={(e) => handleDeepNestedChange('custom_scripts', 'body_start', 'content', e.target.value)}
+                      placeholder="<!-- GTM noscript, Critical JS -->"
+                      className="w-full px-4 py-3 border rounded-lg font-mono text-sm bg-white"
+                      rows={4}
+                      disabled={!formData.custom_scripts.body_start.enabled}
+                    />
+                  </div>
+
+                  {/* BODY END SCRIPTS */}
+                  <div className="border rounded-xl p-4 bg-slate-50">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="flex items-center gap-2 font-bold text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={formData.custom_scripts.body_end.enabled}
+                          onChange={(e) => handleDeepNestedChange('custom_scripts', 'body_end', 'enabled', e.target.checked)}
+                          className="w-4 h-4"
+                        />
+                        <span>Body End Scripts</span>
+                        <code className="text-xs bg-slate-200 px-2 py-0.5 rounded text-slate-600">Before &lt;/body&gt;</code>
+                      </label>
+                    </div>
+                    <small className="text-xs text-slate-500 block mb-2">Best for: Facebook Pixel, Chat widgets, Deferred JS</small>
+                    <textarea
+                      value={formData.custom_scripts.body_end.content}
+                      onChange={(e) => handleDeepNestedChange('custom_scripts', 'body_end', 'content', e.target.value)}
+                      placeholder="<!-- Facebook Pixel, Chat Widget, Analytics -->"
+                      className="w-full px-4 py-3 border rounded-lg font-mono text-sm bg-white"
+                      rows={6}
+                      disabled={!formData.custom_scripts.body_end.enabled}
+                    />
+                  </div>
+
+                  {/* Quick Templates */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <h5 className="font-bold text-sm text-blue-900 mb-3">📋 Quick Templates</h5>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const gaScript = `<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+                          gtag('js', new Date());
+  gtag('config', 'GA_MEASUREMENT_ID');
+</script>`;
+                          handleDeepNestedChange('custom_scripts', 'head', 'content', formData.custom_scripts.head.content + '\n' + gaScript);
+                          handleDeepNestedChange('custom_scripts', 'head', 'enabled', true);
+                        }}
+                        className="bg-white border border-blue-300 text-blue-700 px-3 py-2 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors"
+                      >
+                        📊 Google Analytics
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const fbPixel = `<!-- Facebook Pixel -->
+<script>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', 'YOUR_PIXEL_ID');
+  fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
+/></noscript>`;
+                          handleDeepNestedChange('custom_scripts', 'body_end', 'content', formData.custom_scripts.body_end.content + '\n' + fbPixel);
+                          handleDeepNestedChange('custom_scripts', 'body_end', 'enabled', true);
+                        }}
+                        className="bg-white border border-blue-300 text-blue-700 px-3 py-2 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors"
+                      >
+                        📘 Facebook Pixel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const gtmHead = `<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-XXXXXXX');</script>`;
+                          const gtmBody = `<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>`;
+                          handleDeepNestedChange('custom_scripts', 'head', 'content', formData.custom_scripts.head.content + '\n' + gtmHead);
+                          handleDeepNestedChange('custom_scripts', 'body_start', 'content', formData.custom_scripts.body_start.content + '\n' + gtmBody);
+                          handleDeepNestedChange('custom_scripts', 'head', 'enabled', true);
+                          handleDeepNestedChange('custom_scripts', 'body_start', 'enabled', true);
+                        }}
+                        className="bg-white border border-blue-300 text-blue-700 px-3 py-2 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors"
+                      >
+                        🏷️ Google Tag Manager
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const whatsapp = `<!-- WhatsApp Chat Widget -->
+<script src="https://apps.elfsight.com/p/platform.js" defer></script>
+<div class="elfsight-app-YOUR_APP_ID"></div>`;
+                          handleDeepNestedChange('custom_scripts', 'body_end', 'content', formData.custom_scripts.body_end.content + '\n' + whatsapp);
+                          handleDeepNestedChange('custom_scripts', 'body_end', 'enabled', true);
+                        }}
+                        className="bg-white border border-blue-300 text-blue-700 px-3 py-2 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors"
+                      >
+                        💬 WhatsApp Chat
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Publish Status */}
                 <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between">
                   <span className="font-bold text-blue-900">Publish Status</span>
@@ -1322,8 +1522,8 @@ export default function LandingPageCreate() {
               </div>
             )}
 
-        
-            
+
+
 
             {/* =========================================================== */}
             {/* STEP 3: HERO SECTION */}
@@ -1489,7 +1689,7 @@ export default function LandingPageCreate() {
               </div>
             )}
 
-           
+
 
             {/* =========================================================== */}
             {/* STEP 5: PACKAGES */}

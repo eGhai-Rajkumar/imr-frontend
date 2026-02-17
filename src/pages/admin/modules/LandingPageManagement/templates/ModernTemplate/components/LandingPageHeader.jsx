@@ -11,10 +11,10 @@ export default function LandingPageHeader({ companySettings, promoData, primaryC
 
   // Parse social media links
   const socials = companySettings?.social_media || {};
-  
+
   // WhatsApp Logic
   const contactNumber = companySettings?.contact || '';
-  const whatsAppNumber = contactNumber.replace(/[^0-9]/g, ''); 
+  const whatsAppNumber = contactNumber.replace(/[^0-9]/g, '');
   const whatsAppLink = `https://wa.me/${whatsAppNumber}`;
 
   // Navigation Links
@@ -66,51 +66,51 @@ export default function LandingPageHeader({ companySettings, promoData, primaryC
           1. TOP BAR (Promo + Socials + Contact)
       ======================================== */}
       {/* Changed px-4 to px-4 sm:px-6 lg:px-8 for better edge spacing on large screens */}
-      <div className="bg-slate-900 text-white py-4 px-4 sm:px-6 lg:px-8 relative overflow-hidden z-[1002]">
+      <div className="bg-[#1A1A1A] text-white py-4 px-4 sm:px-6 lg:px-8 relative overflow-hidden z-[1002]">
         {/* Shine Effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" />
-        
+
         {/* Container - REMOVED 'max-w-7xl mx-auto' to allow full width spreading */}
         <div className="relative z-10 w-full flex justify-between items-center h-full">
-            
-            {/* LEFT: Social Media (Desktop Only) */}
-            <div className="hidden md:flex items-center gap-4 z-20 relative">
-              {socials.facebook && <a href={socials.facebook} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-blue-500 transition-colors"><Facebook className="h-4 w-4" /></a>}
-              {socials.twitter && <a href={socials.twitter} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-sky-400 transition-colors"><Twitter className="h-4 w-4" /></a>}
-              {socials.instagram && <a href={socials.instagram} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-pink-500 transition-colors"><Instagram className="h-4 w-4" /></a>}
-              {socials.youtube && <a href={socials.youtube} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-red-500 transition-colors"><Youtube className="h-4 w-4" /></a>}
-            </div>
 
-            {/* CENTER: Promo Text (Absolute Center) */}
-            <div className="absolute inset-0 flex justify-center items-center pointer-events-none z-10">
-                {promoData?.enabled && (
-                    <div className="flex items-center gap-2 text-xs md:text-sm font-medium pointer-events-auto px-2">
-                        <Sparkles className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
-                        <span className="tracking-wide font-nav text-slate-100">{promoData.text}</span>
-                        <Sparkles className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
-                    </div>
-                )}
-            </div>
+          {/* LEFT: Social Media (Desktop Only) */}
+          <div className="hidden md:flex items-center gap-4 z-20 relative">
+            {socials.facebook && <a href={socials.facebook} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-blue-500 transition-colors"><Facebook className="h-4 w-4" /></a>}
+            {socials.twitter && <a href={socials.twitter} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-sky-400 transition-colors"><Twitter className="h-4 w-4" /></a>}
+            {socials.instagram && <a href={socials.instagram} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-pink-500 transition-colors"><Instagram className="h-4 w-4" /></a>}
+            {socials.youtube && <a href={socials.youtube} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-red-500 transition-colors"><Youtube className="h-4 w-4" /></a>}
+          </div>
 
-            {/* RIGHT: Contact Info (Desktop Only) - Pushed to the far right */}
-            <div className="hidden md:flex items-center justify-end gap-6 text-sm font-medium z-20 relative font-nav text-slate-300 ml-auto">
-              {companySettings?.contact && (
-                <a 
-                  href={whatsAppLink} 
-                  target="_blank" 
-                  rel="noreferrer" 
-                  className="flex items-center gap-2 hover:text-green-400 transition-colors cursor-pointer"
-                  title="Chat on WhatsApp"
-                >
-                  <Phone className="h-3.5 w-3.5" />
-                  <span>{companySettings.contact}</span>
-                </a>
-              )}
-              <a href="mailto:info@indianmountainrovers.com" className="flex items-center gap-2 hover:text-blue-400 transition-colors">
-                <Mail className="h-3.5 w-3.5" />
-                <span>info@indianmountainrovers.com</span>
+          {/* CENTER: Promo Text (Absolute Center) */}
+          <div className="absolute inset-0 flex justify-center items-center pointer-events-none z-10">
+            {promoData?.enabled && (
+              <div className="flex items-center gap-2 text-xs md:text-sm font-medium pointer-events-auto px-2">
+                <Sparkles className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
+                <span className="tracking-wide font-nav text-slate-100">{promoData.text}</span>
+                <Sparkles className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT: Contact Info (Desktop Only) - Pushed to the far right */}
+          <div className="hidden md:flex items-center justify-end gap-6 text-sm font-medium z-20 relative font-nav text-slate-300 ml-auto">
+            {companySettings?.contact && (
+              <a
+                href={whatsAppLink}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 hover:text-green-400 transition-colors cursor-pointer"
+                title="Chat on WhatsApp"
+              >
+                <Phone className="h-3.5 w-3.5" />
+                <span>{companySettings.contact}</span>
               </a>
-            </div>
+            )}
+            <a href="mailto:sales@indianmountainrovers.com" className="flex items-center gap-2 hover:text-blue-400 transition-colors">
+              <Mail className="h-3.5 w-3.5" />
+              <span>sales@indianmountainrovers.com</span>
+            </a>
+          </div>
 
         </div>
       </div>
@@ -118,10 +118,9 @@ export default function LandingPageHeader({ companySettings, promoData, primaryC
       {/* ========================================
           2. MAIN NAVBAR (Sticky)
       ======================================== */}
-      <motion.header 
-        className={`sticky top-0 z-[999] w-full transition-all duration-300 ${
-          isScrolled ? 'bg-white/95 backdrop-blur-md shadow-md py-2' : 'bg-white py-3'
-        }`}
+      <motion.header
+        className={`sticky top-0 z-[999] w-full transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-md py-2' : 'bg-white py-3'
+          }`}
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
       >
@@ -130,18 +129,18 @@ export default function LandingPageHeader({ companySettings, promoData, primaryC
 
             {/* LOGO (Image) */}
             <a href="#" onClick={(e) => scrollToSection(e, '#hero')} className="flex items-center gap-3 group">
-              <img 
-                src="/holidaysplanners-logo.png" 
-                alt="Holidays Planners" 
-                className="w-auto h-16" 
+              <img
+                src="/logo-indian-mountain-rovers.png"
+                alt="Holidays Planners"
+                className="w-auto h-16"
               />
             </a>
 
             {/* DESKTOP NAV - Updated Font */}
             <nav className="hidden lg:flex items-center gap-8">
               {navLinks.map((link) => (
-                <a 
-                  key={link.name} 
+                <a
+                  key={link.name}
                   href={link.href}
                   onClick={(e) => scrollToSection(e, link.href)}
                   className="text-slate-800 font-medium text-[16px] hover:text-[#FF6B35] transition-colors py-2 font-nav tracking-wide"
@@ -192,20 +191,20 @@ export default function LandingPageHeader({ companySettings, promoData, primaryC
                     {link.name}
                   </a>
                 ))}
-                
+
                 <div className="h-px bg-slate-100 my-2" />
 
                 {/* Mobile WhatsApp */}
                 {companySettings?.contact && (
-                    <a 
-                      href={whatsAppLink}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-3 p-3 rounded-xl text-green-600 font-bold hover:bg-green-50 transition-all font-nav"
-                    >
-                      <Phone className="h-5 w-5" />
-                      WhatsApp Us
-                    </a>
+                  <a
+                    href={whatsAppLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-3 p-3 rounded-xl text-green-600 font-bold hover:bg-green-50 transition-all font-nav"
+                  >
+                    <Phone className="h-5 w-5" />
+                    WhatsApp Us
+                  </a>
                 )}
 
                 <button

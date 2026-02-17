@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Plus, Eye, Edit, Trash2, Copy, MoreVertical, Search, Star, 
-  ExternalLink, BarChart, LayoutGrid, List, AlertCircle, X, 
-  CheckSquare, Square 
+import {
+  Plus, Eye, Edit, Trash2, Copy, MoreVertical, Search, Star,
+  ExternalLink, BarChart, LayoutGrid, List, AlertCircle, X,
+  CheckSquare, Square
 } from 'lucide-react';
 
 // =============================================================================
@@ -20,7 +20,7 @@ const cleanDataForDuplication = (data) => {
   if (Array.isArray(data)) return data.map(cleanDataForDuplication);
   if (data !== null && typeof data === 'object') {
     const fieldsToRemove = [
-      'id', '_id', 'uuid', 'created_at', 'updated_at', 'deleted_at', 
+      'id', '_id', 'uuid', 'created_at', 'updated_at', 'deleted_at',
       'views', 'leads', 'created_by', 'updated_by', 'page_id', 'landing_page_id'
     ];
     const cleaned = {};
@@ -165,7 +165,7 @@ export default function LandingPageList() {
   // BULK ACTIONS
   // -------------------------------------------------------------------------
   const toggleSelectPage = (pageId) => {
-    setSelectedPages(prev => 
+    setSelectedPages(prev =>
       prev.includes(pageId) ? prev.filter(id => id !== pageId) : [...prev, pageId]
     );
   };
@@ -184,7 +184,7 @@ export default function LandingPageList() {
 
     setIsLoading(true);
     try {
-      await Promise.all(selectedPages.map(id => 
+      await Promise.all(selectedPages.map(id =>
         fetch(`${API_BASE_URL}/landing-pages/${id}`, {
           method: 'DELETE',
           headers: { 'x-api-key': API_KEY }
@@ -261,7 +261,7 @@ export default function LandingPageList() {
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        
+
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
@@ -271,14 +271,14 @@ export default function LandingPageList() {
           <div className="flex flex-wrap items-center gap-3">
             {bulkDeleteMode ? (
               <>
-                <button 
-                  onClick={handleBulkDelete} 
+                <button
+                  onClick={handleBulkDelete}
                   disabled={selectedPages.length === 0 || isLoading}
                   className="flex items-center gap-2 bg-red-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700 shadow-lg disabled:opacity-50 transition-all"
                 >
                   <Trash2 size={18} /> Delete Selected ({selectedPages.length})
                 </button>
-                <button 
+                <button
                   onClick={() => { setBulkDeleteMode(false); setSelectedPages([]); }}
                   className="flex items-center gap-2 bg-slate-800 text-white px-6 py-3 rounded-xl font-bold"
                 >
@@ -287,14 +287,14 @@ export default function LandingPageList() {
               </>
             ) : (
               <>
-                <button 
+                <button
                   onClick={() => setBulkDeleteMode(true)}
                   className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-6 py-3 rounded-xl font-bold shadow-sm hover:bg-slate-50"
                 >
                   <CheckSquare size={18} /> Select Multiple
                 </button>
-                <button 
-                  onClick={handleCreate} 
+                <button
+                  onClick={handleCreate}
                   className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg transition-all"
                 >
                   <Plus size={18} /> Create New Page
@@ -363,9 +363,9 @@ export default function LandingPageList() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPages.map(page => (
               <div key={page.id} className={`group relative bg-white rounded-2xl border transition-all duration-300 ${selectedPages.includes(page.id) ? 'ring-2 ring-blue-500 border-blue-500 shadow-lg' : 'border-slate-100 shadow-sm hover:shadow-md'}`}>
-                
+
                 {bulkDeleteMode && (
-                  <button 
+                  <button
                     onClick={() => toggleSelectPage(page.id)}
                     className="absolute top-4 left-4 z-20 p-1.5 rounded-lg bg-white shadow-lg border border-slate-100"
                   >
@@ -395,28 +395,28 @@ export default function LandingPageList() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button 
+                    <button
                       onClick={() => handleEdit(page.id)}
                       className="flex-1 bg-slate-50 hover:bg-blue-600 hover:text-white text-slate-600 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2"
                     >
                       <Edit size={14} /> EDIT
                     </button>
-                    
+
                     <div className="dropdown-container relative">
-                      <button 
+                      <button
                         onClick={() => setDropdownOpen(dropdownOpen === page.id ? null : page.id)}
                         className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-100"
                       >
                         <MoreVertical size={18} />
                       </button>
-                      
+
                       {dropdownOpen === page.id && (
                         <div className="absolute bottom-full right-0 mb-2 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 overflow-hidden">
-                          <button onClick={() => handleView(page)} className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-3 text-xs font-bold text-slate-600"><ExternalLink size={14}/> Preview Live</button>
-                          <button onClick={() => handleDuplicate(page)} className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-3 text-xs font-bold text-slate-600"><Copy size={14}/> Duplicate Page</button>
-                          <button onClick={() => handleToggleStatus(page)} className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-3 text-xs font-bold text-slate-600"><Eye size={14}/> {page.is_active ? 'Set to Draft' : 'Publish Page'}</button>
+                          <button onClick={() => handleView(page)} className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-3 text-xs font-bold text-slate-600"><ExternalLink size={14} /> Preview Live</button>
+                          <button onClick={() => handleDuplicate(page)} className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-3 text-xs font-bold text-slate-600"><Copy size={14} /> Duplicate Page</button>
+                          <button onClick={() => handleToggleStatus(page)} className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-3 text-xs font-bold text-slate-600"><Eye size={14} /> {page.is_active ? 'Set to Draft' : 'Publish Page'}</button>
                           <div className="h-px bg-slate-100 my-1"></div>
-                          <button onClick={() => handleDelete(page.id)} className="w-full text-left px-4 py-2.5 hover:bg-red-50 flex items-center gap-3 text-xs font-black text-red-600"><Trash2 size={14}/> DELETE</button>
+                          <button onClick={() => handleDelete(page.id)} className="w-full text-left px-4 py-2.5 hover:bg-red-50 flex items-center gap-3 text-xs font-black text-red-600"><Trash2 size={14} /> DELETE</button>
                         </div>
                       )}
                     </div>
@@ -443,7 +443,7 @@ export default function LandingPageList() {
                     {bulkDeleteMode && (
                       <td className="p-4 text-center">
                         <button onClick={() => toggleSelectPage(page.id)} className={selectedPages.includes(page.id) ? 'text-blue-600' : 'text-slate-300'}>
-                          {selectedPages.includes(page.id) ? <CheckSquare size={20}/> : <Square size={20}/>}
+                          {selectedPages.includes(page.id) ? <CheckSquare size={20} /> : <Square size={20} />}
                         </button>
                       </td>
                     )}
@@ -458,8 +458,8 @@ export default function LandingPageList() {
                     </td>
                     <td className="p-4 text-center">
                       <div className="flex items-center justify-center gap-4 text-xs font-bold text-slate-600">
-                        <span className="flex items-center gap-1"><Eye size={14} className="text-blue-400"/> {page.views || 0}</span>
-                        <span className="flex items-center gap-1"><Star size={14} className="text-orange-400"/> {page.leads || 0}</span>
+                        <span className="flex items-center gap-1"><Eye size={14} className="text-blue-400" /> {page.views || 0}</span>
+                        <span className="flex items-center gap-1"><Star size={14} className="text-orange-400" /> {page.leads || 0}</span>
                       </div>
                     </td>
                     <td className="p-4">
@@ -469,9 +469,9 @@ export default function LandingPageList() {
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => handleEdit(page.id)} className="p-2 text-slate-400 hover:text-blue-600 rounded-lg"><Edit size={18}/></button>
-                        <button onClick={() => handleView(page)} className="p-2 text-slate-400 hover:text-blue-600 rounded-lg"><ExternalLink size={18}/></button>
-                        <button onClick={() => handleDelete(page.id)} className="p-2 text-slate-400 hover:text-red-600 rounded-lg"><Trash2 size={18}/></button>
+                        <button onClick={() => handleEdit(page.id)} className="p-2 text-slate-400 hover:text-blue-600 rounded-lg"><Edit size={18} /></button>
+                        <button onClick={() => handleView(page)} className="p-2 text-slate-400 hover:text-blue-600 rounded-lg"><ExternalLink size={18} /></button>
+                        <button onClick={() => handleDelete(page.id)} className="p-2 text-slate-400 hover:text-red-600 rounded-lg"><Trash2 size={18} /></button>
                       </div>
                     </td>
                   </tr>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Mail, Phone, MapPin, Clock, Send } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, Send, CheckCircle } from 'lucide-react';
+import PageHeader from '../../../components/layout/PageHeader';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -13,8 +14,8 @@ export default function ContactPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Form submitted:', formData);
-    // NOTE: Removed alert() as per instructions. You can replace this with a proper toast/modal notification.
-    console.log('Message sent successfully!'); 
+    // Replace with actual toast/notification logic
+    console.log('Message sent successfully!');
   };
 
   const handleChange = (e) => {
@@ -24,42 +25,32 @@ export default function ContactPage() {
     });
   };
 
-  // UPDATED CONTACT INFORMATION
   const contactInfo = [
     {
       icon: Phone,
       title: 'Phone Numbers',
-      // Combining all numbers into an array to be rendered as clickable links
       content: [
         { text: '0177-2831381 (Landline)', href: 'tel:+911772831381' },
-        { text: '+91-98162-59997 (Mobile)', href: 'tel:+919816259997' },
-        { text: '+91-94180-63381 (Mobile)', href: 'tel:+919418063381' },
+        { text: '+91 82788 29941 (Mobile)', href: 'tel:+918278829941' },
+        { text: '+91 94183 44227 (Mobile)', href: 'tel:+919418344227' },
       ],
       subtitle: 'Call us during working hours',
-      color: 'from-blue-600 to-cyan-500', 
-      delay: '0'
     },
     {
       icon: Mail,
       title: 'Email',
-      // Making the email content a clickable link
       content: [
-        { text: 'info@indianmountainrovers.com', href: 'mailto:info@indianmountainrovers.com' }
+        { text: 'sales@indianmountainrovers.com', href: 'mailto:sales@indianmountainrovers.com' }
       ],
       subtitle: "We'll respond within 24 hours",
-      color: 'from-cyan-500 to-green-500',
-      delay: '100'
     },
     {
       icon: MapPin,
       title: 'Office Address',
-      // Making the address content a clickable link to Google Maps
       content: [
-        { text: 'Kapil Niwas Bye Pass Road Chakkar', href: 'https://maps.app.goo.gl/pkCAr39eBtwqskYs7' }
+        { text: 'Indian Mountain Rovers', href: 'https://maps.app.goo.gl/pkCAr39eBtwqskYs7' }
       ],
       subtitle: 'Shimla, H.P. (171005)',
-      color: 'from-pink-500 to-orange-500',
-      delay: '200'
     },
     {
       icon: Clock,
@@ -69,75 +60,59 @@ export default function ContactPage() {
         { text: 'Saturday: 10:00 AM - 4:00 PM', href: '#' }
       ],
       subtitle: 'We are here for you',
-      color: 'from-orange-500 to-red-500',
-      delay: '300'
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white py-20">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-white rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        </div>
-        
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <h1 className="text-5xl md:text-6xl font-bold mb-4 animate-fade-in">
-            Contact Holidays Planners
-          </h1>
-          <p className="text-xl md:text-2xl opacity-90 animate-fade-in" style={{ animationDelay: '200ms' }}>
-            Your dream adventure starts with a conversation
-          </p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-surface">
+      <PageHeader
+        title="Contact Us"
+        subtitle="Your dream adventure starts with a conversation"
+        breadcrumb="Contact"
+        bgImage="https://images.pexels.com/photos/1266808/pexels-photo-1266808.jpeg?auto=compress&cs=tinysrgb&w=1920"
+      />
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+      <div className="container mx-auto px-4 py-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
+
           {/* Left Column - Contact Info */}
-          <div className="space-y-6">
-            <div className="animate-slide-in-left">
-              <h2 className="text-4xl font-bold mb-3 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                Get In Touch
+          <div className="space-y-12">
+            <div>
+              <span className="text-accent font-bold tracking-widest uppercase text-sm">Get In Touch</span>
+              <h2 className="text-4xl md:text-5xl font-serif font-bold text-primary mt-2 mb-6">
+                Let's Plan Your Next Getaway
               </h2>
-              <p className="text-gray-600 text-lg">
+              <p className="text-gray-600 text-lg leading-relaxed font-light">
                 Have a question about our tours? Want to customize your trip? Our team is ready to assist you.
+                Whether you're looking for a solo adventure or a family vacation, we're here to help.
               </p>
             </div>
 
-            <div className="space-y-4 mt-8">
+            <div className="space-y-6">
               {contactInfo.map((item, index) => (
                 <div
                   key={index}
-                  className="animate-slide-in-left group"
-                  style={{ animationDelay: `${item.delay}ms` }}
+                  className="group bg-white rounded-2xl p-6 shadow-soft hover:shadow-lg transition-all duration-300 border border-gray-100 flex items-start gap-4"
                 >
-                  <div className="bg-white border-0 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                    <div className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className={`w-14 h-14 bg-gradient-to-br ${item.color} rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                          <item.icon className="h-7 w-7 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-bold text-lg mb-1 text-gray-800">{item.title}</h3>
-                          {/* Mapped content to render clickable links */}
-                          {item.content.map((c, i) => (
-                            <a 
-                              key={i} 
-                              href={c.href} 
-                              className={`block text-gray-700 font-medium ${c.href !== '#' ? 'hover:text-indigo-600 transition-colors' : ''}`}
-                              target={item.title === 'Office Address' || item.title === 'Email' ? '_blank' : '_self'}
-                              rel={item.title === 'Office Address' ? 'noopener noreferrer' : undefined}
-                            >
-                              {c.text}
-                            </a>
-                          ))}
-                          <p className="text-sm text-gray-500 mt-1">{item.subtitle}</p>
-                        </div>
-                      </div>
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                    <item.icon className="h-6 w-6 text-primary group-hover:text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg mb-1 text-primary">{item.title}</h3>
+                    <div className="space-y-1">
+                      {item.content.map((c, i) => (
+                        <a
+                          key={i}
+                          href={c.href}
+                          className={`block text-gray-700 font-medium ${c.href !== '#' ? 'hover:text-accent transition-colors' : ''}`}
+                          target={item.title === 'Office Address' || item.title === 'Email' ? '_blank' : '_self'}
+                          rel={item.title === 'Office Address' ? 'noopener noreferrer' : undefined}
+                        >
+                          {c.text}
+                        </a>
+                      ))}
                     </div>
+                    <p className="text-sm text-gray-400 mt-2">{item.subtitle}</p>
                   </div>
                 </div>
               ))}
@@ -145,140 +120,89 @@ export default function ContactPage() {
           </div>
 
           {/* Right Column - Contact Form */}
-          <div className="animate-slide-in-right">
-            <div className="bg-white border-0 rounded-xl shadow-2xl overflow-hidden">
-              <div className="h-2 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600"></div>
-              <div className="p-8 lg:p-10">
-                <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Send Us a Message
-                </h2>
-                <p className="text-gray-600 mb-8">Fill out the form and we'll get back to you shortly</p>
-                
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  <div className="animate-fade-in" style={{ animationDelay: '100ms' }}>
-                    <label className="block text-sm font-semibold mb-2 text-gray-700">Name</label>
-                    <input 
+          <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-accent/20 rounded-bl-full -mr-16 -mt-16"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/10 rounded-tr-full -ml-16 -mb-16"></div>
+
+            <div className="relative z-10">
+              <h2 className="text-3xl font-serif font-bold text-primary mb-2">Send Message</h2>
+              <p className="text-gray-500 mb-8">We usually reply within 24 hours.</p>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700 ml-1">Name</label>
+                    <input
                       type="text"
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      placeholder="Your full name" 
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none transition-colors duration-300"
+                      placeholder="Full Name"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
                     />
                   </div>
-                  
-                  <div className="animate-fade-in" style={{ animationDelay: '150ms' }}>
-                    <label className="block text-sm font-semibold mb-2 text-gray-700">Email</label>
-                    <input 
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700 ml-1">Email</label>
+                    <input
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder="your@email.com" 
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none transition-colors duration-300"
+                      placeholder="email@address.com"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
                     />
                   </div>
-                  
-                  <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
-                    <label className="block text-sm font-semibold mb-2 text-gray-700">Phone</label>
-                    <input 
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700 ml-1">Phone</label>
+                    <input
                       type="tel"
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      placeholder="Phone number" 
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none transition-colors duration-300"
+                      placeholder="+91 98765 43210"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
                     />
                   </div>
-                  
-                  <div className="animate-fade-in" style={{ animationDelay: '250ms' }}>
-                    <label className="block text-sm font-semibold mb-2 text-gray-700">Subject</label>
-                    <input 
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700 ml-1">Subject</label>
+                    <input
                       type="text"
                       name="subject"
                       value={formData.subject}
                       onChange={handleChange}
-                      placeholder="What can we help you with?" 
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none transition-colors duration-300"
+                      placeholder="Tour Inquiry"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
                     />
                   </div>
-                  
-                  <div className="animate-fade-in" style={{ animationDelay: '300ms' }}>
-                    <label className="block text-sm font-semibold mb-2 text-gray-700">Message</label>
-                    <textarea 
-                      name="message"
-                      value={formData.message}
-                      onChange={handleChange}
-                      placeholder="Tell us more about your inquiry..." 
-                      rows={6}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none transition-colors duration-300 resize-none"
-                    />
-                  </div>
-                  
-                  <button 
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white font-semibold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 animate-fade-in flex items-center justify-center gap-2"
-                    style={{ animationDelay: '350ms' }}
-                  >
-                    <Send className="h-5 w-5" />
-                    Send Message
-                  </button>
-                </form>
-              </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700 ml-1">Message</label>
+                  <textarea
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    placeholder="Tell us about your travel plans..."
+                    rows={5}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl hover:bg-primary-dark transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  <Send className="w-5 h-5" />
+                  Send Message
+                </button>
+              </form>
             </div>
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes slide-in-left {
-          from {
-            opacity: 0;
-            transform: translateX(-30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @keyframes slide-in-right {
-          from {
-            opacity: 0;
-            transform: translateX(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        .animate-fade-in {
-          animation: fade-in 0.6s ease-out forwards;
-          opacity: 0;
-        }
-
-        .animate-slide-in-left {
-          animation: slide-in-left 0.6s ease-out forwards;
-          opacity: 0;
-        }
-
-        .animate-slide-in-right {
-          animation: slide-in-right 0.6s ease-out forwards;
-          opacity: 0;
-        }
-      `}</style>
     </div>
   );
 }

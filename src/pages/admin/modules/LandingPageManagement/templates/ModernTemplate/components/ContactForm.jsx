@@ -10,10 +10,10 @@ const API_BASE_URL = 'https://api.yaadigo.com/secure/api';
 const API_KEY = 'bS8WV0lnLRutJH-NbUlYrO003q30b_f8B4VGYy9g45M';
 const DEFAULT_DOMAIN = 'https://www.indianmountainrovers.com';
 
-export default function ContactForm({ 
-    settings, 
-    primaryColor = "#2563eb", 
-    secondaryColor = "#7c3aed", 
+export default function ContactForm({
+    settings,
+    primaryColor = "#2563eb",
+    secondaryColor = "#7c3aed",
     pageName = null,
     pageSlug = null
 }) {
@@ -29,7 +29,7 @@ export default function ContactForm({
         additional_comments: '',
         domain_name: DEFAULT_DOMAIN
     });
-    
+
     const [isFlexibleDate, setIsFlexibleDate] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
@@ -49,7 +49,7 @@ export default function ContactForm({
 
         if (isFlexibleDate) {
             finalComments = `(Flexible Travel Dates) ${finalComments}`;
-            if (!finalDate) finalDate = new Date().toISOString().split('T')[0]; 
+            if (!finalDate) finalDate = new Date().toISOString().split('T')[0];
         }
 
         const payload = {
@@ -101,7 +101,7 @@ export default function ContactForm({
 
     const contactInfo = [
         { icon: Phone, label: 'Call Us', value: settings?.contact || '+91 98765 43210', highlight: '24/7' },
-        { icon: Mail, label: 'Email', value: 'info@indianmountainrovers.com', highlight: 'Quick' },
+        { icon: Mail, label: 'Email', value: 'sales@indianmountainrovers.com', highlight: 'Quick' },
         { icon: MapPin, label: 'Office', value: 'Shimla, H.P. (171005)', highlight: 'Visit', isLink: true },
         { icon: Clock, label: 'Response', value: 'Within 2 hours', highlight: 'Fast' }
     ];
@@ -109,7 +109,7 @@ export default function ContactForm({
     return (
         <section id="contact" className="py-12 md:py-24 relative overflow-hidden bg-slate-50">
             <Toaster richColors position="top-center" />
-            
+
             {/* Background Decorations */}
             <div className="absolute inset-0 pointer-events-none opacity-10">
                 <div className="absolute top-0 left-0 w-64 h-64 blur-3xl rounded-full" style={{ backgroundColor: primaryColor }} />
@@ -118,7 +118,7 @@ export default function ContactForm({
 
             <div className="max-w-7xl mx-auto px-4 relative z-10">
                 <div className="grid lg:grid-cols-2 gap-12 items-start">
-                    
+
                     {/* Left Side: Content */}
                     <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 bg-white shadow-sm border" style={{ color: primaryColor }}>
@@ -126,7 +126,7 @@ export default function ContactForm({
                             <span className="text-xs md:text-sm font-bold">Special Discount on First Booking!</span>
                         </div>
                         <h2 className="text-3xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
-                            Ready for Your <br/>
+                            Ready for Your <br />
                             <span className="text-transparent bg-clip-text" style={{ backgroundImage: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})` }}>
                                 Dream Vacation?
                             </span>
@@ -166,7 +166,13 @@ export default function ContactForm({
                                                 <Label className="text-sm font-bold text-slate-700">Travel Date *</Label>
                                                 <Input type="date" name="travel_date" value={formData.travel_date} onChange={handleChange} disabled={isFlexibleDate} required={!isFlexibleDate} className="rounded-xl h-11" />
                                                 <div className="flex items-center gap-2 mt-1 cursor-pointer" onClick={() => setIsFlexibleDate(!isFlexibleDate)}>
-                                                    <div className={`w-4 h-4 rounded border flex items-center justify-center ${isFlexibleDate ? 'bg-orange-500 border-orange-500' : 'border-slate-300'}`}>
+                                                    <div
+                                                        className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${!isFlexibleDate && 'border-slate-300'}`}
+                                                        style={{
+                                                            backgroundColor: isFlexibleDate ? primaryColor : 'transparent',
+                                                            borderColor: isFlexibleDate ? primaryColor : undefined
+                                                        }}
+                                                    >
                                                         {isFlexibleDate && <CheckSquare className="w-3 h-3 text-white" />}
                                                     </div>
                                                     <span className="text-xs text-slate-500 font-medium">Flexible dates</span>

@@ -21,8 +21,8 @@ const CAPTCHA_ANSWER = 13;
 // --- WhatsApp Icon ---
 const WhatsAppIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 0C5.383 0 0 5.383 0 12c0 2.136.53 4.168 1.547 5.948L0 24l6.304-2.016C9.055 23.383 10.464 24 12 24c6.617 0 12-5.383 12-12S18.617 0 12 0zm0 22.08c-1.357 0-2.688-.328-3.847-.963l-.276-.163-2.856.915.963-2.856-.164-.276A10.075 10.075 0 011.92 12c0-5.531 4.529-10.08 10.08-10.08 5.551 0 10.08 4.529 10.08 10.08 0 5.551-4.529 10.08-10.08 10.08z"/>
-    <path d="M17.622 14.236c-.306-.153-1.81-.892-2.088-.993-.277-.102-.479-.153-.68.153-.204.306-.788.993-.966 1.194-.179.204-.356.229-.662.076-.307-.153-1.291-.476-2.456-1.515-.908-.837-1.52-1.87-1.697-2.177-.178-.306-.019-.471.134-.623.137-.137.306-.357.459-.535.153-.178.204-.306.306-.51.102-.204.052-.381-.025-.535-.077-.153-.68-1.638-.932-2.243-.246-.585-.497-.506-.68-.515-.176-.009-.38-.012-.583-.012-.203 0-.533.076-.812.381-.279.306-1.066 1.04-1.066 2.533 0 1.493 1.093 2.937 1.246 3.141.153.204 2.149 3.283 5.205 4.596.727.313 1.295.5 1.736.64.729.233 1.39.201 1.912.121.583-.087 1.8-.736 2.053-1.445.253-.71.253-1.318.178-1.445-.076-.127-.279-.204-.583-.357z"/>
+    <path d="M12 0C5.383 0 0 5.383 0 12c0 2.136.53 4.168 1.547 5.948L0 24l6.304-2.016C9.055 23.383 10.464 24 12 24c6.617 0 12-5.383 12-12S18.617 0 12 0zm0 22.08c-1.357 0-2.688-.328-3.847-.963l-.276-.163-2.856.915.963-2.856-.164-.276A10.075 10.075 0 011.92 12c0-5.531 4.529-10.08 10.08-10.08 5.551 0 10.08 4.529 10.08 10.08 0 5.551-4.529 10.08-10.08 10.08z" />
+    <path d="M17.622 14.236c-.306-.153-1.81-.892-2.088-.993-.277-.102-.479-.153-.68.153-.204.306-.788.993-.966 1.194-.179.204-.356.229-.662.076-.307-.153-1.291-.476-2.456-1.515-.908-.837-1.52-1.87-1.697-2.177-.178-.306-.019-.471.134-.623.137-.137.306-.357.459-.535.153-.178.204-.306.306-.51.102-.204.052-.381-.025-.535-.077-.153-.68-1.638-.932-2.243-.246-.585-.497-.506-.68-.515-.176-.009-.38-.012-.583-.012-.203 0-.533.076-.812.381-.279.306-1.066 1.04-1.066 2.533 0 1.493 1.093 2.937 1.246 3.141.153.204 2.149 3.283 5.205 4.596.727.313 1.295.5 1.736.64.729.233 1.39.201 1.912.121.583-.087 1.8-.736 2.053-1.445.253-.71.253-1.318.178-1.445-.076-.127-.279-.204-.583-.357z" />
   </svg>
 );
 
@@ -135,7 +135,7 @@ export default function LeadGeneration({ isOpen, onClose }) {
 
       setSuccessMessage('Your custom trip quote request has been sent! A specialist will contact you shortly.');
       resetForm();
-      
+
       setTimeout(() => {
         onClose();
         setSuccessMessage(null);
@@ -182,63 +182,71 @@ export default function LeadGeneration({ isOpen, onClose }) {
 
                 <div className="flex flex-col lg:flex-row h-full overflow-hidden">
                   {/* Sidebar */}
-                  <div className="hidden lg:block lg:w-2/5 bg-gradient-to-br from-slate-900 to-blue-900 p-6 text-white overflow-y-auto">
-                    <div className="flex items-center gap-3 mb-4">
+                  <div className="hidden lg:block lg:w-2/5 bg-[#1B4D3E] text-white p-6 overflow-y-auto relative">
+                    {/* Decorative pattern for luxury feel */}
+                    <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/cubes.png")' }}></div>
+
+                    <div className="flex items-center gap-3 mb-8 relative z-10">
                       <a href="/" className="flex items-center gap-3 group">
                         <motion.img
-                          src="/holidaysplanners-logo.png"
-                          alt="Holidays Planners Logo"
-                          className="h-auto w-36"
+                          src="https://www.indianmountainrovers.com/logo-indian-mountain-rovers.png"
+                          alt="Indian Mountain Rovers"
+                          className="h-auto w-40 drop-shadow-lg"
                         />
                       </a>
                     </div>
 
-                    <div className="mb-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-4xl font-bold">4.9</span>
-                        <div className="flex text-yellow-400 text-xl">★★★★★</div>
+                    <div className="mb-8 relative z-10">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-5xl font-serif font-bold text-[#D4AF37]">4.9</span>
+                        <div className="flex text-[#D4AF37] text-xl">★★★★★</div>
                       </div>
-                      <p className="text-indigo-200 text-sm">Excellent on Google</p>
-                      {/* <p className="text-indigo-300 text-xs">Based on 1,245 reviews</p> */}
+                      <p className="text-green-100 text-sm font-light tracking-wide">TRUSTED BY TRAVELERS WORLDWIDE</p>
                     </div>
 
-                    <div className="space-y-3 mb-4">
-                      <h4 className="text-lg font-semibold border-b border-indigo-400 pb-2">Why Choose Us?</h4>
+                    <div className="space-y-6 mb-8 relative z-10">
+                      <h4 className="text-xl font-serif font-bold border-b border-[#D4AF37]/30 pb-3 text-[#D4AF37]">The IMR Difference</h4>
 
-                      <div className="flex gap-3">
-                        <MapPin className="h-5 w-5 text-indigo-300 flex-shrink-0 mt-0.5" />
+                      <div className="flex gap-4 group">
+                        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#D4AF37] transition-colors duration-300">
+                          <MapPin className="h-5 w-5 text-white" />
+                        </div>
                         <div>
-                          <h5 className="font-semibold text-base">Personalized Planning</h5>
-                          <p className="text-indigo-200 text-sm">Tailored to your needs</p>
+                          <h5 className="font-bold text-base text-[#D4AF37]">Curated Journeys</h5>
+                          <p className="text-green-100 text-xs font-light">Handpicked destinations, exclusive experiences.</p>
                         </div>
                       </div>
 
-                      <div className="flex gap-3">
-                        <Users className="h-5 w-5 text-indigo-300 flex-shrink-0 mt-0.5" />
+                      <div className="flex gap-4 group">
+                        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#D4AF37] transition-colors duration-300">
+                          <Users className="h-5 w-5 text-white" />
+                        </div>
                         <div>
-                          <h5 className="font-semibold text-base">Expert Knowledge</h5>
-                          <p className="text-indigo-200 text-sm">Insider tips included</p>
+                          <h5 className="font-bold text-base text-[#D4AF37]">Expert Guides</h5>
+                          <p className="text-green-100 text-xs font-light">Locals who know every trail and tale.</p>
                         </div>
                       </div>
 
-                      <div className="flex gap-3">
-                        <Phone className="h-5 w-5 text-indigo-300 flex-shrink-0 mt-0.5" />
+                      <div className="flex gap-4 group">
+                        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#D4AF37] transition-colors duration-300">
+                          <Phone className="h-5 w-5 text-white" />
+                        </div>
                         <div>
-                          <h5 className="font-semibold text-base">24/7 Support</h5>
-                          <p className="text-indigo-200 text-sm">Always here to help</p>
+                          <h5 className="font-bold text-base text-[#D4AF37]">Concierge Support</h5>
+                          <p className="text-green-100 text-xs font-light">24/7 assistance throughout your trip.</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="border-t border-indigo-400 pt-4">
-                      <h4 className="text-sm font-semibold mb-2">Contact Us</h4>
-                      <p className="text-indigo-200 text-sm mb-1">info@indianmountainrovers.com</p>
-                      <p className="text-indigo-200 text-sm mb-3">+91 98162 59997</p>
+                    <div className="border-t border-white/10 pt-6 relative z-10">
+                      <h4 className="text-sm font-bold uppercase tracking-widest text-[#D4AF37] mb-4">Contact Our Concierge</h4>
+                      <p className="text-white text-sm mb-1 hover:text-[#D4AF37] transition-colors"><a href="mailto:sales@indianmountainrovers.com">sales@indianmountainrovers.com</a></p>
+                      <p className="text-white text-sm mb-4 hover:text-[#D4AF37] transition-colors"><a href="tel:+918278829941">+91 82788 29941</a></p>
                       <a
-                        href="https://wa.me/919816259997"
+                        href="https://wa.me/918278829941"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg flex items-center justify-center gap-2 text-sm"
+                        className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-3 rounded-lg flex items-center justify-center gap-2 text-sm font-bold shadow-lg transition-all hover:shadow-xl hover:-translate-y-0.5"
                       >
                         <WhatsAppIcon />
                         Chat on WhatsApp
@@ -289,9 +297,8 @@ export default function LeadGeneration({ isOpen, onClose }) {
                           value={formData.travelDate}
                           onChange={handleInputChange}
                           disabled={isDateDisabled}
-                          className={`w-full px-2.5 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none ${
-                            isDateDisabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'focus:ring-2 focus:ring-indigo-500'
-                          }`}
+                          className={`w-full px-2.5 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none ${isDateDisabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'focus:ring-2 focus:ring-indigo-500'
+                            }`}
                         />
                         <label className="flex items-center gap-1.5 mt-1 cursor-pointer">
                           <input
@@ -459,11 +466,10 @@ export default function LeadGeneration({ isOpen, onClose }) {
                       <button
                         onClick={handleSubmit}
                         disabled={isSubmitting}
-                        className={`w-full text-white font-semibold py-2 sm:py-2.5 rounded-lg shadow-lg transition-all text-sm flex items-center justify-center gap-2 ${
-                          isSubmitting
-                            ? 'bg-indigo-400 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 hover:shadow-xl'
-                        }`}
+                        className={`w-full text-white font-semibold py-2 sm:py-2.5 rounded-lg shadow-lg transition-all text-sm flex items-center justify-center gap-2 ${isSubmitting
+                          ? 'bg-indigo-400 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 hover:shadow-xl'
+                          }`}
                       >
                         {isSubmitting ? (
                           <>

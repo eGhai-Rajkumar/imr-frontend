@@ -6,6 +6,8 @@ import axios from "axios";
 
 const API_BASE_URL = "https://api.yaadigo.com/secure/api/";
 const API_KEY = "bS8WV0lnLRutJH-NbUlYrO003q30b_f8B4VGYy9g45M";
+const PUBLIC_DOMAIN = "https://indianmountainrovers.com"; // ✅ Added domain constant
+const TENANT_ID = 1; // ✅ Tenant ID constant
 
 export default function BlogList() {
     const navigate = useNavigate();
@@ -70,7 +72,7 @@ export default function BlogList() {
     };
 
     const handleView = (post) => {
-        window.open(`/blog?blogId=${post.id}`, "_blank");
+        window.open(`${PUBLIC_DOMAIN}/blog?blogId=${post.id}`, "_blank");
     };
 
     if (loading) return <div className="p-8 text-gray-600 text-lg">Loading blog posts...</div>;
@@ -115,10 +117,9 @@ export default function BlogList() {
 
                                 {/* Status Badge */}
                                 <td className="px-6 py-4">
-                                    <span 
-                                        className={`px-3 py-1 text-sm rounded-full font-semibold ${
-                                            post.is_published ? "bg-green-200 text-green-800" : "bg-yellow-200 text-yellow-800"
-                                        }`}>
+                                    <span
+                                        className={`px-3 py-1 text-sm rounded-full font-semibold ${post.is_published ? "bg-green-200 text-green-800" : "bg-yellow-200 text-yellow-800"
+                                            }`}>
                                         {post.is_published ? "Published" : "Draft"}
                                     </span>
                                 </td>
@@ -127,7 +128,7 @@ export default function BlogList() {
                                 <td className="px-6 py-4">
                                     <div className="flex items-center justify-center gap-5">
 
-                                        <button 
+                                        <button
                                             onClick={() => navigate(`/admin/dashboard/blog/create/${post.id}`)}
                                             className="text-indigo-600 hover:text-indigo-800 transition"
                                             title="Edit"
@@ -135,7 +136,7 @@ export default function BlogList() {
                                             <FontAwesomeIcon icon={faEdit} size="lg" />
                                         </button>
 
-                                        <button 
+                                        <button
                                             onClick={() => handleDelete(post.id)}
                                             className="text-red-600 hover:text-red-800 transition"
                                             title="Delete"
@@ -143,7 +144,7 @@ export default function BlogList() {
                                             <FontAwesomeIcon icon={faTrash} size="lg" />
                                         </button>
 
-                                        <button 
+                                        <button
                                             onClick={() => handleView(post)}
                                             className="text-gray-800 hover:text-black transition"
                                             title="View"

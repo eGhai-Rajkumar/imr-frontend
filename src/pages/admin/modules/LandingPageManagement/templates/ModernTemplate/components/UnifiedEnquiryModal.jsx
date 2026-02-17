@@ -15,14 +15,14 @@ const API_KEY = "bS8WV0lnLRutJH-NbUlYrO003q30b_f8B4VGYy9g45M";
  * Green: leaf green
  */
 const BRAND = {
-  BLUE: "#0B2F9D",
-  GOLD: "#F6C33B",
-  GREEN: "#2E7D32",
-  DARK: "#0B1220",
+  BLUE: "#2C6B4F", // Now Forest Green (Primary)
+  GOLD: "#D4AF37", // Gold Accent
+  GREEN: "#2C6B4F", // Forest Green (Success)
+  DARK: "#4A3820", // Dark Brown
   TEXT: "#1A1A1A",
-  MUTED: "#64748B",
+  MUTED: "#8B6F47", // Vintage Brown
   BORDER: "#E5E7EB",
-  BG_SOFT: "#F8FAFC",
+  BG_SOFT: "#FDFBF7", // Cream
 };
 
 const Field = ({ icon: Icon, label, className = "", ...props }) => (
@@ -154,7 +154,7 @@ export default function UnifiedEnquiryModal({ trip, isOpen, onClose, pageName })
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-[11px] font-extrabold opacity-90 uppercase tracking-widest">
-                    Holidays Planners
+                    Indian Mountain Rovers
                   </p>
                   <h2 className="text-lg font-black leading-tight mt-1">
                     Get Free Quote

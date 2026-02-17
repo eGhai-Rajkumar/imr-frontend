@@ -1,60 +1,69 @@
-import { Users, Award, Globe, Shield, MapPin, Heart, Star } from 'lucide-react';
+import { Users, Award, Globe, Shield, MapPin, Heart, Star, CheckCircle, Leaf, Briefcase } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import PageHeader from '../../../components/layout/PageHeader';
 
 // --- DATA ---
 
 const stats = [
-  // Updated Years Experience (2025 - 2015 = 10)
   { icon: Users, value: 15000, label: 'Happy Travelers', suffix: '+' },
-  { icon: Award, value: 10, label: 'Years Experience', suffix: '+' },
-  { icon: Globe, value: 250, label: 'Destinations', suffix: '+' },
-  { icon: Shield, value: 98, label: 'Satisfaction Rate', suffix: '%' },
+  { icon: Award, value: 12, label: 'Years Experience', suffix: '+' },
+  { icon: Globe, value: 50, label: 'Destinations', suffix: '+' },
+  { icon: Shield, value: 100, label: 'Satisfaction Rate', suffix: '%' },
 ];
 
-// Kept placeholder team and values as no new data was provided, but these should be updated by you later.
 const team = [
   {
     name: 'Poonam Sharma',
-    role: 'CEO & Founder (Est. 2015)',
-    image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400', // Placeholder
+    role: 'CEO & Founder',
+    image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400',
   },
   {
-    name: 'Team Member',
+    name: 'Ops Team',
     role: 'Head of Operations',
-    image: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=400', // Placeholder
+    image: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=400',
   },
   {
-    name: 'Team Member',
-    role: 'Tour Director',
-    image: 'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=400', // Placeholder
+    name: 'Tour Guides',
+    role: 'Field Experts',
+    image: 'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=400',
   },
   {
-    name: 'Team Member',
+    name: 'Support Team',
     role: 'Customer Relations',
-    image: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=400', // Placeholder
+    image: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=400',
   },
 ];
 
 const values = [
   {
     icon: Heart,
-    title: 'Personalized Service',
-    description: 'We focus on personalized services to ensure customer satisfaction, all under one roof.',
+    title: 'Honesty',
+    description: 'We prioritize honest communication and fair pricing, fostering trust with clients and partners.',
   },
   {
     icon: Shield,
-    title: 'Reliable Travel',
-    description: 'Acting as your travel companion and investigator, we ensure safe and smooth journeys.',
+    title: 'Transparency',
+    description: 'We ensure clarity in all our products, services, and processes.',
+  },
+  {
+    icon: Award,
+    title: 'Quality',
+    description: 'We focus on delivering excellent service and value by working with top people and operators.',
   },
   {
     icon: Star,
-    title: 'Expert Knowledge',
-    description: 'Backed by 10+ years of experience in client servicing and travel logistics.',
+    title: 'Personal',
+    description: 'We offer tailored advice and personal, friendly service, making each experience unique.',
   },
   {
-    icon: MapPin,
-    title: 'Local Expertise',
-    description: 'Specializing in domestic tourism across all major regions of India and territories.',
+    icon: Leaf,
+    title: 'Sustainable Tourism',
+    description: 'We promote responsible tourism, respecting local cultures, the environment, and fair economic practices.',
+  },
+  {
+    icon: Briefcase,
+    title: 'Professional',
+    description: 'We approach business with integrity, efficiency, and realibility, maintaining a grounded, respectful attitude.',
   },
 ];
 
@@ -71,7 +80,7 @@ function CountUpAnimation({ end, duration = 2000, suffix = '' }) {
       if (!startTime) startTime = timestamp;
       const progress = timestamp - startTime;
       const percentage = Math.min(progress / duration, 1);
-      
+
       setCount(Math.floor(end * percentage));
 
       if (percentage < 1) {
@@ -96,132 +105,149 @@ export default function AboutPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      {/* Hero Section */}
-      <div
-        className="h-screen relative overflow-hidden"
-        style={{
-          backgroundImage: 'url(https://images.pexels.com/photos/1008155/pexels-photo-1008155.jpeg?auto=compress&cs=tinysrgb&w=1920)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-blue-900/70 via-blue-900/50 to-cyan-900/70" />
-        
-        {/* Animated overlay elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-cyan-400/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        </div>
+    <div className="min-h-screen bg-surface">
 
-        <div className={`relative z-10 h-full flex items-center justify-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <div className="text-center text-white px-4">
-            {/* Updated Company Name */}
-            <h1 className="text-6xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white to-cyan-200">
-              About Holidays Planners
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 text-cyan-100">Your trusted travel companion since 2015</p>
-            <div className="w-24 h-1 bg-gradient-to-r from-cyan-400 to-blue-500 mx-auto rounded-full" />
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-white rounded-full mt-2 animate-pulse" />
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="About Indian Mountain Rovers"
+        subtitle="Making Memories, Not Just Itineraries"
+        breadcrumb="About Us"
+        bgImage="https://images.pexels.com/photos/1008155/pexels-photo-1008155.jpeg?auto=compress&cs=tinysrgb&w=1920"
+      />
 
       <div className="container mx-auto px-4 py-20">
-        {/* Story Section - UPDATED CONTENT */}
-        <div className={`max-w-4xl mx-auto mb-24 transition-all duration-1000 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <h2 className="text-4xl md:text-5xl font-bold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-600">
-            Our Story
-          </h2>
-          <div className="space-y-6 text-gray-700 text-lg leading-relaxed">
-            <p className="hover:text-gray-900 transition-colors duration-300">
-              Holidays Planners, founded in 2015 by CEO Miss. Poonam Sharma and a team of seasoned professionals, is an online travel portal dedicated to being your complete travel companion and investigator. Based in Shimla, Himachal Pradesh, we offer comprehensive services across India, covering key destinations like Himachal Pradesh, J&K, Leh Ladakh, Goa, Kerala, Maharashtra, Delhi, Uttarakhand, and the Andaman & Nicobar Islands region.
-            </p>
-            <p className="hover:text-gray-900 transition-colors duration-300">
-              As a leading Indian Tour and Travel company, Holidays Planners serves as a one-stop shop for all your travel needs, offering comprehensive holiday packages, hotel bookings, and related services. We specialize in creating unique, affordable holiday experiences across India, focusing on personalized service and maximizing customer satisfaction under one professional roof.
-            </p>
-            <p className="hover:text-gray-900 transition-colors duration-300">
-              Our travel department simplifies your entire journey. We are resourceful enough to handle all bookings, from domestic and international airlines to visa assistance and foreign exchange. We serve as travel consultants, taking complete responsibility for the consumer’s needs through our strong network for hotels, car rentals, and packages.
-            </p>
+
+        {/* Story Section */}
+        <div className={`grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32 transition-all duration-1000 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <div className="relative">
+            <div className="absolute top-0 left-0 w-full h-full bg-primary/5 rounded-3xl transform -rotate-3"></div>
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl">
+              <img
+                src="https://images.pexels.com/photos/2387418/pexels-photo-2387418.jpeg?auto=compress&cs=tinysrgb&w=800"
+                alt="Himalayan Trek"
+                className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-8">
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-primary">
+              Who We Are
+            </h2>
+            <div className="w-20 h-1 bg-accent rounded-full"></div>
+            <div className="space-y-6 text-gray-600 text-lg leading-relaxed font-light text-justify">
+              <p>
+                <strong className="text-primary font-bold">Indian Mountain Rovers</strong> is a full fledged tourism oriented agency, is all set to make a big difference in value added tour operations. Indian Mountain Rovers is the local ground handler for worldwide customers run by a experienced enterprising businessman supported by a team who have 12 years experience in hotel management and travel industries. The company image is based on innovation, technology, credibility, quality services, fair-business practices & respect to our relationships with customers, suppliers, & office colleagues.
+              </p>
+              <p>
+                Through an amalgamation of user friendly tools and human touch, we deliver the most responsive personalized service in the industry. Our structure puts us in a different league compared to the many poorly organized ground handlers which you may have encountered in North India. We also have a strict policy of answering all emails and queries within 24 hours for offline requests. We believe you would have an extremely positive working relationship with our reliable team.
+              </p>
+              <p className="italic text-gray-500 font-medium">
+                "Journeys can be bought but memories cannot… let this journey be an experience. We invite you to the Indian Mountain Rovers to enjoy a host of privileges."
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Stats Section - UPDATED DATA */}
-        <div className={`grid grid-cols-2 md:grid-cols-4 gap-8 mb-24 transition-all duration-1000 delay-400 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <div 
-                key={index} 
-                className="text-center group cursor-pointer transform hover:scale-110 transition-all duration-300"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:shadow-2xl group-hover:rotate-6 transition-all duration-300">
-                  <Icon className="h-12 w-12 text-white" />
-                </div>
-                <div className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-600 mb-2">
-                  <CountUpAnimation end={stat.value} suffix={stat.suffix} />
-                </div>
-                <div className="text-gray-600 font-medium">{stat.label}</div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Values Section - UPDATED VALUES */}
-        <div className="mb-24">
-          <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-600">
-            Our Core Principles
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {values.map((value, index) => {
-              const Icon = value.icon;
+        {/* Stats Section */}
+        <div className="relative py-16 mb-32 bg-primary rounded-3xl overflow-hidden shadow-2xl">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+          <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-8 px-8">
+            {stats.map((stat, index) => {
+              const Icon = stat.icon;
               return (
                 <div
                   key={index}
-                  className="group bg-white rounded-2xl p-8 shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100"
-                  style={{ animationDelay: `${index * 100}ms` }}
+                  className="text-center group"
                 >
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <Icon className="h-8 w-8 text-blue-600" />
+                  <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/20 group-hover:scale-110 transition-transform duration-300">
+                    <Icon className="h-8 w-8 text-accent" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3 text-gray-800">{value.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{value.description}</p>
+                  <div className="text-4xl md:text-5xl font-bold text-white mb-2">
+                    <CountUpAnimation end={stat.value} suffix={stat.suffix} />
+                  </div>
+                  <div className="text-white/80 font-medium tracking-wide uppercase text-sm">{stat.label}</div>
+                  <div className="text-white/80 font-medium tracking-wide uppercase text-xs mt-1">Clock-work Precision</div>
                 </div>
               );
             })}
           </div>
         </div>
 
+        {/* Values Section */}
+        <div className="mb-32">
+          <div className="text-center mb-16">
+            <span className="text-accent font-bold tracking-widest uppercase text-sm">Why Choose Us</span>
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-primary mt-2">
+              Our Values
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {values.map((value, index) => {
+              const Icon = value.icon;
+              return (
+                <div
+                  key={index}
+                  className="group bg-white rounded-2xl p-8 shadow-soft hover:shadow-glass transition-all duration-300 hover:-translate-y-2 border border-gray-100"
+                >
+                  <div className="w-16 h-16 bg-primary/5 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 group-hover:bg-primary group-hover:text-white">
+                    <Icon className="h-8 w-8 text-primary group-hover:text-white transition-colors" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3 text-gray-800">{value.title}</h3>
+                  <p className="text-gray-600 leading-relaxed text-sm">{value.description}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Registration Info */}
+        <div className="mb-24 bg-gray-50 rounded-3xl p-10 border border-gray-200">
+          <div className="text-center">
+            <h3 className="text-2xl font-serif font-bold text-primary mb-6">Registration Information</h3>
+            <div className="grid md:grid-cols-2 gap-8 text-left max-w-4xl mx-auto">
+              <div>
+                <h4 className="font-bold text-gray-800 mb-2">Registered with:</h4>
+                <p className="text-gray-600">Department of Tourism Government of Himachal Pradesh, India</p>
+                <p className="text-gray-600 font-medium mt-2">Indian Mountain Rovers No: <br /> 11-576/12-DTO-SML</p>
+              </div>
+              <div>
+                <h4 className="font-bold text-gray-800 mb-2">Registered Office:</h4>
+                <p className="text-gray-600">Manali highway Chakkar Shimla</p>
+
+                <h4 className="font-bold text-gray-800 mt-4 mb-2">Phone:</h4>
+                <p className="text-gray-600 text-lg font-bold text-accent">+91 82788 29941</p>
+                <p className="text-gray-600 text-lg font-bold text-accent">+91 94183 44227</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Team Section */}
         <div className="mb-24">
-          <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-600">
-            Meet Our Team
-          </h2>
+          <div className="text-center mb-16">
+            <span className="text-accent font-bold tracking-widest uppercase text-sm">The People</span>
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-primary mt-2">
+              Meet Our Team
+            </h2>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {team.map((member, index) => (
-              <div 
-                key={index} 
-                className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 group overflow-hidden"
+              <div
+                key={index}
+                className="bg-white rounded-2xl shadow-soft p-6 text-center hover:shadow-2xl transition-all duration-300 group hover:-translate-y-2"
               >
-                <div className="p-6 text-center">
-                  <div className="relative mb-6 inline-block">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full blur-md opacity-0 group-hover:opacity-75 transition-opacity duration-300" />
-                    <img
-                      src={member.image}
-                      alt={member.name}
-                      className="w-32 h-32 rounded-full object-cover relative z-10 border-4 border-white shadow-lg group-hover:scale-110 transition-transform duration-300"
-                    />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2 text-gray-800">{member.name}</h3>
-                  <p className="text-cyan-600 font-medium">{member.role}</p>
+                <div className="relative mb-6 inline-block">
+                  <div className="absolute inset-0 bg-accent rounded-full blur-md opacity-0 group-hover:opacity-40 transition-opacity duration-300" />
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    className="w-32 h-32 rounded-full object-cover relative z-10 border-4 border-white shadow-lg group-hover:border-accent transition-colors duration-300"
+                  />
                 </div>
+                <h3 className="text-xl font-bold mb-2 text-primary">{member.name}</h3>
+                <p className="text-secondary font-medium text-sm">{member.role}</p>
               </div>
             ))}
           </div>
@@ -229,30 +255,28 @@ export default function AboutPage() {
 
         {/* CTA Section */}
         <div className="relative overflow-hidden rounded-3xl shadow-2xl">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-600 animate-gradient" 
-              style={{ backgroundSize: '200% 200%' }} />
-          <div className="relative z-10 p-12 md:p-16 text-center text-white">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">Ready to Start Your Adventure?</h2>
-            <p className="text-xl md:text-2xl mb-8 text-cyan-50">Join thousands of satisfied travelers and explore the world with us</p>
+          <div className="absolute inset-0 bg-primary"></div>
+          <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')]"></div>
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'radial-gradient(circle at top right, #2C6E58 0%, transparent 40%)'
+            }}
+          ></div>
+
+          <div className="relative z-10 p-12 md:p-20 text-center text-white">
+            <h2 className="text-4xl md:text-6xl font-serif font-bold mb-6">Ready to Start Your Journey?</h2>
+            <p className="text-xl md:text-2xl mb-10 text-white/90 font-light max-w-3xl mx-auto">
+              We do not just make the itineraries, we actually make memories.
+            </p>
             <a href="/triplist">
-            <button className="group bg-white text-blue-600 px-10 py-4 rounded-xl font-bold text-lg hover:bg-cyan-50 transition-all duration-300 shadow-lg hover:shadow-2xl hover:scale-105 transform">
-              Browse Tours
-              <span className="inline-block ml-2 group-hover:translate-x-2 transition-transform duration-300">→</span>
-            </button></a>
+              <button className="bg-accent text-white px-12 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-primary transition-all duration-300 shadow-lg hover:shadow-glow transform hover:-translate-y-1">
+                Browse Tours
+              </button>
+            </a>
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes gradient {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        .animate-gradient {
-          animation: gradient 8s ease infinite;
-        }
-      `}</style>
     </div>
   );
 }

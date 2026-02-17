@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, X, Pencil, Trash2, Copy, Eye, CheckCircle, AlertTriangle } from 'lucide-react';
-import CreateCategory from './CreateCategory'; 
-import axios from 'axios'; 
-import "../../css/Categories/CategoryList.css"; 
+import CreateCategory from './CreateCategory';
+import axios from 'axios';
+import "../../css/Categories/CategoryList.css";
 
 // --- API Configuration ---
-const API_KEY = "bS8WV0lnLRutJH-NbUlYrO003q30b_f8B4VGYy9g45M"; 
+const API_KEY = "bS8WV0lnLRutJH-NbUlYrO003q30b_f8B4VGYy9g45M";
 const CATEGORY_API_URL = "https://api.yaadigo.com/secure/api/categories/";
-const UPLOAD_URL = "https://api.yaadigo.com/multiple"; 
-const BACKEND_DOMAIN = "https://api.yaadigo.com/uploads"; 
-const PUBLIC_DOMAIN = "https://indianmountainrovers.com"; 
+const UPLOAD_URL = "https://api.yaadigo.com/multiple";
+const BACKEND_DOMAIN = "https://api.yaadigo.com/uploads";
+const PUBLIC_DOMAIN = "https://indianmountainrovers.com";
+const TENANT_ID = 1; // ✅ Fixed: Changed from 2 to 1
 
 // --- Alert Component ---
 const Alert = ({ message, type, onClose }) => {
@@ -29,15 +30,15 @@ const Alert = ({ message, type, onClose }) => {
 };
 
 export default function CategoryList() {
-  const [categories, setCategories] = useState([]); 
+  const [categories, setCategories] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [categoryData, setCategoryData] = useState({});
   const [validation, setValidation] = useState({});
   const [isViewOnly, setIsViewOnly] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedIds, setSelectedIds] = useState([]); 
-  const [alert, setAlert] = useState(null); 
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [alert, setAlert] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
@@ -54,7 +55,7 @@ export default function CategoryList() {
   const getAllTourCategory = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${CATEGORY_API_URL}?skip=0&limit=1000&tenant_id=2`, { 
+      const response = await fetch(`${CATEGORY_API_URL}?skip=0&limit=1000&tenant_id=${TENANT_ID}`, {
         headers: { 'accept': 'application/json', 'x-api-key': API_KEY }
       });
       const result = await response.json();
@@ -78,7 +79,9 @@ export default function CategoryList() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this category?")) return;
     try {
-      await axios.delete(`${CATEGORY_API_URL}${id}?tenant_id=2`, { headers: { 'x-api-key': API_KEY } });
+      await axios.delete(`${CATEGORY_API_URL}${id}?tenant_id=${TENANT_ID}`, {
+        headers: { 'x-api-key': API_KEY }
+      });
       showAlert("Category deleted successfully!");
       getAllTourCategory();
     } catch (error) {
@@ -94,7 +97,7 @@ export default function CategoryList() {
       ...clone,
       name: `${category.name} (Copy)`,
       slug: `${category.slug}-copy`,
-      tenant_id: 2,
+      tenant_id: TENANT_ID,
       isDuplicating: true,
     });
     setIsUpdate(false);
@@ -120,13 +123,148 @@ export default function CategoryList() {
     if (selectedIds.length === 0) return;
     if (!window.confirm(`Delete ${selectedIds.length} selected categories?`)) return;
     try {
-      await Promise.all(selectedIds.map((id) => axios.delete(`${CATEGORY_API_URL}${id}?tenant_id=2`, { headers: { 'x-api-key': API_KEY } })));
+      await Promise.all(selectedIds.map((id) =>
+        axios.delete(`${CATEGORY_API_URL}${id}?tenant_id=${TENANT_ID}`, {
+          headers: { 'x-api-key': API_KEY }
+        })
+      ));
       showAlert("Selected categories deleted successfully!");
       setSelectedIds([]);
       getAllTourCategory();
     } catch {
       showAlert("Error deleting selected categories.", "error");
     }
+  };
+
+  // --- Create/Update Handlers ---
+  const handleSubmit = async (e, dataWithTenant) => {
+    console.log('🔵 handleSubmit called with data:', dataWithTenant);
+    try {
+      console.log('📤 Sending POST request to:', CATEGORY_API_URL);
+      const response = await axios.post(CATEGORY_API_URL, dataWithTenant, {
+        headers: { 'x-api-key': API_KEY }
+      });
+      console.log('📥 Response received:', response.data);
+      if (response.data.success) {
+        showAlert("Category created successfully!");
+        setIsModalOpen(false);
+        setCategoryData({});
+        setValidation({});
+        getAllTourCategory();
+      } else {
+        showAlert(response.data.message || "Failed to create category.", 'error');
+      }
+    } catch (error) {
+      console.error('❌ Create error:', error);
+      console.error('❌ Error response:', error.response?.data);
+      showAlert("Error creating category.", 'error');
+    }
+  };
+
+  const handleUpdate = async (e, dataWithTenant) => {
+    console.log('🟡 handleUpdate called with data:', dataWithTenant);
+    try {
+      const id = getCategoryId(categoryData);
+      console.log('📤 Sending PUT request to:', `${CATEGORY_API_URL}${id}`);
+      const response = await axios.put(`${CATEGORY_API_URL}${id}`, dataWithTenant, {
+        headers: { 'x-api-key': API_KEY }
+      });
+      console.log('📥 Response received:', response.data);
+      if (response.data.success) {
+        showAlert("Category updated successfully!");
+        setIsModalOpen(false);
+        setCategoryData({});
+        setValidation({});
+        setIsUpdate(false);
+        getAllTourCategory();
+      } else {
+        showAlert(response.data.message || "Failed to update category.", 'error');
+      }
+    } catch (error) {
+      console.error('❌ Update error:', error);
+      console.error('❌ Error response:', error.response?.data);
+      showAlert("Error updating category.", 'error');
+    }
+  };
+
+  // ✅ FIXED: Correct handleFileUpload with gallery_images field
+  const handleFileUpload = async (e, fieldName) => {
+    console.log('🟢 handleFileUpload called for field:', fieldName);
+    const files = e.target.files;
+    if (!files || files.length === 0) {
+      console.log('⚠️ No files selected');
+      return;
+    }
+
+    console.log('📁 Files to upload:', files.length);
+    const formData = new FormData();
+
+    // ✅ CRITICAL FIX: Use 'gallery_images' as the field name
+    Array.from(files).forEach((file) => {
+      console.log('📎 Adding file:', file.name, file.size, 'bytes');
+      formData.append('gallery_images', file); // ✅ This MUST be 'gallery_images'
+    });
+
+    // ✅ Add required fields
+    formData.append('storage', 'local');
+    formData.append('tenant_id', TENANT_ID);
+
+    try {
+      console.log('📤 Uploading to:', UPLOAD_URL);
+      console.log('📦 FormData contents:');
+      for (let [key, value] of formData.entries()) {
+        console.log(`  ${key}:`, value);
+      }
+
+      const response = await axios.post(UPLOAD_URL, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      console.log('📥 Upload response:', response.data);
+
+      // ✅ Handle response correctly
+      if (response.data.message === "Files uploaded" || response.data.success) {
+        const uploadedUrls = response.data.files || response.data.urls || [];
+        console.log('✅ Uploaded URLs:', uploadedUrls);
+
+        if (Array.isArray(uploadedUrls) && uploadedUrls.length > 0) {
+          setCategoryData((prev) => ({
+            ...prev,
+            [fieldName]: [...(prev[fieldName] || []), ...uploadedUrls]
+          }));
+          showAlert("Image(s) uploaded successfully!");
+        } else {
+          console.log('⚠️ No URLs returned from upload');
+          showAlert("Upload completed but no URLs received.", 'error');
+        }
+      } else {
+        console.log('⚠️ Upload failed:', response.data);
+        showAlert("Image upload failed.", 'error');
+      }
+    } catch (error) {
+      console.error('❌ Upload error:', error.message);
+      console.error('❌ Full error:', error);
+      console.error('❌ Error response:', error.response?.data);
+
+      if (error.response?.data?.detail) {
+        console.error('❌ Validation details:', error.response.data.detail);
+        const errorMessages = error.response.data.detail
+          .map(d => `${d.loc?.[d.loc.length - 1] || 'unknown'}: ${d.msg}`)
+          .join(', ');
+        showAlert(`Image upload failed: ${errorMessages}`, 'error');
+      } else {
+        showAlert(error.message || "Error uploading image.", 'error');
+      }
+    }
+  };
+
+  const handleRemoveImage = (index) => {
+    setCategoryData((prev) => ({
+      ...prev,
+      image: prev.image.filter((_, i) => i !== index)
+    }));
   };
 
   // --- Filter + Pagination ---
@@ -180,7 +318,13 @@ export default function CategoryList() {
             </button>
           )}
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              console.log('➕ Add Category button clicked');
+              setIsModalOpen(true);
+              setCategoryData({});
+              setValidation({});
+              setIsUpdate(false);
+            }}
             className="!bg-green-600 hover:!bg-green-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md flex items-center transition-colors"
           >
             <Plus size={18} className="mr-2" /> Add Category
@@ -271,7 +415,7 @@ export default function CategoryList() {
         </div>
       )}
 
-      {/* ✅ Pagination */}
+      {/* Pagination */}
       <div className="mt-4 flex justify-between items-center text-sm text-gray-700">
         <div>
           Rows per page:
@@ -292,20 +436,19 @@ export default function CategoryList() {
             {filteredCategories.length === 0
               ? "0"
               : `${(currentPage - 1) * rowsPerPage + 1}–${Math.min(
-                  currentPage * rowsPerPage,
-                  filteredCategories.length
-                )}`}{" "}
+                currentPage * rowsPerPage,
+                filteredCategories.length
+              )}`}{" "}
             of {filteredCategories.length}
           </span>
         </div>
 
         <div className="flex items-center space-x-1">
           <button
-            className={`px-2 py-1 border rounded ${
-              currentPage === 1
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-gray-100"
-            }`}
+            className={`px-2 py-1 border rounded ${currentPage === 1
+              ? "opacity-50 cursor-not-allowed"
+              : "hover:bg-gray-100"
+              }`}
             onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
             disabled={currentPage === 1}
           >
@@ -318,11 +461,10 @@ export default function CategoryList() {
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
-                className={`px-3 py-1 border rounded ${
-                  currentPage === page
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "hover:bg-gray-100"
-                }`}
+                className={`px-3 py-1 border rounded ${currentPage === page
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "hover:bg-gray-100"
+                  }`}
               >
                 {page}
               </button>
@@ -330,11 +472,10 @@ export default function CategoryList() {
           })}
 
           <button
-            className={`px-2 py-1 border rounded ${
-              currentPage === totalPages || totalPages === 0
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-gray-100"
-            }`}
+            className={`px-2 py-1 border rounded ${currentPage === totalPages || totalPages === 0
+              ? "opacity-50 cursor-not-allowed"
+              : "hover:bg-gray-100"
+              }`}
             onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
             disabled={currentPage === totalPages || totalPages === 0}
           >
@@ -355,10 +496,10 @@ export default function CategoryList() {
         setIsViewOnly={setIsViewOnly}
         isUpdate={isUpdate}
         setIsUpdate={setIsUpdate}
-        handleSubmit={() => {}}
-        handleUpdate={() => {}}
-        handleFileUpload={() => {}}
-        handleRemoveImage={() => {}}
+        handleSubmit={handleSubmit}
+        handleUpdate={handleUpdate}
+        handleFileUpload={handleFileUpload}
+        handleRemoveImage={handleRemoveImage}
         getAllTourCategory={getAllTourCategory}
       />
     </div>

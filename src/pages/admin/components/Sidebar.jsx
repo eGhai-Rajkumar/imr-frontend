@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-    LayoutDashboard, MapPin, PlusCircle, Layers, Database, 
+import {
+    LayoutDashboard, MapPin, PlusCircle, Layers, Database,
     Users, DollarSign, FileText, LogOut, Trash2,
     ListTree, Tag, Layout
 } from 'lucide-react';
@@ -15,9 +15,9 @@ const sidebarGroups = [
         ]
     },
     {
-        title: 'TRIP MANAGEMENT', 
+        title: 'TRIP MANAGEMENT',
         modules: [
-            { name: 'All Trips', path: '/admin/dashboard/trip-management/list', icon: PlusCircle }, 
+            { name: 'All Trips', path: '/admin/dashboard/trip-management/list', icon: PlusCircle },
             { name: 'Add Destination', path: '/admin/dashboard/add-destination', icon: MapPin },
             { name: 'Add Activity', path: '/admin/dashboard/add-activity', icon: Layers },
             { name: 'Add Categories', path: '/admin/dashboard/add-categories', icon: Database },
@@ -67,15 +67,15 @@ export default function Sidebar({ isOpen, toggleSidebar, onLogout }) {
             return true;
         }
 
-        if (path === '/admin/dashboard/blog/list' && 
+        if (path === '/admin/dashboard/blog/list' &&
             location.pathname.startsWith('/admin/dashboard/blog/create')) {
             return true;
         }
 
         // Landing Pages active state
-        if (path === '/admin/dashboard/landing-pages' && 
+        if (path === '/admin/dashboard/landing-pages' &&
             (location.pathname.startsWith('/admin/dashboard/landing-pages/edit') ||
-             location.pathname.startsWith('/admin/dashboard/landing-pages/create'))) {
+                location.pathname.startsWith('/admin/dashboard/landing-pages/create'))) {
             return true;
         }
 
@@ -86,7 +86,7 @@ export default function Sidebar({ isOpen, toggleSidebar, onLogout }) {
         <>
             {/* Mobile Overlay */}
             {isOpen && (
-                <div 
+                <div
                     className="sidebar-overlay"
                     onClick={toggleSidebar}
                 />
@@ -97,9 +97,9 @@ export default function Sidebar({ isOpen, toggleSidebar, onLogout }) {
                 <div className="sidebar-header">
                     <div className="sidebar-logo-wrapper">
                         <a href="/" className="sidebar-logo-link">
-                            <img 
-                                src="/holidaysplanners-logo.png" 
-                                alt="Holidays Planners" 
+                            <img
+                                src="/logo-indian-mountain-rovers.png"
+                                alt='Indian Mountain Rovers Logo'
                                 className="sidebar-logo"
                             />
                         </a>

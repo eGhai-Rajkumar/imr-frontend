@@ -3,8 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckCircle, Phone, MessageCircle, Star, Award } from 'lucide-react';
 
-const CONTACT_NUMBER = '+919816259997';
-const CONTACT_DISPLAY = '+91-98162 59997';
+const CONTACT_NUMBER = '+918278829941';
+const CONTACT_DISPLAY = '+91 82788 29941';
 const BRAND_BLUE = '#1E5BA8';
 const BRAND_GOLD = '#F4C430';
 const BRAND_GREEN = '#2D5D3F';

@@ -29,8 +29,10 @@
    ============================================================================ */
 
 .dashboard-content {
-  margin-left: 280px; /* Space for open sidebar */
-  margin-top: 70px; /* Space for header */
+  margin-left: 280px;
+  /* Space for open sidebar */
+  margin-top: 70px;
+  /* Space for header */
   min-height: calc(100vh - 70px);
   padding: 0;
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -47,7 +49,8 @@ body.sidebar-collapsed .dashboard-content,
 @media (max-width: 1024px) {
   .dashboard-content {
     margin-left: 0 !important;
-    margin-top: 64px; /* Smaller header on mobile */
+    margin-top: 64px;
+    /* Smaller header on mobile */
   }
 }
 
@@ -86,7 +89,12 @@ body.sidebar-collapsed .dashboard-content,
    PAGE TITLES
    ============================================================================ */
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: white;
   font-weight: 600;
 }
@@ -155,6 +163,7 @@ button:disabled {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }

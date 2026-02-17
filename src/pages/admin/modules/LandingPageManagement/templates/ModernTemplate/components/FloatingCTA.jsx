@@ -1,7 +1,7 @@
 import React from "react";
 
 export default function FloatingCTA() {
-  const whatsappLink = "https://wa.me/919816259997";
+  const whatsappLink = "https://wa.me/918278829941";
 
   return (
     <>

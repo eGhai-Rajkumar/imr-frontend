@@ -4,6 +4,7 @@ import axios from "axios";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import TripCard from "../../../components/trips/TripCard";
 import CategoryFeaturedTrips from "../../../components/categories/CategoryFeaturedTrips.jsx";
+import GlobalCTA from "../../../components/Globalcta"; // Import the redesigned GlobalCTA
 
 const API_KEY = "bS8WV0lnLRutJH-NbUlYrO003q30b_f8B4VGYy9g45M";
 const API_URL = "https://api.yaadigo.com/secure/api/";
@@ -13,8 +14,8 @@ const getFullImageUrl = (path) =>
   !path || typeof path !== "string"
     ? ""
     : path.startsWith("http")
-    ? path
-    : `${IMAGE_BASE_URL}${path}`;
+      ? path
+      : `${IMAGE_BASE_URL}${path}`;
 
 const CategoryPreview = () => {
   const { id } = useParams();
@@ -33,11 +34,11 @@ const CategoryPreview = () => {
     let discount = 0;
 
     if (trip.pricing_model === 'customized' || trip.pricing_model === 'custom' || trip.is_custom) {
-      finalPrice = trip.pricing?.customized?.final_price || 
-                   trip.pricing?.customized?.base_price || 
-                   trip.base_price || 
-                   trip.price;
-      
+      finalPrice = trip.pricing?.customized?.final_price ||
+        trip.pricing?.customized?.base_price ||
+        trip.base_price ||
+        trip.price;
+
       const basePrice = trip.pricing?.customized?.base_price || 0;
       if (basePrice > 0 && finalPrice > 0) {
         discount = basePrice - finalPrice;
@@ -56,7 +57,7 @@ const CategoryPreview = () => {
     }
 
     // Format price for display
-    const final_price_display = finalPrice 
+    const final_price_display = finalPrice
       ? Number(finalPrice).toLocaleString('en-IN')
       : 'N/A';
 
@@ -102,11 +103,11 @@ const CategoryPreview = () => {
       const res = await axios.get(`${API_URL}categories/trip_details/${id}`, {
         headers: { "x-api-key": API_KEY },
       });
-      
+
       // Transform trips data to match TripCard expectations
       const rawTrips = res.data?.data || [];
       const transformedTrips = rawTrips.map(transformTripData);
-      
+
       setTrips(transformedTrips);
     } catch (err) {
       console.error("Trips Fetch Error:", err);
@@ -165,87 +166,123 @@ const CategoryPreview = () => {
   };
 
   if (isLoading)
-    return <p className="text-center text-lg py-20">Loading category...</p>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-[#1B4D3E] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
 
   if (error)
-    return <p className="text-center text-red-500 py-20">{error}</p>;
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        <p>{error}</p>
+      </div>
+    );
 
   return (
-    <div className="category-preview">
+    <div className="category-preview bg-white">
       {/* --- Hero Section --- */}
-      {images.length > 0 && (
-        <section className="relative w-full h-[600px] md:h-[700px] overflow-hidden bg-black">
+      {images.length > 0 ? (
+        <section className="relative w-full h-[60vh] md:h-[70vh] lg:h-[800px] overflow-hidden bg-black">
           <img
             src={images[currentImageIndex]}
             alt={`Category Hero - ${categoryData.name}`}
-            className={`w-full h-full object-cover transition-all duration-700 ${
-              isTransitioning ? "opacity-0 scale-105" : "opacity-100 scale-100"
-            }`}
+            className={`w-full h-full object-cover transition-all duration-1000 ${isTransitioning ? "opacity-80 scale-105" : "opacity-100 scale-100"
+              }`}
           />
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <div className="text-center max-w-4xl text-white">
-              <h3 className="text-4xl sm:text-6xl font-extrabold mb-3">
+          {/* Detailed Overlay for better text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-center">
+            <div className="text-center max-w-5xl px-6 relative z-10">
+              <span className="block text-[#D4AF37] font-bold tracking-[0.2em] uppercase mb-4 text-sm md:text-base">
+                Curated Collections
+              </span>
+              <h1 className="text-5xl sm:text-7xl md:text-8xl font-black mb-6 text-white drop-shadow-lg leading-tight font-serif">
                 {categoryData.name}
-              </h3>
-              <p className="text-white/90 text-lg sm:text-xl font-light">
+              </h1>
+              <p className="text-white/90 text-lg sm:text-xl md:text-2xl font-light max-w-3xl mx-auto leading-relaxed">
                 {categoryData.description}
               </p>
             </div>
           </div>
-          {/* Navigation */}
-          <button
-            onClick={goToPrevious}
-            className="absolute left-6 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 w-12 h-12 rounded-full flex items-center justify-center"
-          >
-            <ChevronLeft className="text-white" />
-          </button>
-          <button
-            onClick={goToNext}
-            className="absolute right-6 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 w-12 h-12 rounded-full flex items-center justify-center"
-          >
-            <ChevronRight className="text-white" />
-          </button>
-          {/* Dots */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-            {images.map((_, index) => (
+
+          {/* Navigation Controls */}
+          {images.length > 1 && (
+            <>
               <button
-                key={index}
-                onClick={() => goToImage(index)}
-                className={`transition-all rounded-full ${
-                  currentImageIndex === index
-                    ? "w-6 h-2 bg-white"
-                    : "w-2 h-2 bg-white/50 hover:bg-white/80"
-                }`}
-              />
-            ))}
-          </div>
+                onClick={goToPrevious}
+                className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-all group border border-white/20"
+              >
+                <ChevronLeft className="text-white w-6 h-6 md:w-8 md:h-8 group-hover:-translate-x-1 transition-transform" />
+              </button>
+              <button
+                onClick={goToNext}
+                className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-all group border border-white/20"
+              >
+                <ChevronRight className="text-white w-6 h-6 md:w-8 md:h-8 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              {/* Pagination Dots */}
+              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3">
+                {images.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToImage(index)}
+                    className={`transition-all duration-300 rounded-full ${currentImageIndex === index
+                        ? "w-8 h-2 bg-[#D4AF37]"
+                        : "w-2 h-2 bg-white/50 hover:bg-white/80"
+                      }`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </section>
+      ) : (
+        <div className="h-[40vh] bg-[#1B4D3E] flex items-center justify-center text-white">
+          <h1 className="text-5xl font-serif font-bold">{categoryData.name}</h1>
+        </div>
       )}
 
       {/* --- Featured Trips Section --- */}
-      <CategoryFeaturedTrips 
-        categoryId={id} 
-        categoryName={categoryData.name || "Category"} 
-      />
+      <div className="relative z-10 -mt-20">
+        <CategoryFeaturedTrips
+          categoryId={id}
+          categoryName={categoryData.name || "Category"}
+        />
+      </div>
 
       {/* --- All Trip List --- */}
-      <section className="py-16 container mx-auto px-4">
-        <h2 className="text-3xl font-bold mb-8 text-center">
-          Explore All {categoryData.name} Packages
-        </h2>
-
-        {trips.length === 0 ? (
-          <p className="text-center text-gray-500">
-            No trips available for this category.
-          </p>
-        ) : (
-          <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {trips.map((trip) => (
-              <TripCard key={trip.id} trip={trip} />
-            ))}
+      <section className="py-20 bg-gray-50/50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <span className="text-[#1B4D3E] font-bold tracking-widest uppercase text-sm mb-3 block">Explore</span>
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-gray-900 mb-6">
+              All {categoryData.name} Packages
+            </h2>
+            <div className="w-24 h-1 bg-[#D4AF37] mx-auto rounded-full"></div>
           </div>
-        )}
+
+          {trips.length === 0 ? (
+            <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-gray-100 max-w-2xl mx-auto">
+              <p className="text-gray-500 text-lg">No trips found for this category at the moment.</p>
+              <a href="/contact" className="mt-6 inline-block text-[#1B4D3E] font-bold border-b-2 border-[#1B4D3E]">Contact us for custom packages</a>
+            </div>
+          ) : (
+            <div className="grid gap-8 sm:gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {trips.map((trip) => (
+                <TripCard key={trip.id} trip={trip} />
+              ))}
+            </div>
+          )}
+        </div>
       </section>
+
+      {/* --- Global CTA --- */}
+      <GlobalCTA
+        type="generic"
+        title={`Ready to Experience ${categoryData.name || 'Something New'}?`}
+        subtitle="Our expert team is ready to craft the perfect itinerary for you."
+      />
     </div>
   );
 };
