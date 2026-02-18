@@ -46,7 +46,6 @@ const sidebarGroups = [
             { name: 'Lead Trash', path: '/admin/dashboard/lead-trash', icon: Trash2 },
             { name: 'Quotation Management', path: '/admin/dashboard/quotations', icon: DollarSign },
             { name: 'Quotation Trash', path: '/admin/dashboard/quotations/trash', icon: Trash2 },
-            { name: 'Invoice Management', path: '/admin/dashboard/invoice-management', icon: DollarSign },
         ]
     }
 ];
