@@ -8,7 +8,7 @@
 // ✅ Proper error handling
 // 🚨 NEW: Added mandatory check for costing data (Step 4)
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
     Box, Button, TextField, Grid, Typography, Alert, CircularProgress,
     IconButton, Autocomplete,
@@ -46,18 +46,19 @@ const UPLOAD_API = 'https://api.yaadigo.com/upload';
 const MULTIPLE_UPLOAD_API = 'https://api.yaadigo.com/multiple';
 
 const BASE_FORM_DATA = {
-    design: 'Modern Professional',
+    design: 'Magazine Modern',
     lead_id: 0,
     lead_source: '',
     client_name: '',
     client_email: '',
     client_mobile: '',
-    agent: { name: 'Agent Name', email: 'agent@example.com', contact: '+91-9876543210' },
+    agent: { name: 'Agent Name', email: 'sales@indianmountainrovers.com', contact: '+91 82788 29941' },
     company: {
-        name: 'Holidays Planners',
+        name: 'Indian Mountain Rovers',
         email: 'sales@indianmountainrovers.com',
-        mobile: '+91-9988776655',
-        website: 'https://indianmountainrovers.com',
+        mobile: '+91 82788 29941',
+        website: 'https://www.indianmountainrovers.com',
+        address: 'Near Govt. Printing Press, Lower Chakkar, Shimla–Manali Highway, NH205, HP - 171005',
         licence: 'TRV-12345',
         logo_url: ''
     },
@@ -66,6 +67,8 @@ const BASE_FORM_DATA = {
     overview: '',
     hero_image: '',
     gallery_images: [],
+    inclusions: [],
+    exclusions: [],
     itinerary: [{ day: 1, title: 'Day 1: Arrival', description: '' }],
     costing: {
         type: 'package',
@@ -156,6 +159,9 @@ const QuotationFormSteps = ({ activeStep, setActiveStep, handleClose, API_KEY: p
                 overview: normalizedQuotation.trip?.overview || normalizedQuotation.overview || '',
                 hero_image: normalizedQuotation.trip?.hero_image || normalizedQuotation.hero_image || '',
                 gallery_images: normalizedQuotation.trip?.gallery_images || normalizedQuotation.gallery_images || [],
+                // Restore inclusions/exclusions from trip or root
+                inclusions: normalizedQuotation.trip?.inclusions || normalizedQuotation.inclusions || [],
+                exclusions: normalizedQuotation.trip?.exclusions || normalizedQuotation.exclusions || [],
                 costing: {
                     ...BASE_FORM_DATA.costing,
                     ...normalizedQuotation.costing,
@@ -189,34 +195,37 @@ const QuotationFormSteps = ({ activeStep, setActiveStep, handleClose, API_KEY: p
         loadData();
     }, [quotation, apiKey]);
 
-    // Calculate totals
-    const calculatePackageTotal = useCallback((pkg) => {
-        return pkg.components.reduce((total, component) => {
-            const selectedVariant = component.variants.find(v => v.is_selected);
-            return total + (Number(selectedVariant?.price_per_person) || 0);
-        }, 0);
-    }, []);
-
-    useEffect(() => {
-        let total = 0;
-        if (formData.costing.type === 'package' && formData.costing.packages) {
-            const selectedPkg = formData.costing.packages.find(p => p.package_id === formData.costing.selected_package_id)
+    // ── COMPUTED TOTAL (useMemo avoids stale-closure / shallow-compare bugs) ──
+    const computedTotal = useMemo(() => {
+        if (formData.costing.type === 'package' && formData.costing.packages?.length) {
+            const selectedPkg =
+                formData.costing.packages.find(p => p.package_id === formData.costing.selected_package_id)
                 || formData.costing.packages.find(p => p.is_active)
                 || formData.costing.packages[0];
-
-            if (selectedPkg) {
-                total = calculatePackageTotal(selectedPkg);
-            }
-        } else if (formData.costing.type === 'person' && formData.costing.items) {
-            total = (formData.costing.items || []).reduce((s, it) => s + (Number(it.quantity || 0) * Number(it.unit_price || 0)), 0);
+            if (!selectedPkg) return 0;
+            return (selectedPkg.components || []).reduce((sum, comp) => {
+                const sel = comp.variants?.find(v => v.is_selected) || comp.variants?.[0];
+                return sum + (Number(sel?.price_per_person) || 0);
+            }, 0);
         }
+        if (formData.costing.type === 'person' && formData.costing.items?.length) {
+            return formData.costing.items.reduce(
+                (s, it) => s + (Number(it.quantity || 0) * Number(it.unit_price || 0)), 0
+            );
+        }
+        return 0;
+        // JSON.stringify gives deep comparison so any nested price change triggers recalc
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [JSON.stringify(formData.costing)]);
 
+    // Sync computed total back into formData
+    useEffect(() => {
         setFormData(prev => ({
             ...prev,
-            costing: { ...prev.costing, total_amount: total },
-            amount: total
+            costing: { ...prev.costing, total_amount: computedTotal },
+            amount: computedTotal
         }));
-    }, [formData.costing.packages, formData.costing.items, formData.costing.type, formData.costing.selected_package_id, calculatePackageTotal]);
+    }, [computedTotal]);
 
     // Navigation
     const handleNext = () => {
@@ -305,13 +314,23 @@ const QuotationFormSteps = ({ activeStep, setActiveStep, handleClose, API_KEY: p
             const json = await res.json();
             const full = json?.data || json;
 
+            // Parse inclusions/exclusions — may be array of strings or array of objects
+            const parseList = (raw) => {
+                if (!raw) return [];
+                if (Array.isArray(raw)) return raw.map(item => typeof item === 'string' ? item : (item.text || item.title || item.name || JSON.stringify(item)));
+                if (typeof raw === 'string') return raw.split('\n').filter(Boolean);
+                return [];
+            };
+
             setFormData(prev => ({
                 ...prev,
                 trip_id: selectedTrip.id,
-                display_title: full.title || selectedTrip.title || '',
+                display_title: full.display_title || full.title || selectedTrip.title || '',
                 overview: full.overview || selectedTrip.overview || '',
                 hero_image: full.hero_image || selectedTrip.hero_image || '',
                 gallery_images: full.gallery_images || selectedTrip.gallery_images || [],
+                inclusions: parseList(full.inclusions),
+                exclusions: parseList(full.exclusions),
                 itinerary: full.itinerary?.map((it, i) => ({
                     day: i + 1,
                     title: it.title,
@@ -527,30 +546,37 @@ const QuotationFormSteps = ({ activeStep, setActiveStep, handleClose, API_KEY: p
             costing: {
                 ...prev.costing,
                 packages: prev.costing.packages.map(pkg => {
-                    if (pkg.package_id === packageId) {
-                        if (componentIndex === undefined) {
-                            return { ...pkg, [field]: value };
-                        } else if (variantIndex === undefined) {
-                            const updatedComponents = [...pkg.components];
-                            if (field === 'remove') {
-                                return { ...pkg, components: updatedComponents.filter((_, idx) => idx !== componentIndex) };
-                            }
-                            updatedComponents[componentIndex][field] = value;
-                            return { ...pkg, components: updatedComponents };
-                        } else {
-                            if (field === 'remove') {
-                                const updatedComponents = [...pkg.components];
-                                updatedComponents[componentIndex].variants =
-                                    updatedComponents[componentIndex].variants.filter((_, idx) => idx !== variantIndex);
-                                return { ...pkg, components: updatedComponents };
-                            } else {
-                                const updatedComponents = [...pkg.components];
-                                updatedComponents[componentIndex].variants[variantIndex][field] = value;
-                                return { ...pkg, components: updatedComponents };
-                            }
-                        }
+                    if (pkg.package_id !== packageId) return pkg;
+
+                    // Package-level field
+                    if (componentIndex === undefined) {
+                        return { ...pkg, [field]: value };
                     }
-                    return pkg;
+
+                    // Component-level
+                    const updatedComponents = pkg.components.map((comp, ci) => {
+                        if (ci !== componentIndex) return comp;
+
+                        // Remove component
+                        if (field === 'remove' && variantIndex === undefined) return null;
+
+                        // Variant-level
+                        if (variantIndex !== undefined) {
+                            const updatedVariants = comp.variants
+                                .map((v, vi) => {
+                                    if (vi !== variantIndex) return v;
+                                    if (field === 'remove') return null;
+                                    return { ...v, [field]: value }; // ← immutable spread
+                                })
+                                .filter(Boolean);
+                            return { ...comp, variants: updatedVariants };
+                        }
+
+                        // Component field
+                        return { ...comp, [field]: value };
+                    }).filter(Boolean);
+
+                    return { ...pkg, components: updatedComponents };
                 })
             }
         }));
@@ -646,6 +672,8 @@ const QuotationFormSteps = ({ activeStep, setActiveStep, handleClose, API_KEY: p
                     overview: formData.overview,
                     hero_image: formData.hero_image,
                     gallery_images: formData.gallery_images,
+                    inclusions: formData.inclusions || [],
+                    exclusions: formData.exclusions || [],
                     sections: []
                 },
                 itinerary: formData.itinerary,
@@ -715,15 +743,15 @@ const QuotationFormSteps = ({ activeStep, setActiveStep, handleClose, API_KEY: p
             alignItems: 'center',
             mb: 4,
             p: 2.5,
-            bgcolor: '#e3f2fd',
+            bgcolor: '#e8f0ef',
             borderRadius: 1,
-            borderLeft: '5px solid #1976d2',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+            borderLeft: '5px solid #1A3C40',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
             minHeight: 80
         }}>
-            <Icon sx={{ fontSize: 40, color: '#1976d2', mr: 2 }} />
+            <Icon sx={{ fontSize: 40, color: '#1A3C40', mr: 2 }} />
             <Box>
-                <Typography variant="h5" sx={{ fontWeight: 700, color: '#1976d2' }}>{title}</Typography>
+                <Typography variant="h5" sx={{ fontWeight: 700, color: '#1A3C40' }}>{title}</Typography>
                 <Typography variant="body2" color="text.secondary">{subtitle}</Typography>
             </Box>
         </Box>
@@ -747,9 +775,8 @@ const QuotationFormSteps = ({ activeStep, setActiveStep, handleClose, API_KEY: p
                         {renderStepHeader("Choose Your Design Template", "Select the visual theme for the client's quotation document.", CheckCircleIcon)}
                         <Grid container spacing={4}>
                             {[
-                                { name: 'Modern Professional', desc: 'Clean gradient design with modern aesthetics', color: '#667eea' },
-                                { name: 'Luxury Gold', desc: 'Premium gold-themed elegant template', color: '#D4AF37' },
-                                { name: 'Minimalist Classic', desc: 'Simple, professional black & white', color: '#000' }
+                                { name: 'Magazine Modern', desc: 'Immersive, visual travel magazine style', color: '#1A3C40' },
+                                { name: 'Corporate Structured', desc: 'Clean, detailed, invoice-style layout', color: '#D4A017' }
                             ].map(design => (
                                 <Grid item xs={12} md={4} key={design.name}>
                                     <Card
@@ -858,6 +885,35 @@ const QuotationFormSteps = ({ activeStep, setActiveStep, handleClose, API_KEY: p
                                 </Grid>
                                 <Grid item xs={12}>
                                     <Divider sx={{ my: 2 }} />
+                                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>Inclusions & Exclusions</Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Auto-filled from trip. Edit as needed — one item per line.</Typography>
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="✅ Inclusions"
+                                        multiline
+                                        rows={6}
+                                        value={(formData.inclusions || []).join('\n')}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, inclusions: e.target.value.split('\n') }))}
+                                        placeholder="e.g. Accommodation&#10;Meals&#10;Transport"
+                                        sx={{ '& textarea': { fontSize: '14px' } }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="❌ Exclusions"
+                                        multiline
+                                        rows={6}
+                                        value={(formData.exclusions || []).join('\n')}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, exclusions: e.target.value.split('\n') }))}
+                                        placeholder="e.g. Airfare&#10;Personal expenses&#10;Tips"
+                                        sx={{ '& textarea': { fontSize: '14px' } }}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Divider sx={{ my: 2 }} />
                                     <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>Trip Images</Typography>
                                 </Grid>
                                 <Grid item xs={12} md={6}>
@@ -945,217 +1001,243 @@ const QuotationFormSteps = ({ activeStep, setActiveStep, handleClose, API_KEY: p
                         ))}
                     </Box>
                 );
-
             case 4: // Costing
                 return (
                     <Box sx={{ p: 2 }}>
                         {renderStepHeader("Costing & Pricing", "Create flexible package options or simple itemized costing.", MonetizationOnIcon)}
-                        <Alert severity="warning" sx={{ mb: 2 }}>
-                            You must add at least one package or one item to proceed to the next step.
-                        </Alert>
-                        <Paper elevation={3} sx={{ p: 3, mb: 4, bgcolor: '#e3f2fd' }}>
-                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>Select Costing Method</Typography>
+
+                        {/* Mode Selector */}
+                        <Paper elevation={0} sx={{ p: 2.5, mb: 3, border: '1px solid #e0e0e0', borderRadius: 2 }}>
+                            <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700, color: '#555' }}>Costing Method</Typography>
                             <ToggleButtonGroup
                                 value={formData.costing.type}
                                 exclusive
                                 onChange={(e, newType) => { if (newType) setFormData(prev => ({ ...prev, costing: { ...prev.costing, type: newType } })); }}
-                                fullWidth
+                                size="small"
                                 color="primary"
                             >
-                                <ToggleButton value="package">Package-Based (Recommended)</ToggleButton>
-                                <ToggleButton value="person">Simple Items</ToggleButton>
+                                <ToggleButton value="package" sx={{ px: 3 }}>📦 Package-Based</ToggleButton>
+                                <ToggleButton value="person" sx={{ px: 3 }}>📋 Simple Items</ToggleButton>
                             </ToggleButtonGroup>
                         </Paper>
 
                         {formData.costing.type === 'package' ? (
                             <>
-                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
-                                    <Button variant="contained" startIcon={<AddIcon />} onClick={addPackage}>Add Package</Button>
+                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+                                    <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={addPackage}>Add Package</Button>
                                 </Box>
-                                {formData.costing.packages.map((pkg, pkgIndex) => (
-                                    <Paper key={pkg.package_id} elevation={4} sx={{ mb: 4, p: 3, bgcolor: '#f1f8e9' }}>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                                            <Typography variant="h5" fontWeight="bold">Package {pkgIndex + 1}</Typography>
-                                            {formData.costing.packages.length > 1 && (
-                                                <IconButton color="error" onClick={() => removePackage(pkg.package_id)}>
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            )}
-                                        </Box>
-                                        <Grid container spacing={3} sx={{ mb: 3 }}>
-                                            <Grid item xs={12} md={6}>
-                                                <TextField fullWidth label="Package Name" value={pkg.package_name} onChange={(e) => updatePackageField(pkg.package_id, undefined, undefined, 'package_name', e.target.value)} size="small" />
-                                            </Grid>
-                                            <Grid item xs={12} md={6}>
-                                                <TextField fullWidth label="Package Description" value={pkg.package_description} onChange={(e) => updatePackageField(pkg.package_id, undefined, undefined, 'package_description', e.target.value)} size="small" />
-                                            </Grid>
-                                        </Grid>
 
-                                        {pkg.components.map((component, compIndex) => (
-                                            <Card key={compIndex} sx={{ mb: 3, bgcolor: '#fff' }} elevation={2}>
-                                                <CardContent>
-                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                            {getComponentIcon(component.component_type)}
-                                                            <TextField
-                                                                label="Component Title"
-                                                                size="small"
-                                                                value={component.component_title}
-                                                                onChange={(e) => updatePackageField(pkg.package_id, compIndex, undefined, 'component_title', e.target.value)}
-                                                            />
-                                                        </Box>
-                                                        <IconButton color="error" size="small" onClick={() => updatePackageField(pkg.package_id, compIndex, undefined, 'remove', true)}>
-                                                            <DeleteIcon />
+                                {formData.costing.packages.map((pkg, pkgIndex) => {
+                                    // Per-package total computed inline (no stale closure)
+                                    const pkgTotal = (pkg.components || []).reduce((sum, comp) => {
+                                        const sel = comp.variants?.find(v => v.is_selected) || comp.variants?.[0];
+                                        return sum + (Number(sel?.price_per_person) || 0);
+                                    }, 0);
+
+                                    return (
+                                        <Paper key={pkg.package_id} elevation={2} sx={{ mb: 4, borderRadius: 2, overflow: 'hidden', border: '1px solid #e0e0e0' }}>
+                                            {/* Package Header */}
+                                            <Box sx={{ px: 3, py: 2, bgcolor: '#1a3c40', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+                                                    <Typography variant="subtitle2" sx={{ color: 'rgba(255,255,255,0.6)', minWidth: 80 }}>Package {pkgIndex + 1}</Typography>
+                                                    <TextField
+                                                        size="small"
+                                                        value={pkg.package_name}
+                                                        onChange={(e) => updatePackageField(pkg.package_id, undefined, undefined, 'package_name', e.target.value)}
+                                                        placeholder="Package name..."
+                                                        variant="standard"
+                                                        InputProps={{ disableUnderline: false, sx: { color: '#fff', fontSize: '1rem', fontWeight: 700, '&:before': { borderColor: 'rgba(255,255,255,0.3)' }, '&:after': { borderColor: '#fff' } } }}
+                                                        sx={{ flex: 1 }}
+                                                    />
+                                                </Box>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#d4a017' }}>₹{pkgTotal.toLocaleString('en-IN')}</Typography>
+                                                    {formData.costing.packages.length > 1 && (
+                                                        <IconButton size="small" onClick={() => removePackage(pkg.package_id)} sx={{ color: 'rgba(255,255,255,0.6)', '&:hover': { color: '#ff5252' } }}>
+                                                            <DeleteIcon fontSize="small" />
                                                         </IconButton>
-                                                    </Box>
+                                                    )}
+                                                </Box>
+                                            </Box>
 
-                                                    {component.variants.map((variant, varIndex) => (
-                                                        <Paper key={varIndex} sx={{ p: 2, mb: 2, bgcolor: variant.is_selected ? '#e8f5e9' : '#f5f5f5' }}>
-                                                            <Grid container spacing={2} alignItems="flex-start">
-                                                                <Grid item xs={12}>
-                                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                        <Chip label={variant.is_selected ? 'Selected' : 'Option'} color={variant.is_selected ? 'success' : 'default'} size="small" />
-                                                                        <Box sx={{ display: 'flex', gap: 1 }}>
-                                                                            {!variant.is_selected && (
-                                                                                <Button size="small" variant="outlined" onClick={() => selectVariant(pkg.package_id, compIndex, varIndex)}>Select</Button>
-                                                                            )}
-                                                                            {component.variants.length > 1 && (
-                                                                                <IconButton color="error" size="small" onClick={() => updatePackageField(pkg.package_id, compIndex, varIndex, 'remove', true)}>
-                                                                                    <DeleteIcon />
-                                                                                </IconButton>
-                                                                            )}
-                                                                        </Box>
-                                                                    </Box>
-                                                                </Grid>
-                                                                <Grid item xs={12} md={3}>
-                                                                    <TextField fullWidth size="small" label="Title" value={variant.title} onChange={(e) => updatePackageField(pkg.package_id, compIndex, varIndex, 'title', e.target.value)} />
-                                                                </Grid>
-                                                                <Grid item xs={12} md={5}>
-                                                                    <TextField fullWidth size="small" label="Description" multiline rows={3} value={variant.description} onChange={(e) => updatePackageField(pkg.package_id, compIndex, varIndex, 'description', e.target.value)} />
-                                                                </Grid>
-                                                                <Grid item xs={12} md={2}>
-                                                                    <TextField fullWidth size="small" type="number" label="Price (₹)" value={variant.price_per_person} onChange={(e) => updatePackageField(pkg.package_id, compIndex, varIndex, 'price_per_person', Number(e.target.value))} />
-                                                                </Grid>
-                                                                <Grid item xs={12} md={2}>
-                                                                    <Typography variant="caption" display="block" sx={{ fontWeight: 'bold', mb: 0.5 }}>Variant Images</Typography>
-                                                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
-                                                                        {(variant.image_urls || []).map((imgUrl, imageIdx) => (
-                                                                            <Box key={imageIdx} sx={{ position: 'relative', width: 40, height: 40 }}>
-                                                                                <img src={imgUrl} alt={`Variant ${imageIdx}`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 2 }} />
-                                                                                <IconButton
-                                                                                    size="small"
-                                                                                    sx={{ position: 'absolute', top: -5, right: -5, bgcolor: 'error.main', color: 'white', p: 0.2 }}
-                                                                                    onClick={() => removeComponentImage(pkg.package_id, compIndex, varIndex, imageIdx)}
-                                                                                >
-                                                                                    <DeleteIcon fontSize="inherit" sx={{ fontSize: 10 }} />
-                                                                                </IconButton>
-                                                                            </Box>
-                                                                        ))}
-                                                                    </Box>
-
-                                                                    <input
-                                                                        accept="image/*"
-                                                                        style={{ display: 'none' }}
-                                                                        id={`comp-${pkg.package_id}-${compIndex}-${varIndex}`}
-                                                                        type="file"
-                                                                        multiple
-                                                                        onChange={(e) => handleComponentMultipleImageUpload(e.target.files, pkg.package_id, compIndex, varIndex)}
-                                                                        disabled={uploadingComponentImages[`${pkg.package_id}-${compIndex}-${varIndex}`]}
+                                            <Box sx={{ p: 3 }}>
+                                                {/* Components */}
+                                                {pkg.components.map((component, compIndex) => {
+                                                    const selVariant = component.variants?.find(v => v.is_selected) || component.variants?.[0];
+                                                    const compPrice = Number(selVariant?.price_per_person) || 0;
+                                                    return (
+                                                        <Paper key={compIndex} elevation={0} sx={{ mb: 2.5, border: '1px solid #e8e8e8', borderRadius: 2, overflow: 'hidden' }}>
+                                                            {/* Component Header */}
+                                                            <Box sx={{ px: 2.5, py: 1.5, bgcolor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #e8e8e8' }}>
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                                                    {getComponentIcon(component.component_type)}
+                                                                    <TextField
+                                                                        size="small"
+                                                                        value={component.component_title}
+                                                                        onChange={(e) => updatePackageField(pkg.package_id, compIndex, undefined, 'component_title', e.target.value)}
+                                                                        variant="standard"
+                                                                        InputProps={{ disableUnderline: true, sx: { fontWeight: 600, fontSize: '0.95rem' } }}
+                                                                        placeholder="Component name..."
                                                                     />
-                                                                    <label htmlFor={`comp-${pkg.package_id}-${compIndex}-${varIndex}`}>
-                                                                        <Button
-                                                                            size="small"
-                                                                            variant="outlined"
-                                                                            component="span"
-                                                                            fullWidth
-                                                                            disabled={uploadingComponentImages[`${pkg.package_id}-${compIndex}-${varIndex}`]}
-                                                                        >
-                                                                            {uploadingComponentImages[`${pkg.package_id}-${compIndex}-${varIndex}`] ? 'Uploading...' : 'Upload Images'}
-                                                                        </Button>
-                                                                    </label>
-                                                                </Grid>
-                                                            </Grid>
-                                                        </Paper>
-                                                    ))}
-                                                    <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={() => addVariant(pkg.package_id, compIndex)}>
-                                                        Add Option
-                                                    </Button>
-                                                </CardContent>
-                                            </Card>
-                                        ))}
+                                                                </Box>
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#1a3c40' }}>₹{compPrice.toLocaleString('en-IN')}</Typography>
+                                                                    <IconButton size="small" color="error" onClick={() => updatePackageField(pkg.package_id, compIndex, undefined, 'remove', true)}>
+                                                                        <DeleteIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </Box>
+                                                            </Box>
 
-                                        <Paper sx={{ p: 2, mb: 3 }}>
-                                            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 'bold' }}>Add Component:</Typography>
-                                            <Box sx={{ display: 'flex', gap: 2 }}>
-                                                <Button variant="outlined" startIcon={<HotelIcon />} onClick={() => addComponent(pkg.package_id, 'hotel')}>Hotel</Button>
-                                                <Button variant="outlined" startIcon={<TransportIcon />} onClick={() => addComponent(pkg.package_id, 'transport')}>Transport</Button>
-                                                <Button variant="outlined" startIcon={<FlightTakeoffIcon />} onClick={() => addComponent(pkg.package_id, 'activity')}>Activity</Button>
-                                                <Button variant="outlined" startIcon={<CategoryIcon />} onClick={() => addComponent(pkg.package_id, 'custom')}>Custom</Button>
+                                                            {/* Variants */}
+                                                            <Box sx={{ p: 2 }}>
+                                                                {component.variants.map((variant, varIndex) => (
+                                                                    <Box
+                                                                        key={varIndex}
+                                                                        sx={{
+                                                                            mb: 1.5, p: 2, borderRadius: 1.5,
+                                                                            border: variant.is_selected ? '2px solid #1a3c40' : '1px solid #e0e0e0',
+                                                                            bgcolor: variant.is_selected ? '#f0f7f4' : '#fafafa',
+                                                                            position: 'relative'
+                                                                        }}
+                                                                    >
+                                                                        {variant.is_selected && (
+                                                                            <Chip label="✓ Selected" size="small" color="success" sx={{ position: 'absolute', top: 10, right: 10, fontWeight: 700, fontSize: '0.7rem' }} />
+                                                                        )}
+                                                                        <Grid container spacing={2} alignItems="center">
+                                                                            <Grid item xs={12} sm={3}>
+                                                                                <TextField
+                                                                                    fullWidth size="small" label="Option Title"
+                                                                                    value={variant.title}
+                                                                                    onChange={(e) => updatePackageField(pkg.package_id, compIndex, varIndex, 'title', e.target.value)}
+                                                                                />
+                                                                            </Grid>
+                                                                            <Grid item xs={12} sm={4}>
+                                                                                <TextField
+                                                                                    fullWidth size="small" label="Description" multiline rows={2}
+                                                                                    value={variant.description}
+                                                                                    onChange={(e) => updatePackageField(pkg.package_id, compIndex, varIndex, 'description', e.target.value)}
+                                                                                />
+                                                                            </Grid>
+                                                                            <Grid item xs={6} sm={2}>
+                                                                                <TextField
+                                                                                    fullWidth size="small" type="number" label="Price (₹)"
+                                                                                    value={variant.price_per_person}
+                                                                                    onChange={(e) => updatePackageField(pkg.package_id, compIndex, varIndex, 'price_per_person', Number(e.target.value))}
+                                                                                    InputProps={{ inputProps: { min: 0 } }}
+                                                                                />
+                                                                            </Grid>
+                                                                            <Grid item xs={6} sm={3}>
+                                                                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                                                                    {!variant.is_selected && (
+                                                                                        <Button size="small" variant="outlined" color="success" onClick={() => selectVariant(pkg.package_id, compIndex, varIndex)} sx={{ fontSize: '0.7rem' }}>
+                                                                                            Select
+                                                                                        </Button>
+                                                                                    )}
+                                                                                    <input
+                                                                                        accept="image/*" style={{ display: 'none' }} multiple
+                                                                                        id={`comp-${pkg.package_id}-${compIndex}-${varIndex}`} type="file"
+                                                                                        onChange={(e) => handleComponentMultipleImageUpload(e.target.files, pkg.package_id, compIndex, varIndex)}
+                                                                                        disabled={uploadingComponentImages[`${pkg.package_id}-${compIndex}-${varIndex}`]}
+                                                                                    />
+                                                                                    <label htmlFor={`comp-${pkg.package_id}-${compIndex}-${varIndex}`}>
+                                                                                        <Button size="small" variant="outlined" component="span" sx={{ fontSize: '0.7rem' }}
+                                                                                            disabled={uploadingComponentImages[`${pkg.package_id}-${compIndex}-${varIndex}`]}>
+                                                                                            {uploadingComponentImages[`${pkg.package_id}-${compIndex}-${varIndex}`] ? '...' : '📷'}
+                                                                                        </Button>
+                                                                                    </label>
+                                                                                    {component.variants.length > 1 && (
+                                                                                        <IconButton size="small" color="error" onClick={() => updatePackageField(pkg.package_id, compIndex, varIndex, 'remove', true)}>
+                                                                                            <DeleteIcon fontSize="small" />
+                                                                                        </IconButton>
+                                                                                    )}
+                                                                                </Box>
+                                                                                {(variant.image_urls || []).length > 0 && (
+                                                                                    <Box sx={{ display: 'flex', gap: 0.5, mt: 1, flexWrap: 'wrap' }}>
+                                                                                        {variant.image_urls.map((imgUrl, imageIdx) => (
+                                                                                            <Box key={imageIdx} sx={{ position: 'relative', width: 36, height: 36 }}>
+                                                                                                <img src={imgUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4 }} />
+                                                                                                <IconButton size="small"
+                                                                                                    sx={{ position: 'absolute', top: -4, right: -4, bgcolor: 'error.main', color: 'white', p: '2px', width: 16, height: 16 }}
+                                                                                                    onClick={() => removeComponentImage(pkg.package_id, compIndex, varIndex, imageIdx)}>
+                                                                                                    <DeleteIcon sx={{ fontSize: 10 }} />
+                                                                                                </IconButton>
+                                                                                            </Box>
+                                                                                        ))}
+                                                                                    </Box>
+                                                                                )}
+                                                                            </Grid>
+                                                                        </Grid>
+                                                                    </Box>
+                                                                ))}
+                                                                <Button size="small" startIcon={<AddIcon />} onClick={() => addVariant(pkg.package_id, compIndex)} sx={{ mt: 0.5 }}>
+                                                                    Add Option
+                                                                </Button>
+                                                            </Box>
+                                                        </Paper>
+                                                    );
+                                                })}
+
+                                                {/* Add Component Buttons */}
+                                                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', mt: 1 }}>
+                                                    <Typography variant="caption" sx={{ width: '100%', color: '#888', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Add Component:</Typography>
+                                                    {[
+                                                        { type: 'hotel', icon: <HotelIcon fontSize="small" />, label: 'Hotel' },
+                                                        { type: 'transport', icon: <TransportIcon fontSize="small" />, label: 'Transport' },
+                                                        { type: 'activity', icon: <FlightTakeoffIcon fontSize="small" />, label: 'Activity' },
+                                                        { type: 'custom', icon: <CategoryIcon fontSize="small" />, label: 'Custom' },
+                                                    ].map(({ type, icon, label }) => (
+                                                        <Button key={type} size="small" variant="outlined" startIcon={icon} onClick={() => addComponent(pkg.package_id, type)} sx={{ borderRadius: 5, textTransform: 'none' }}>
+                                                            {label}
+                                                        </Button>
+                                                    ))}
+                                                </Box>
                                             </Box>
                                         </Paper>
-
-                                        <Paper elevation={3} sx={{ p: 3, bgcolor: '#4caf50', color: '#fff' }}>
-                                            <Grid container justifyContent="space-between">
-                                                <Grid item><Typography variant="h6" fontWeight="bold">PACKAGE TOTAL:</Typography></Grid>
-                                                <Grid item><Typography variant="h4" fontWeight="bold">₹{calculatePackageTotal(pkg).toLocaleString('en-IN')}</Typography></Grid>
-                                            </Grid>
-                                        </Paper>
-                                    </Paper>
-                                ))}
+                                    );
+                                })}
                             </>
                         ) : (
+                            /* ── SIMPLE ITEMS MODE ── */
                             <>
-                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
-                                    <Button variant="contained" startIcon={<AddIcon />} onClick={addCostingItem}>Add Cost Item</Button>
+                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+                                    <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={addCostingItem}>Add Item</Button>
                                 </Box>
-                                <Paper elevation={2} sx={{ p: 2, mb: 2, bgcolor: '#e3f2fd' }}>
-                                    <Grid container spacing={2}>
-                                        <Grid item xs={3}><Typography fontWeight="bold">Item Name</Typography></Grid>
-                                        <Grid item xs={3}><Typography fontWeight="bold">Description</Typography></Grid>
-                                        <Grid item xs={1.5}><Typography fontWeight="bold">Qty</Typography></Grid>
-                                        <Grid item xs={2}><Typography fontWeight="bold">Price (₹)</Typography></Grid>
-                                        <Grid item xs={1.5}><Typography fontWeight="bold">Total</Typography></Grid>
-                                        <Grid item xs={1}></Grid>
-                                    </Grid>
-                                </Paper>
+
+                                <Box sx={{ display: 'grid', gridTemplateColumns: '3fr 3fr 1fr 1.5fr 1.5fr 40px', gap: 1, px: 2, py: 1, bgcolor: '#f5f5f5', borderRadius: 1, mb: 1 }}>
+                                    {['Item Name', 'Description', 'Qty', 'Price (₹)', 'Total', ''].map(h => (
+                                        <Typography key={h} variant="caption" sx={{ fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</Typography>
+                                    ))}
+                                </Box>
+
                                 {(formData.costing.items || []).map((it, idx) => (
-                                    <Card key={idx} sx={{ mb: 2 }} elevation={1}>
-                                        <CardContent sx={{ p: 2 }}>
-                                            <Grid container spacing={2} alignItems="center">
-                                                <Grid item xs={3}>
-                                                    <TextField fullWidth size="small" label="Item Name" value={it.name} onChange={(e) => handleCostingItemChange(idx, 'name', e.target.value)} />
-                                                </Grid>
-                                                <Grid item xs={3}>
-                                                    <TextField fullWidth size="small" label="Description" multiline rows={2} value={it.description || ''} onChange={(e) => handleCostingItemChange(idx, 'description', e.target.value)} />
-                                                </Grid>
-                                                <Grid item xs={1.5}>
-                                                    <TextField fullWidth size="small" type="number" label="Qty" value={it.quantity} onChange={(e) => handleCostingItemChange(idx, 'quantity', e.target.value)} />
-                                                </Grid>
-                                                <Grid item xs={2}>
-                                                    <TextField fullWidth size="small" type="number" label="Price" value={it.unit_price} onChange={(e) => handleCostingItemChange(idx, 'unit_price', e.target.value)} />
-                                                </Grid>
-                                                <Grid item xs={1.5} sx={{ textAlign: 'right' }}>
-                                                    <Typography variant="body1" fontWeight="bold" color="success.main">
-                                                        ₹{(Number(it.quantity || 0) * Number(it.unit_price || 0)).toLocaleString('en-IN')}
-                                                    </Typography>
-                                                </Grid>
-                                                <Grid item xs={1} sx={{ textAlign: 'center' }}>
-                                                    <IconButton color="error" onClick={() => removeCostingItem(idx)} size="small">
-                                                        <DeleteIcon />
-                                                    </IconButton>
-                                                </Grid>
-                                            </Grid>
-                                        </CardContent>
-                                    </Card>
+                                    <Box key={idx} sx={{ display: 'grid', gridTemplateColumns: '3fr 3fr 1fr 1.5fr 1.5fr 40px', gap: 1, px: 2, py: 1.5, mb: 1, bgcolor: '#fff', border: '1px solid #e8e8e8', borderRadius: 1.5, alignItems: 'center' }}>
+                                        <TextField size="small" placeholder="Item name" value={it.name} onChange={(e) => handleCostingItemChange(idx, 'name', e.target.value)} />
+                                        <TextField size="small" placeholder="Description" value={it.description || ''} onChange={(e) => handleCostingItemChange(idx, 'description', e.target.value)} />
+                                        <TextField size="small" type="number" value={it.quantity} onChange={(e) => handleCostingItemChange(idx, 'quantity', e.target.value)} inputProps={{ min: 1 }} />
+                                        <TextField size="small" type="number" value={it.unit_price} onChange={(e) => handleCostingItemChange(idx, 'unit_price', e.target.value)} inputProps={{ min: 0 }} />
+                                        <Typography variant="body2" sx={{ fontWeight: 700, color: '#1a3c40', textAlign: 'right' }}>
+                                            ₹{(Number(it.quantity || 0) * Number(it.unit_price || 0)).toLocaleString('en-IN')}
+                                        </Typography>
+                                        <IconButton size="small" color="error" onClick={() => removeCostingItem(idx)}>
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                    </Box>
                                 ))}
-                                <Paper elevation={4} sx={{ mt: 4, p: 3, bgcolor: '#4caf50', color: '#fff' }}>
-                                    <Grid container justifyContent="space-between">
-                                        <Grid item><Typography variant="h5" fontWeight="bold">GRAND TOTAL:</Typography></Grid>
-                                        <Grid item><Typography variant="h4" fontWeight="bold">₹{Number(formData.costing.total_amount || 0).toLocaleString('en-IN')}</Typography></Grid>
-                                    </Grid>
-                                </Paper>
                             </>
                         )}
+
+                        {/* ── GRAND TOTAL BAR ── always visible, always live */}
+                        <Box sx={{ mt: 4, p: 3, bgcolor: '#1a3c40', borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box>
+                                <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.6)', letterSpacing: '0.15em' }}>Grand Total</Typography>
+                                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem' }}>
+                                    {formData.costing.type === 'package' ? 'Sum of selected variants' : 'Sum of all items'}
+                                </Typography>
+                            </Box>
+                            <Typography variant="h4" sx={{ fontWeight: 800, color: '#d4a017', letterSpacing: '-0.02em' }}>
+                                ₹{computedTotal.toLocaleString('en-IN')}
+                            </Typography>
+                        </Box>
                     </Box>
                 );
 

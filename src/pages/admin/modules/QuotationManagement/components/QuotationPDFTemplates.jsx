@@ -1,248 +1,331 @@
 ﻿// src/pages/admin/modules/QuotationManagement/components/QuotationPDFTemplates.jsx
 import React from 'react';
-import { Box, Typography, Grid } from '@mui/material';
+import { Box, Typography, Grid, Divider, Chip } from '@mui/material';
 
-// --- Helper to get image URL safely ---
-const getImageUrl = (quotation, fieldName) => {
-  let url = quotation[fieldName];
-  if (!url && quotation.trip) url = quotation.trip[fieldName];
-  if (fieldName === 'gallery_images' && Array.isArray(url))
-    return url.filter(img => typeof img === 'string' && img.length > 0);
-  return url || '';
+// ── COMPANY DEFAULTS (Indian Mountain Rovers) ──────────────────────────────
+const IMR_COMPANY = {
+  name: 'Indian Mountain Rovers',
+  email: 'sales@indianmountainrovers.com',
+  mobile: '+91 82788 29941',
+  website: 'https://www.indianmountainrovers.com',
+  address: 'Near Govt. Printing Press, Lower Chakkar, Shimla–Manali Highway, NH205, HP - 171005',
+  licence: 'TRV-12345',
+  logo_url: '',
+};
+
+// ── DATA EXTRACTION HELPERS ────────────────────────────────────────────────
+// The API schema stores trip data under quotation.trip
+// But the form also copies some fields to root level for convenience.
+// We check both places.
+
+const getField = (quotation, field) => {
+  // Check root first, then quotation.trip
+  const root = quotation[field];
+  const trip = quotation.trip?.[field];
+  if (root && (typeof root !== 'string' || root.trim() !== '')) return root;
+  if (trip && (typeof trip !== 'string' || trip.trim() !== '')) return trip;
+  return null;
+};
+
+const getHeroImage = (quotation) => {
+  const url = getField(quotation, 'hero_image');
+  return typeof url === 'string' && url.trim() ? url : '';
+};
+
+const getGalleryImages = (quotation) => {
+  // Check root gallery_images first, then trip.gallery_images
+  const rootGallery = quotation.gallery_images;
+  const tripGallery = quotation.trip?.gallery_images;
+  const raw = (Array.isArray(rootGallery) && rootGallery.length > 0) ? rootGallery
+    : (Array.isArray(tripGallery) && tripGallery.length > 0) ? tripGallery
+      : [];
+
+  return raw.map(img => {
+    if (typeof img === 'string' && img.trim()) return img;
+    if (img && typeof img === 'object') {
+      return img.url || img.file || img.src || null;
+    }
+    return null;
+  }).filter(Boolean);
+};
+
+const getDisplayTitle = (quotation) =>
+  quotation.display_title || quotation.trip?.display_title || 'Your Exclusive Journey';
+
+const getOverview = (quotation) =>
+  quotation.overview || quotation.trip?.overview || '';
+
+const getClientName = (quotation) =>
+  quotation.__client_name || quotation.client_name || 'Valued Guest';
+
+const getClientEmail = (quotation) =>
+  quotation.__client_email || quotation.client_email || '';
+
+const getClientMobile = (quotation) =>
+  quotation.__client_mobile || quotation.client_mobile || '';
+
+const getCompany = (quotation) => ({
+  // Always use real IMR details — ignore old 'Holidays Planners' data in DB
+  name: 'Indian Mountain Rovers',
+  email: 'sales@indianmountainrovers.com',
+  mobile: '+91 82788 29941',
+  website: 'https://www.indianmountainrovers.com',
+  address: 'Near Govt. Printing Press, Lower Chakkar, Shimla–Manali Highway, NH205, HP - 171005',
+  licence: quotation.company?.licence || 'TRV-12345',
+  // Only take logo from stored record if it exists
+  logo_url: quotation.company?.logo_url || IMR_COMPANY.logo_url,
+});
+
+// ── INCLUSIONS / EXCLUSIONS HELPERS ───────────────────────────────────────
+const parseListField = (raw) => {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.map(item =>
+    typeof item === 'string' ? item.trim() : (item.text || item.title || item.name || '')
+  ).filter(Boolean);
+  if (typeof raw === 'string') return raw.split('\n').map(s => s.trim()).filter(Boolean);
+  return [];
+};
+
+const getInclusions = (quotation) =>
+  parseListField(quotation.inclusions) ||
+  parseListField(quotation.trip?.inclusions) ||
+  parseListField(quotation.policies?.inclusions) ||
+  [];
+
+const getExclusions = (quotation) =>
+  parseListField(quotation.exclusions) ||
+  parseListField(quotation.trip?.exclusions) ||
+  parseListField(quotation.policies?.exclusions) ||
+  [];
+
+const formatINR = (amount) => {
+  const n = Number(amount) || 0;
+  return '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 0 });
+};
+
+// ── PACKAGE COST EXTRACTOR ─────────────────────────────────────────────────
+const getPackageCostRows = (costing) => {
+  if (!costing) return [];
+  if (costing.type === 'person' && Array.isArray(costing.items) && costing.items.length > 0) {
+    return costing.items.map(item => ({
+      name: item.name || 'Item',
+      desc: item.description || '',
+      qty: item.quantity || 1,
+      price: (item.unit_price || 0) * (item.quantity || 1),
+    }));
+  }
+  // Package-based: extract selected package components
+  if (costing.type === 'package' && Array.isArray(costing.packages)) {
+    const selected = costing.packages.find(p => p.package_id === costing.selected_package_id)
+      || costing.packages.find(p => p.is_active)
+      || costing.packages[0];
+    if (!selected) return [];
+    const rows = [];
+    (selected.components || []).forEach(comp => {
+      const variant = comp.variants?.find(v => v.is_selected) || comp.variants?.[0];
+      if (variant) {
+        rows.push({
+          name: comp.component_title || comp.component_type || 'Component',
+          desc: variant.title || '',
+          qty: 1,
+          price: Number(variant.price_per_person) || 0,
+        });
+      }
+    });
+    return rows;
+  }
+  return [];
 };
 
 // =========================================================
-// ANIMATION STYLES (injected once, print-safe)
+// TEMPLATE 1: MAGAZINE MODERN (Visual & Immersive)
 // =========================================================
-const AnimationStyles = () => (
-  <style>{`
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeInLeft {
-      from { opacity: 0; transform: translateX(-24px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes shimmer {
-      0%   { background-position: -400px 0; }
-      100% { background-position: 400px 0; }
-    }
-    @keyframes pulseBorder {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(212,160,23,0.4); }
-      50%       { box-shadow: 0 0 0 8px rgba(212,160,23,0); }
-    }
-    .anim-fadeup  { animation: fadeInUp 0.6s ease both; }
-    .anim-left    { animation: fadeInLeft 0.5s ease both; }
-    .anim-delay-1 { animation-delay: 0.1s; }
-    .anim-delay-2 { animation-delay: 0.2s; }
-    .anim-delay-3 { animation-delay: 0.3s; }
-    .anim-delay-4 { animation-delay: 0.4s; }
-    .pulse-gold   { animation: pulseBorder 2s infinite; }
-    @media print {
-      .anim-fadeup, .anim-left, .pulse-gold { animation: none !important; opacity: 1 !important; transform: none !important; }
-    }
-  `}</style>
-);
+export const MagazineModernTemplate = ({ quotation }) => {
+  const company = getCompany(quotation);
+  const clientName = getClientName(quotation);
+  const displayTitle = getDisplayTitle(quotation);
+  const overview = getOverview(quotation);
+  const heroImage = getHeroImage(quotation);
+  const galleryImages = getGalleryImages(quotation);
+  const itinerary = quotation.itinerary || [];
+  const costing = quotation.costing || {};
+  const policies = quotation.policies || {};
+  const payment = quotation.payment || {};
+  const costRows = getPackageCostRows(costing);
+  const totalAmount = costing.total_amount || quotation.amount || 0;
+  const inclusions = getInclusions(quotation);
+  const exclusions = getExclusions(quotation);
 
-// =========================================================
-// TEMPLATE 1: MODERN PROFESSIONAL
-// =========================================================
-export const ModernProfessionalTemplate = ({ quotation }) => {
-  const {
-    client_name, client_email, client_mobile, display_title, overview,
-    itinerary, costing, policies, payment, company,
-    __client_name, __client_email, __client_mobile, transport_details
-  } = quotation;
-
-  const clientName = __client_name || client_name || 'Valued Guest';
-  const clientEmail = __client_email || client_email || '';
-  const clientMobile = __client_mobile || client_mobile || '';
-  const heroImage = getImageUrl(quotation, 'hero_image');
-  const galleryImages = getImageUrl(quotation, 'gallery_images');
-  const hotelOptions = quotation.hotel_options || [];
-  const flightDetails = transport_details?.flight_details || null;
-  const groundTransport = transport_details?.ground_transport || null;
-
-  const G = '#D4A017';   // gold
-  const DG = '#1B4332';  // dark green
-  const MG = '#2D6A4F';  // mid green
-  const LG = '#D8F3DC';  // light green bg
-
-  const sectionTitle = (text, delay = '') => (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-      <Box sx={{ width: 4, height: 28, bgcolor: G, borderRadius: 2, flexShrink: 0 }} />
-      <Typography variant="h6" className={`anim-left ${delay}`}
-        sx={{ fontWeight: 800, color: DG, fontSize: '1rem', letterSpacing: 0.3 }}>
-        {text}
-      </Typography>
-    </Box>
-  );
+  // Theme
+  const PRIMARY = '#1A3C40';
+  const GOLD = '#D4A017';
+  const TEXT = '#2C3E50';
+  const LIGHT_BG = '#F9FAFB';
 
   return (
-    <Box sx={{ bgcolor: '#F4F6F0', fontFamily: "'Segoe UI', Arial, sans-serif", minHeight: '100vh' }}>
-      <AnimationStyles />
+    <Box sx={{ bgcolor: '#fff', fontFamily: '"Georgia", serif', color: TEXT, width: '100%' }}>
 
-      {/* â”€â”€ HEADER â”€â”€ */}
+      {/* ── COVER PAGE ── */}
       <Box sx={{
-        background: `linear-gradient(135deg, ${DG} 0%, ${MG} 100%)`,
-        color: '#fff', px: 4, py: 2.5,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        pageBreakInside: 'avoid', breakInside: 'avoid'
+        minHeight: '1050px',
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-end',
+        color: '#fff',
+        overflow: 'hidden',
+        pageBreakAfter: 'always',
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          {company?.logo_url ? (
-            <img src={company.logo_url} alt="logo"
-              style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${G}` }} />
-          ) : (
-            <Box sx={{
-              width: 52, height: 52, borderRadius: '50%', bgcolor: G,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 900, fontSize: '1.3rem', color: DG
-            }}>
-              {(company?.name || 'IMR')[0]}
-            </Box>
-          )}
+        {/* Hero Background */}
+        <Box sx={{
+          position: 'absolute', inset: 0,
+          bgcolor: heroImage ? 'transparent' : PRIMARY,
+          backgroundImage: heroImage ? `url(${heroImage})` : 'none',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          zIndex: 0,
+        }} />
+        {/* Dark Overlay */}
+        <Box sx={{
+          position: 'absolute', inset: 0, zIndex: 1,
+          background: 'linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.1) 100%)',
+        }} />
+
+        {/* Top Bar */}
+        <Box sx={{
+          position: 'absolute', top: 0, left: 0, right: 0, zIndex: 2,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          p: 4, pb: 2,
+        }}>
           <Box>
-            <Typography sx={{ fontWeight: 800, fontSize: '1.25rem', lineHeight: 1.2 }}>
-              {company?.name || 'Indian Mountain Rovers'}
-            </Typography>
-            <Typography sx={{ fontSize: '0.72rem', opacity: 0.8, letterSpacing: 1 }}>
-              CRAFTING MOUNTAIN MEMORIES
-            </Typography>
+            {company.logo_url
+              ? <img src={company.logo_url} alt="Logo" style={{ height: 48, objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+              : <Typography sx={{ fontSize: '1.1rem', fontWeight: 800, letterSpacing: '0.05em', color: '#fff' }}>
+                {company.name}
+              </Typography>
+            }
           </Box>
+          <Typography sx={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            Travel Quotation
+          </Typography>
         </Box>
-        <Box sx={{ textAlign: 'right' }}>
-          {company?.mobile && <Typography sx={{ fontSize: '0.72rem', opacity: 0.85 }}>ðŸ“ž {company.mobile}</Typography>}
-          {company?.email && <Typography sx={{ fontSize: '0.72rem', opacity: 0.85 }}>âœ‰ {company.email}</Typography>}
-          {company?.address && <Typography sx={{ fontSize: '0.7rem', opacity: 0.75, maxWidth: 220 }}>{company.address}</Typography>}
-          {payment?.gst_number && <Typography sx={{ fontSize: '0.68rem', opacity: 0.7 }}>GST: {payment.gst_number}</Typography>}
-        </Box>
-      </Box>
 
-      {/* â”€â”€ HERO â”€â”€ */}
-      <Box sx={{
-        position: 'relative', height: 260, overflow: 'hidden',
-        background: heroImage
-          ? `linear-gradient(rgba(27,67,50,0.55), rgba(27,67,50,0.75)), url(${heroImage}) center/cover no-repeat`
-          : `linear-gradient(135deg, ${DG} 0%, ${MG} 60%, #40916C 100%)`,
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        pageBreakInside: 'avoid', breakInside: 'avoid'
-      }}>
-        <Typography className="anim-fadeup" sx={{
-          color: G, fontSize: '0.8rem', fontWeight: 700, letterSpacing: 4,
-          textTransform: 'uppercase', mb: 1
-        }}>
-          Travel Quotation
-        </Typography>
-        <Typography className="anim-fadeup anim-delay-1" sx={{
-          color: '#fff', fontSize: '2rem', fontWeight: 900,
-          textAlign: 'center', px: 4, lineHeight: 1.25,
-          textShadow: '0 2px 12px rgba(0,0,0,0.5)'
-        }}>
-          {display_title || 'Your Dream Mountain Journey'}
-        </Typography>
-        {itinerary?.length > 0 && (
-          <Typography className="anim-fadeup anim-delay-2" sx={{
-            color: 'rgba(255,255,255,0.85)', fontSize: '0.9rem', mt: 1.5
+        {/* Cover Content */}
+        <Box sx={{ position: 'relative', zIndex: 2, p: 6, pb: 8 }}>
+          <Typography sx={{
+            fontFamily: '"Montserrat", sans-serif', fontSize: '0.85rem',
+            letterSpacing: '0.25em', textTransform: 'uppercase', color: GOLD, mb: 2,
           }}>
-            {itinerary.length} Days Â· {itinerary.length - 1} Nights
+            A Journey Curated For
           </Typography>
-        )}
-        {/* gold bottom bar */}
-        <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 4, bgcolor: G }} />
-      </Box>
-
-      {/* â”€â”€ BODY â”€â”€ */}
-      <Box sx={{ px: 3, py: 3 }}>
-
-        {/* CLIENT CARD */}
-        <Box className="anim-fadeup anim-delay-1" sx={{
-          bgcolor: '#fff', borderRadius: 3, p: 3, mb: 3,
-          boxShadow: '0 4px 20px rgba(27,67,50,0.1)',
-          borderLeft: `5px solid ${G}`,
-          pageBreakInside: 'avoid', breakInside: 'avoid'
-        }}>
-          <Typography sx={{ color: DG, fontWeight: 700, fontSize: '0.95rem', mb: 0.5 }}>
-            Prepared Exclusively For
-          </Typography>
-          <Typography sx={{ color: DG, fontWeight: 900, fontSize: '1.5rem', mb: 1.5 }}>
+          <Typography sx={{ fontSize: '3.2rem', fontWeight: 700, lineHeight: 1.1, mb: 1 }}>
             {clientName}
           </Typography>
-          <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-            {clientEmail && <Typography sx={{ fontSize: '0.82rem', color: '#555' }}>âœ‰ {clientEmail}</Typography>}
-            {clientMobile && <Typography sx={{ fontSize: '0.82rem', color: '#555' }}>ðŸ“ž {clientMobile}</Typography>}
-            <Typography sx={{ fontSize: '0.82rem', color: '#888' }}>
-              Ref: #{quotation.id || 'IMR-2025'}
-            </Typography>
+          <Box sx={{ width: 80, height: 3, bgcolor: GOLD, mb: 3 }} />
+          <Typography sx={{ fontSize: '1.4rem', fontStyle: 'italic', opacity: 0.9, mb: 5 }}>
+            {displayTitle}
+          </Typography>
+
+          {/* Company Footer on Cover */}
+          <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap', opacity: 0.85 }}>
+            <Typography sx={{ fontSize: '0.8rem' }}>📧 {company.email}</Typography>
+            <Typography sx={{ fontSize: '0.8rem' }}>📞 {company.mobile}</Typography>
+            <Typography sx={{ fontSize: '0.8rem' }}>🌐 {company.website}</Typography>
           </Box>
         </Box>
+      </Box>
 
-        {/* OVERVIEW */}
-        {overview && (
-          <Box className="anim-fadeup anim-delay-2" sx={{
-            bgcolor: '#fff', borderRadius: 3, p: 3, mb: 3,
-            boxShadow: '0 4px 20px rgba(27,67,50,0.08)',
-            pageBreakInside: 'avoid', breakInside: 'avoid'
-          }}>
-            {sectionTitle('Trip Overview')}
-            <Typography sx={{ fontSize: '0.88rem', lineHeight: 1.8, color: '#444', whiteSpace: 'pre-line' }}>
-              {overview}
-            </Typography>
-          </Box>
+      {/* ── OVERVIEW ── */}
+      <Box sx={{ p: 6, bgcolor: '#fff' }}>
+        <Typography sx={{
+          fontFamily: '"Montserrat", sans-serif', color: GOLD,
+          fontSize: '0.8rem', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 700, mb: 1,
+        }}>
+          Begin The Adventure
+        </Typography>
+        <Typography sx={{ fontSize: '2rem', fontWeight: 700, color: PRIMARY, mb: 3 }}>
+          Trip Overview
+        </Typography>
+        {overview ? (
+          <Typography sx={{ fontSize: '1rem', lineHeight: 1.9, color: '#555', whiteSpace: 'pre-line' }}>
+            {overview}
+          </Typography>
+        ) : (
+          <Typography sx={{ fontSize: '1rem', color: '#999', fontStyle: 'italic' }}>
+            Your personalized itinerary details are included below.
+          </Typography>
         )}
 
-        {/* ITINERARY TIMELINE */}
-        {itinerary?.length > 0 && (
-          <Box className="anim-fadeup anim-delay-2" sx={{
-            bgcolor: '#fff', borderRadius: 3, p: 3, mb: 3,
-            boxShadow: '0 4px 20px rgba(27,67,50,0.08)'
-          }}>
-            {sectionTitle('Day-by-Day Itinerary')}
-            {itinerary.map((day, idx) => (
-              <Box key={idx} sx={{
-                display: 'flex', gap: 2, mb: 2.5,
-                pageBreakInside: 'avoid', breakInside: 'avoid'
-              }}>
-                {/* Day badge + line */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+        {/* Gallery Grid */}
+        {galleryImages.length > 0 && (
+          <Box sx={{ mt: 5, display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 2, height: '380px' }}>
+            <Box sx={{
+              backgroundImage: `url(${galleryImages[0]})`,
+              backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: 2,
+            }} />
+            <Box sx={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: 2 }}>
+              {galleryImages[1] && (
+                <Box sx={{ backgroundImage: `url(${galleryImages[1]})`, backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: 2 }} />
+              )}
+              {galleryImages[2] && (
+                <Box sx={{ backgroundImage: `url(${galleryImages[2]})`, backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: 2 }} />
+              )}
+            </Box>
+          </Box>
+        )}
+      </Box>
+
+      {/* ── ITINERARY ── */}
+      {itinerary.length > 0 && (
+        <Box sx={{ p: 6, bgcolor: LIGHT_BG }}>
+          <Typography sx={{ fontSize: '2rem', fontWeight: 700, color: PRIMARY, mb: 5, textAlign: 'center' }}>
+            Your Day-by-Day Itinerary
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {itinerary.map((day, i) => (
+              <Box key={i} sx={{ display: 'flex', gap: 3, pageBreakInside: 'avoid' }}>
+                {/* Day Number */}
+                <Box sx={{ flex: '0 0 70px', textAlign: 'center' }}>
                   <Box sx={{
-                    width: 44, height: 44, borderRadius: '50%',
-                    background: `linear-gradient(135deg, ${DG}, ${MG})`,
-                    color: '#fff', display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                    width: 56, height: 56, borderRadius: '50%', bgcolor: PRIMARY,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto',
                   }}>
-                    <Typography sx={{ fontSize: '0.55rem', fontWeight: 700, lineHeight: 1, opacity: 0.8 }}>DAY</Typography>
-                    <Typography sx={{ fontSize: '0.95rem', fontWeight: 900, lineHeight: 1 }}>{day.day || idx + 1}</Typography>
+                    <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '1.1rem' }}>
+                      {day.day}
+                    </Typography>
                   </Box>
-                  {idx < itinerary.length - 1 && (
-                    <Box sx={{ width: 2, flex: 1, minHeight: 20, bgcolor: '#D8F3DC', mt: 0.5 }} />
+                  {i < itinerary.length - 1 && (
+                    <Box sx={{ width: 2, height: 40, bgcolor: '#E5E7EB', mx: 'auto', mt: 1 }} />
                   )}
                 </Box>
                 {/* Content */}
-                <Box sx={{ flex: 1, pb: 1 }}>
-                  <Typography sx={{ fontWeight: 800, color: DG, fontSize: '0.95rem', mb: 0.5 }}>
-                    {day.title || `Day ${day.day || idx + 1}`}
+                <Box sx={{ flex: 1, pb: 2 }}>
+                  <Typography sx={{
+                    fontFamily: '"Montserrat", sans-serif', fontSize: '0.75rem',
+                    fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '0.1em', mb: 0.5,
+                  }}>
+                    Day {day.day}
                   </Typography>
-                  <Typography sx={{ fontSize: '0.82rem', color: '#555', lineHeight: 1.7, mb: 1, whiteSpace: 'pre-line' }}>
+                  <Typography sx={{ fontSize: '1.3rem', fontWeight: 700, color: PRIMARY, mb: 1 }}>
+                    {day.title}
+                  </Typography>
+                  <Typography sx={{ fontSize: '0.95rem', lineHeight: 1.7, color: '#555' }}>
                     {day.description}
                   </Typography>
-                  {(day.hotel || day.meal_plan || day.activities) && (
-                    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                  {(day.hotel || day.meal_plan) && (
+                    <Box sx={{ display: 'flex', gap: 2, mt: 1.5, flexWrap: 'wrap' }}>
                       {day.hotel && (
-                        <Box sx={{ bgcolor: LG, px: 1.5, py: 0.4, borderRadius: 10 }}>
-                          <Typography sx={{ fontSize: '0.7rem', color: DG, fontWeight: 600 }}>ðŸ¨ {day.hotel}</Typography>
+                        <Box sx={{ px: 2, py: 0.5, bgcolor: '#fff', border: '1px solid #E5E7EB', borderRadius: 10 }}>
+                          <Typography sx={{ fontSize: '0.75rem', color: PRIMARY, fontWeight: 600 }}>
+                            🏨 {day.hotel}
+                          </Typography>
                         </Box>
                       )}
                       {day.meal_plan && (
-                        <Box sx={{ bgcolor: '#FFF8E1', px: 1.5, py: 0.4, borderRadius: 10 }}>
-                          <Typography sx={{ fontSize: '0.7rem', color: '#7B5E00', fontWeight: 600 }}>ðŸ½ {day.meal_plan}</Typography>
-                        </Box>
-                      )}
-                      {day.activities && (
-                        <Box sx={{ bgcolor: '#E8EAF6', px: 1.5, py: 0.4, borderRadius: 10 }}>
-                          <Typography sx={{ fontSize: '0.7rem', color: '#3949AB', fontWeight: 600 }}>âš¡ {day.activities}</Typography>
+                        <Box sx={{ px: 2, py: 0.5, bgcolor: '#fff', border: '1px solid #E5E7EB', borderRadius: 10 }}>
+                          <Typography sx={{ fontSize: '0.75rem', color: PRIMARY, fontWeight: 600 }}>
+                            🍽️ {day.meal_plan}
+                          </Typography>
                         </Box>
                       )}
                     </Box>
@@ -251,686 +334,137 @@ export const ModernProfessionalTemplate = ({ quotation }) => {
               </Box>
             ))}
           </Box>
-        )}
-
-        {/* HOTEL OPTIONS */}
-        {hotelOptions.length > 0 && (
-          <Box className="anim-fadeup anim-delay-3" sx={{
-            bgcolor: '#fff', borderRadius: 3, p: 3, mb: 3,
-            boxShadow: '0 4px 20px rgba(27,67,50,0.08)',
-            pageBreakInside: 'avoid', breakInside: 'avoid'
-          }}>
-            {sectionTitle('Hotel Options')}
-            <Grid container spacing={2}>
-              {hotelOptions.map((hotel, idx) => (
-                <Grid item xs={12} sm={6} key={idx}>
-                  <Box sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid #E0E0E0' }}>
-                    {hotel.image_url ? (
-                      <img src={hotel.image_url} alt={hotel.name}
-                        style={{ width: '100%', height: 130, objectFit: 'cover' }} />
-                    ) : (
-                      <Box sx={{
-                        height: 130, bgcolor: LG, display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', color: MG, fontSize: '0.8rem', fontWeight: 600
-                      }}>
-                        ðŸ¨ Hotel Option {idx + 1}
-                      </Box>
-                    )}
-                    <Box sx={{ p: 1.5 }}>
-                      <Typography sx={{ fontWeight: 700, fontSize: '0.88rem', color: DG }}>{hotel.name}</Typography>
-                      {hotel.description && (
-                        <Typography sx={{ fontSize: '0.75rem', color: '#666', mt: 0.5, lineHeight: 1.5 }}>
-                          {hotel.description}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
-
-        {/* INCLUSIONS / EXCLUSIONS */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6}>
-            <Box className="anim-fadeup anim-delay-2" sx={{
-              bgcolor: '#F0FFF4', border: `1px solid #74C69D`, borderRadius: 3, p: 2.5, height: '100%',
-              pageBreakInside: 'avoid', breakInside: 'avoid'
-            }}>
-              <Typography sx={{ fontWeight: 800, color: '#1B5E20', fontSize: '0.9rem', mb: 1.5 }}>
-                âœ… Inclusions
-              </Typography>
-              <Typography component="div" sx={{ fontSize: '0.8rem', color: '#2E7D32', lineHeight: 2 }}>
-                {policies?.inclusions ? (
-                  policies.inclusions.split('\n').map((line, i) => line.trim() && <div key={i}>â€¢ {line.trim()}</div>)
-                ) : (
-                  <>
-                    <div>â€¢ Accommodation as per itinerary</div>
-                    <div>â€¢ Daily breakfast & specified meals</div>
-                    <div>â€¢ All transfers & sightseeing</div>
-                    <div>â€¢ Entry fees to mentioned attractions</div>
-                    <div>â€¢ Dedicated tour manager</div>
-                  </>
-                )}
-              </Typography>
-            </Box>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Box className="anim-fadeup anim-delay-3" sx={{
-              bgcolor: '#FFF5F5', border: `1px solid #FC8181`, borderRadius: 3, p: 2.5, height: '100%',
-              pageBreakInside: 'avoid', breakInside: 'avoid'
-            }}>
-              <Typography sx={{ fontWeight: 800, color: '#C62828', fontSize: '0.9rem', mb: 1.5 }}>
-                âŒ Exclusions
-              </Typography>
-              <Typography component="div" sx={{ fontSize: '0.8rem', color: '#B71C1C', lineHeight: 2 }}>
-                {policies?.exclusions ? (
-                  policies.exclusions.split('\n').map((line, i) => line.trim() && <div key={i}>â€¢ {line.trim()}</div>)
-                ) : (
-                  <>
-                    <div>â€¢ Airfare / train tickets</div>
-                    <div>â€¢ Visa & travel insurance</div>
-                    <div>â€¢ Personal expenses & tips</div>
-                    <div>â€¢ Meals not mentioned</div>
-                    <div>â€¢ Optional activities</div>
-                  </>
-                )}
-              </Typography>
-            </Box>
-          </Grid>
-        </Grid>
-
-        {/* TRANSPORT */}
-        {(flightDetails || groundTransport) && (
-          <Box className="anim-fadeup anim-delay-3" sx={{
-            bgcolor: '#fff', borderRadius: 3, p: 3, mb: 3,
-            boxShadow: '0 4px 20px rgba(27,67,50,0.08)',
-            pageBreakInside: 'avoid', breakInside: 'avoid'
-          }}>
-            {sectionTitle('Transport Details')}
-            <Grid container spacing={2}>
-              {flightDetails && (
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ bgcolor: '#EFF6FF', borderRadius: 2, p: 2 }}>
-                    <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#1E40AF', mb: 1 }}>âœˆ Flight Details</Typography>
-                    <Typography sx={{ fontSize: '0.8rem', color: '#1E3A8A' }}>
-                      {flightDetails.airline && <span><strong>Airline:</strong> {flightDetails.airline}<br /></span>}
-                      {flightDetails.flight && <span><strong>Flight:</strong> {flightDetails.flight}<br /></span>}
-                      {flightDetails.departure && <span><strong>Departure:</strong> {flightDetails.departure}<br /></span>}
-                      {flightDetails.arrival && <span><strong>Arrival:</strong> {flightDetails.arrival}</span>}
-                    </Typography>
-                  </Box>
-                </Grid>
-              )}
-              {groundTransport && (
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ bgcolor: LG, borderRadius: 2, p: 2 }}>
-                    <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: DG, mb: 1 }}>ðŸš— Ground Transport</Typography>
-                    <Typography sx={{ fontSize: '0.8rem', color: MG }}>{groundTransport}</Typography>
-                  </Box>
-                </Grid>
-              )}
-            </Grid>
-          </Box>
-        )}
-
-        {/* COST BREAKDOWN */}
-        {costing && (
-          <Box className="anim-fadeup anim-delay-3" sx={{
-            bgcolor: '#fff', borderRadius: 3, p: 3, mb: 3,
-            boxShadow: '0 4px 20px rgba(27,67,50,0.08)',
-            pageBreakInside: 'avoid', breakInside: 'avoid'
-          }}>
-            {sectionTitle('Cost Breakdown')}
-            {costing.items?.length > 0 && (
-              <Box sx={{ mb: 2, borderRadius: 2, overflow: 'hidden', border: '1px solid #E0E0E0' }}>
-                {/* Table header */}
-                <Box sx={{ display: 'flex', bgcolor: DG, color: '#fff', px: 2, py: 1 }}>
-                  <Typography sx={{ flex: 3, fontSize: '0.78rem', fontWeight: 700 }}>Description</Typography>
-                  <Typography sx={{ flex: 1, fontSize: '0.78rem', fontWeight: 700, textAlign: 'center' }}>Qty</Typography>
-                  <Typography sx={{ flex: 1.5, fontSize: '0.78rem', fontWeight: 700, textAlign: 'right' }}>Unit Price</Typography>
-                  <Typography sx={{ flex: 1.5, fontSize: '0.78rem', fontWeight: 700, textAlign: 'right' }}>Total</Typography>
-                </Box>
-                {costing.items.map((item, idx) => (
-                  <Box key={idx} sx={{
-                    display: 'flex', px: 2, py: 1.2,
-                    bgcolor: idx % 2 === 0 ? '#FAFAFA' : '#fff',
-                    borderTop: '1px solid #F0F0F0'
-                  }}>
-                    <Typography sx={{ flex: 3, fontSize: '0.82rem', color: '#333' }}>{item.name}</Typography>
-                    <Typography sx={{ flex: 1, fontSize: '0.82rem', color: '#555', textAlign: 'center' }}>{item.quantity}</Typography>
-                    <Typography sx={{ flex: 1.5, fontSize: '0.82rem', color: '#555', textAlign: 'right' }}>
-                      â‚¹{item.unit_price?.toLocaleString('en-IN')}
-                    </Typography>
-                    <Typography sx={{ flex: 1.5, fontSize: '0.82rem', fontWeight: 600, color: DG, textAlign: 'right' }}>
-                      â‚¹{(item.quantity * item.unit_price)?.toLocaleString('en-IN')}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            )}
-            {/* Grand Total */}
-            <Box className="pulse-gold" sx={{
-              background: `linear-gradient(135deg, ${DG} 0%, ${MG} 100%)`,
-              borderRadius: 3, p: 3, textAlign: 'center',
-              pageBreakInside: 'avoid', breakInside: 'avoid'
-            }}>
-              <Typography sx={{ color: G, fontSize: '0.8rem', fontWeight: 700, letterSpacing: 2, mb: 0.5 }}>
-                TOTAL PACKAGE COST
-              </Typography>
-              <Typography sx={{ color: '#fff', fontSize: '2.4rem', fontWeight: 900, lineHeight: 1 }}>
-                â‚¹{costing.total_amount?.toLocaleString('en-IN') || 'â€”'}
-              </Typography>
-              {costing.pax && (
-                <Typography sx={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.8rem', mt: 0.5 }}>
-                  For {costing.pax} Pax Â· All Inclusive
-                </Typography>
-              )}
-            </Box>
-          </Box>
-        )}
-
-        {/* PAYMENT DETAILS */}
-        {(payment?.bank_name || payment?.account_number || payment?.qr_code_url) && (
-          <Box className="anim-fadeup anim-delay-4" sx={{
-            bgcolor: '#fff', borderRadius: 3, p: 3, mb: 3,
-            boxShadow: '0 4px 20px rgba(27,67,50,0.08)',
-            pageBreakInside: 'avoid', breakInside: 'avoid'
-          }}>
-            {sectionTitle('Payment Details')}
-            <Grid container spacing={2} alignItems="flex-start">
-              <Grid item xs={12} sm={payment?.qr_code_url ? 7 : 12}>
-                <Box sx={{ bgcolor: '#F8F9FA', borderRadius: 2, p: 2, border: '1px dashed #CCC' }}>
-                  {payment?.bank_name && <Typography sx={{ fontSize: '0.82rem', mb: 0.5 }}><strong>Bank:</strong> {payment.bank_name}</Typography>}
-                  {payment?.bank_address && <Typography sx={{ fontSize: '0.82rem', mb: 0.5 }}><strong>Address:</strong> {payment.bank_address}</Typography>}
-                  {payment?.account_name && <Typography sx={{ fontSize: '0.82rem', mb: 0.5 }}><strong>A/C Name:</strong> {payment.account_name}</Typography>}
-                  {payment?.account_number && <Typography sx={{ fontSize: '0.82rem', mb: 0.5 }}><strong>A/C No:</strong> {payment.account_number}</Typography>}
-                  {payment?.ifsc_code && <Typography sx={{ fontSize: '0.82rem', mb: 0.5 }}><strong>IFSC:</strong> {payment.ifsc_code}</Typography>}
-                  {payment?.upi_ids?.[0] && <Typography sx={{ fontSize: '0.82rem' }}><strong>UPI:</strong> {payment.upi_ids[0]}</Typography>}
-                </Box>
-              </Grid>
-              {payment?.qr_code_url && (
-                <Grid item xs={12} sm={5}>
-                  <Box sx={{ textAlign: 'center', p: 2, bgcolor: '#F8F9FA', borderRadius: 2, border: '1px dashed #CCC' }}>
-                    <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: DG, mb: 1 }}>Scan to Pay</Typography>
-                    <img src={payment.qr_code_url} alt="QR"
-                      style={{ width: 110, height: 110, objectFit: 'contain', border: `2px solid ${G}`, borderRadius: 8 }} />
-                  </Box>
-                </Grid>
-              )}
-            </Grid>
-          </Box>
-        )}
-
-        {/* POLICIES */}
-        {(policies?.payment_terms || policies?.cancellation_policy || policies?.terms_and_conditions) && (
-          <Box className="anim-fadeup anim-delay-4" sx={{
-            bgcolor: '#fff', borderRadius: 3, p: 3, mb: 3,
-            boxShadow: '0 4px 20px rgba(27,67,50,0.08)',
-            pageBreakInside: 'avoid', breakInside: 'avoid'
-          }}>
-            {sectionTitle('Policies & Terms')}
-            {policies.payment_terms && (
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: DG, mb: 0.5 }}>ðŸ’³ Payment Terms</Typography>
-                <Typography sx={{ fontSize: '0.8rem', color: '#555', lineHeight: 1.7, whiteSpace: 'pre-line' }}>{policies.payment_terms}</Typography>
-              </Box>
-            )}
-            {policies.cancellation_policy && (
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#C62828', mb: 0.5 }}>ðŸš« Cancellation Policy</Typography>
-                <Typography sx={{ fontSize: '0.8rem', color: '#555', lineHeight: 1.7, whiteSpace: 'pre-line' }}>{policies.cancellation_policy}</Typography>
-              </Box>
-            )}
-            {policies.terms_and_conditions && (
-              <Box>
-                <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#555', mb: 0.5 }}>ðŸ“‹ Terms & Conditions</Typography>
-                <Typography sx={{ fontSize: '0.8rem', color: '#555', lineHeight: 1.7, whiteSpace: 'pre-line' }}>{policies.terms_and_conditions}</Typography>
-              </Box>
-            )}
-          </Box>
-        )}
-
-        {/* GALLERY */}
-        {galleryImages?.length > 0 && (
-          <Box className="anim-fadeup anim-delay-4" sx={{
-            bgcolor: '#fff', borderRadius: 3, p: 3, mb: 3,
-            boxShadow: '0 4px 20px rgba(27,67,50,0.08)',
-            pageBreakInside: 'avoid', breakInside: 'avoid'
-          }}>
-            {sectionTitle('Destination Gallery')}
-            <Grid container spacing={1.5}>
-              {galleryImages.slice(0, 6).map((img, idx) => (
-                <Grid item xs={4} key={idx}>
-                  <Box sx={{ height: 110, borderRadius: 2, overflow: 'hidden', bgcolor: LG }}>
-                    <img src={img} alt={`Gallery ${idx + 1}`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
-
-        {/* AGENT */}
-        {(quotation.agent?.name || quotation.agent?.contact || quotation.agent?.email) && (
-          <Box sx={{
-            bgcolor: LG, borderRadius: 3, p: 2.5, mb: 3,
-            border: `1px solid #74C69D`,
-            pageBreakInside: 'avoid', breakInside: 'avoid'
-          }}>
-            <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: DG, mb: 1 }}>ðŸ‘¤ Your Travel Specialist</Typography>
-            {quotation.agent.name && <Typography sx={{ fontSize: '0.82rem', color: '#333' }}><strong>Name:</strong> {quotation.agent.name}</Typography>}
-            {quotation.agent.contact && <Typography sx={{ fontSize: '0.82rem', color: '#333' }}><strong>Phone:</strong> {quotation.agent.contact}</Typography>}
-            {quotation.agent.email && <Typography sx={{ fontSize: '0.82rem', color: '#333' }}><strong>Email:</strong> {quotation.agent.email}</Typography>}
-          </Box>
-        )}
-      </Box>
-
-      {/* â”€â”€ FOOTER â”€â”€ */}
-      <Box sx={{
-        background: `linear-gradient(135deg, ${DG} 0%, ${MG} 100%)`,
-        color: '#fff', px: 4, py: 3, textAlign: 'center',
-        pageBreakInside: 'avoid', breakInside: 'avoid'
-      }}>
-        <Typography sx={{ color: G, fontWeight: 800, fontSize: '1.1rem', mb: 0.5 }}>
-          Ready to Book Your Adventure?
-        </Typography>
-        <Typography sx={{ fontSize: '0.82rem', opacity: 0.85, mb: 1 }}>
-          Contact us today and let's make your mountain dream a reality.
-        </Typography>
-        <Typography sx={{ fontSize: '0.75rem', opacity: 0.65 }}>
-          {company?.mobile && `ðŸ“ž ${company.mobile}  `}
-          {company?.email && `âœ‰ ${company.email}  `}
-          {company?.website && `ðŸŒ ${company.website}`}
-        </Typography>
-        <Typography sx={{ fontSize: '0.65rem', opacity: 0.5, mt: 1 }}>
-          Â© {new Date().getFullYear()} {company?.name || 'Indian Mountain Rovers'}. All rights reserved.
-        </Typography>
-      </Box>
-    </Box>
-  );
-};
-
-// =========================================================
-// TEMPLATE 2: LUXURY GOLD (Preserved Original)
-// =========================================================
-export const LuxuryGoldTemplate = ({ quotation }) => {
-  const {
-    client_name, client_email, client_mobile, display_title, overview,
-    itinerary, costing, policies, payment, company, __client_name,
-    __client_email, __client_mobile
-  } = quotation;
-
-  const finalClientName = __client_name || client_name || 'Distinguished Guest';
-  const finalClientEmail = __client_email || client_email || '';
-  const finalClientMobile = __client_mobile || client_mobile || '';
-  const heroImage = getImageUrl(quotation, 'hero_image');
-  const galleryImages = getImageUrl(quotation, 'gallery_images');
-
-  return (
-    <Box sx={{
-      background: '#fff',
-      minHeight: '100vh',
-      p: 4,
-      fontFamily: 'Georgia, serif'
-    }}>
-      <Box sx={{
-        textAlign: 'center',
-        mb: 5,
-        pb: 3,
-        borderBottom: '5px solid #D4AF37',
-        background: 'linear-gradient(90deg, #FFF8DC 0%, #FAEBD7 100%)',
-        p: 3,
-        borderRadius: 2,
-        pageBreakInside: 'avoid',
-        breakInside: 'avoid'
-      }}>
-        <Typography variant="h2" sx={{
-          fontWeight: 'bold',
-          color: '#8B4513',
-          textShadow: '1px 1px 3px rgba(212,175,55,0.5)',
-          fontFamily: 'Georgia, serif',
-          mb: 1
-        }}>
-          âœ¨ {company?.name || 'Luxury Holidays Planners'} âœ¨
-        </Typography>
-        <Typography variant="h6" sx={{ color: '#D4AF37', fontStyle: 'italic', mt: 2, fontWeight: 'bold' }}>
-          Crafting Premium Travel Experiences
-        </Typography>
-      </Box>
-
-      {heroImage && (
-        <Box sx={{
-          mb: 4,
-          borderRadius: 4,
-          overflow: 'hidden',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          pageBreakInside: 'avoid',
-          breakInside: 'avoid'
-        }}>
-          <img
-            src={heroImage}
-            alt="Trip Hero"
-            style={{ width: '100%', height: '350px', objectFit: 'cover' }}
-          />
         </Box>
       )}
 
-      <Box sx={{
-        bgcolor: '#fff',
-        p: 5,
-        borderRadius: 4,
-        boxShadow: '0 15px 50px rgba(0,0,0,0.1)',
-        mb: 4,
-        border: '2px solid #D4AF37',
-        pageBreakInside: 'avoid',
-        breakInside: 'avoid'
-      }}>
-        <Typography variant="h3" sx={{
-          fontWeight: 'bold',
-          color: '#D4AF37',
-          mb: 3,
-          fontFamily: 'Georgia, serif',
-          borderBottom: '3px solid #D4AF37',
-          pb: 2
-        }}>
-          {display_title || 'Exclusive Travel Quotation'}
-        </Typography>
-        <Typography variant="body1" sx={{ lineHeight: 2, fontSize: '1.1rem', color: '#555', mb: 3 }}>
-          Dear <Typography component="span" fontWeight="bold" sx={{ color: '#8B4513' }}>{finalClientName}</Typography>, we are absolutely delighted to present you with an exclusive, tailor-made travel experience
-          designed to exceed your expectations. Your journey of a lifetime awaits.
-        </Typography>
-
-        <Grid container spacing={2} sx={{ mt: 3, p: 2, bgcolor: '#FFF8DC', borderRadius: 2 }}>
-          {finalClientEmail && (
-            <Grid item xs={12} md={6}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Email sx={{ color: '#D4AF37', fontSize: 20 }} />
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Email</Typography>
-                  <Typography variant="body2" fontWeight="medium">{finalClientEmail}</Typography>
-                </Box>
-              </Box>
-            </Grid>
-          )}
-          {finalClientMobile && (
-            <Grid item xs={12} md={6}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Phone sx={{ color: '#D4AF37', fontSize: 20 }} />
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Mobile</Typography>
-                  <Typography variant="body2" fontWeight="medium">{finalClientMobile}</Typography>
-                </Box>
-              </Box>
-            </Grid>
-          )}
+      {/* ── INCLUSIONS / EXCLUSIONS ── */}
+      <Box sx={{ p: 6, bgcolor: PRIMARY, color: '#fff', pageBreakInside: 'avoid' }}>
+        <Grid container spacing={6}>
+          <Grid item xs={12} md={6}>
+            <Typography sx={{ fontFamily: '"Montserrat", sans-serif', fontWeight: 700, fontSize: '0.85rem', color: GOLD, mb: 3, letterSpacing: '0.1em' }}>
+              ✓ INCLUSIONS
+            </Typography>
+            {inclusions.length > 0
+              ? inclusions.map((line, i) => (
+                <Typography key={i} sx={{ fontSize: '0.9rem', mb: 1, display: 'flex', gap: 1.5 }}>
+                  <span style={{ color: GOLD }}>✓</span> {line}
+                </Typography>
+              ))
+              : <Typography sx={{ fontSize: '0.9rem', opacity: 0.7 }}>As per standard package.</Typography>
+            }
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Typography sx={{ fontFamily: '"Montserrat", sans-serif', fontWeight: 700, fontSize: '0.85rem', color: '#ff8a80', mb: 3, letterSpacing: '0.1em' }}>
+              ✗ EXCLUSIONS
+            </Typography>
+            {exclusions.length > 0
+              ? exclusions.map((line, i) => (
+                <Typography key={i} sx={{ fontSize: '0.9rem', mb: 1, display: 'flex', gap: 1.5, opacity: 0.85 }}>
+                  <span>✗</span> {line}
+                </Typography>
+              ))
+              : <Typography sx={{ fontSize: '0.9rem', opacity: 0.7 }}>As per standard package.</Typography>
+            }
+          </Grid>
         </Grid>
-      </Box>
 
-      <Box sx={{
-        bgcolor: '#fff',
-        p: 5,
-        borderRadius: 4,
-        boxShadow: '0 15px 50px rgba(0,0,0,0.1)',
-        mb: 4,
-        pageBreakInside: 'avoid',
-        breakInside: 'avoid'
-      }}>
-        <Typography variant="h4" sx={{
-          fontWeight: 'bold',
-          color: '#8B4513',
-          mb: 3,
-          fontFamily: 'Georgia, serif'
-        }}>
-          âœ¨ Package Overview
-        </Typography>
-        <Divider sx={{ mb: 3, borderColor: '#D4AF37', borderWidth: 2 }} />
-        <Typography variant="body1" sx={{ lineHeight: 2, fontSize: '1.05rem', whiteSpace: 'pre-line' }}>
-          {overview || 'An unforgettable journey awaits you.'}
-        </Typography>
-      </Box>
+        <Divider sx={{ borderColor: 'rgba(255,255,255,0.15)', my: 5 }} />
 
-      {galleryImages && galleryImages.length > 0 && (
-        <Box sx={{
-          bgcolor: '#fff',
-          p: 4,
-          borderRadius: 4,
-          mb: 4,
-          boxShadow: '0 15px 50px rgba(0,0,0,0.1)',
-          border: '1px solid #D4AF37',
-          pageBreakInside: 'avoid',
-          breakInside: 'avoid'
-        }}>
-          <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3, color: '#D4AF37', borderBottom: '3px solid #D4AF37', pb: 1 }}>
-            ðŸ“¸ Moments to Come
-          </Typography>
-          <Grid container spacing={2}>
-            {galleryImages.slice(0, 6).map((img, idx) => (
-              <Grid item xs={4} key={idx}>
-                <img
-                  src={img}
-                  alt={`Gallery Image ${idx + 1}`}
-                  style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px' }}
-                />
-              </Grid>
+        {/* Cost Breakdown */}
+        {costRows.length > 0 && (
+          <Box sx={{ mb: 4 }}>
+            <Typography sx={{ fontFamily: '"Montserrat", sans-serif', fontWeight: 700, fontSize: '0.85rem', color: GOLD, mb: 2, letterSpacing: '0.1em' }}>
+              COST BREAKDOWN
+            </Typography>
+            {costRows.map((row, i) => (
+              <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', py: 1, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                <Box>
+                  <Typography sx={{ fontSize: '0.9rem', fontWeight: 600 }}>{row.name}</Typography>
+                  {row.desc && <Typography sx={{ fontSize: '0.8rem', opacity: 0.7 }}>{row.desc}</Typography>}
+                </Box>
+                <Typography sx={{ fontSize: '0.9rem', fontWeight: 600 }}>{formatINR(row.price)}</Typography>
+              </Box>
             ))}
+          </Box>
+        )}
+
+        {/* Total */}
+        <Box sx={{ bgcolor: '#fff', color: TEXT, p: 4, borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box>
+            <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, color: '#888', textTransform: 'uppercase' }}>
+              Total Investment
+            </Typography>
+            {costing.pax && (
+              <Typography sx={{ fontSize: '0.8rem', color: '#888' }}>Based on {costing.pax} Guests</Typography>
+            )}
+          </Box>
+          <Typography sx={{ fontSize: '2.5rem', fontWeight: 700, color: PRIMARY }}>
+            {formatINR(totalAmount)}
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* ── PAYMENT TERMS ── */}
+      {(policies.payment_terms || policies.cancellation_policy || payment.bank_name) && (
+        <Box sx={{ p: 6, bgcolor: '#fff', pageBreakInside: 'avoid' }}>
+          <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: PRIMARY, mb: 4 }}>
+            Payment & Terms
+          </Typography>
+          <Grid container spacing={4}>
+            {(policies.payment_terms || policies.cancellation_policy) && (
+              <Grid item xs={12} md={6}>
+                {policies.payment_terms && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography sx={{ fontWeight: 700, color: PRIMARY, mb: 1 }}>Payment Terms</Typography>
+                    <Typography sx={{ fontSize: '0.9rem', color: '#555', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
+                      {policies.payment_terms}
+                    </Typography>
+                  </Box>
+                )}
+                {policies.cancellation_policy && (
+                  <Box>
+                    <Typography sx={{ fontWeight: 700, color: PRIMARY, mb: 1 }}>Cancellation Policy</Typography>
+                    <Typography sx={{ fontSize: '0.9rem', color: '#555', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
+                      {policies.cancellation_policy}
+                    </Typography>
+                  </Box>
+                )}
+              </Grid>
+            )}
+            {(payment.bank_name || payment.qr_code_url) && (
+              <Grid item xs={12} md={6}>
+                <Typography sx={{ fontWeight: 700, color: PRIMARY, mb: 2 }}>Bank Details</Typography>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                  <Box sx={{ p: 2.5, border: '1px solid #E5E7EB', borderRadius: 2, flex: 1 }}>
+                    {payment.bank_name && <Typography sx={{ fontSize: '0.85rem', mb: 0.5 }}><strong>Bank:</strong> {payment.bank_name}</Typography>}
+                    {payment.account_number && <Typography sx={{ fontSize: '0.85rem', mb: 0.5 }}><strong>Account:</strong> {payment.account_number}</Typography>}
+                    {payment.ifsc_code && <Typography sx={{ fontSize: '0.85rem', mb: 0.5 }}><strong>IFSC:</strong> {payment.ifsc_code}</Typography>}
+                    {payment.branch_name && <Typography sx={{ fontSize: '0.85rem', mb: 0.5 }}><strong>Branch:</strong> {payment.branch_name}</Typography>}
+                    {payment.upi_ids?.[0] && <Typography sx={{ fontSize: '0.85rem' }}><strong>UPI:</strong> {payment.upi_ids[0]}</Typography>}
+                  </Box>
+                  {payment.qr_code_url && (
+                    <Box sx={{ textAlign: 'center', flexShrink: 0 }}>
+                      <img src={payment.qr_code_url} alt="Pay via QR" style={{ width: 100, height: 100, objectFit: 'contain', border: '1px solid #E5E7EB', borderRadius: 8, padding: 4 }} />
+                      <Typography sx={{ fontSize: '0.7rem', color: '#888', mt: 0.5 }}>Scan to Pay</Typography>
+                    </Box>
+                  )}
+                </Box>
+              </Grid>
+            )}
           </Grid>
         </Box>
       )}
 
-      {itinerary && itinerary.length > 0 && (
-        <Box sx={{ bgcolor: '#fff', p: 5, borderRadius: 4, boxShadow: '0 15px 50px rgba(0,0,0,0.1)', mb: 4 }}>
-          <Typography variant="h4" sx={{
-            fontWeight: 'bold',
-            color: '#D4AF37',
-            mb: 4,
-            fontFamily: 'Georgia, serif',
-            borderBottom: '3px solid #D4AF37',
-            pb: 2
-          }}>
-            ðŸ—“ï¸ Your Journey, Day by Day
-          </Typography>
-          {itinerary.map((day, idx) => (
-            <Box key={idx} sx={{
-              mb: 2,
-              p: 3,
-              bgcolor: '#FFF8DC',
-              borderRadius: 3,
-              borderLeft: '5px solid #D4AF37',
-              boxShadow: '0 4px 15px rgba(212,175,55,0.2)',
-              pageBreakInside: 'avoid',
-              breakInside: 'avoid'
-            }}>
-              <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#8B4513', mb: 1 }}>
-                Day {day.day} â€¢ {day.title}
-              </Typography>
-              <Typography variant="body1" sx={{ lineHeight: 1.9, color: '#666', whiteSpace: 'pre-line' }}>
-                {day.description}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
-      )}
-
-      <Box sx={{
-        bgcolor: '#fff',
-        p: 5,
-        borderRadius: 4,
-        boxShadow: '0 15px 50px rgba(0,0,0,0.1)',
-        mb: 4,
-        pageBreakInside: 'avoid',
-        breakInside: 'avoid'
-      }}>
-        <Typography variant="h4" sx={{
-          fontWeight: 'bold',
-          color: '#D4AF37',
-          mb: 4,
-          fontFamily: 'Georgia, serif'
-        }}>
-          ðŸ’Ž Investment Details
+      {/* ── TEMPLATE FOOTER ── */}
+      <Box sx={{ p: 4, textAlign: 'center', bgcolor: '#111', color: '#888' }}>
+        <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff', mb: 0.5 }}>
+          {company.name}
         </Typography>
-        <Box sx={{ bgcolor: '#FFF8DC', p: 4, borderRadius: 3 }}>
-          {costing?.items?.map((item, idx) => (
-            <Box key={idx} sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              mb: 3,
-              pb: 2,
-              borderBottom: '2px dashed #D4AF37',
-              alignItems: 'center'
-            }}>
-              <Box>
-                <Typography variant="h6" fontWeight="medium">{item.name}</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Quantity: {item.quantity} Ã— â‚¹{item.unit_price?.toLocaleString('en-IN')}
-                </Typography>
-              </Box>
-              <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#8B4513' }}>
-                â‚¹{(item.quantity * item.unit_price)?.toLocaleString('en-IN')}
-              </Typography>
-            </Box>
-          ))}
-          <Box sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            mt: 4,
-            pt: 3,
-            borderTop: '4px solid #D4AF37',
-            alignItems: 'center'
-          }}>
-            <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#8B4513', fontFamily: 'Georgia, serif' }}>
-              TOTAL INVESTMENT
-            </Typography>
-            <Typography variant="h3" sx={{ fontWeight: 'bold', color: '#D4AF37', fontFamily: 'Georgia, serif' }}>
-              â‚¹{costing?.total_amount?.toLocaleString('en-IN')}
-            </Typography>
-          </Box>
-        </Box>
-      </Box>
-
-      <Box sx={{
-        bgcolor: '#fff',
-        p: 5,
-        borderRadius: 4,
-        boxShadow: '0 15px 50px rgba(0,0,0,0.1)',
-        mb: 4,
-        pageBreakInside: 'avoid',
-        breakInside: 'avoid'
-      }}>
-        <Typography variant="h4" sx={{
-          fontWeight: 'bold',
-          color: '#8B4513',
-          mb: 4,
-          fontFamily: 'Georgia, serif'
-        }}>
-          ðŸ“œ Important Guidelines
+        <Typography sx={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>
+          {company.mobile} · {company.email} · {company.website}
         </Typography>
-        {policies?.payment_terms && (
-          <>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#D4AF37', mt: 2, mb: 1 }}>
-              Payment Terms
-            </Typography>
-            <Typography variant="body2" sx={{ lineHeight: 1.8, whiteSpace: 'pre-line' }}>
-              {policies.payment_terms}
-            </Typography>
-          </>
-        )}
-        {policies?.cancellation_policy && (
-          <>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#D4AF37', mt: 3, mb: 1 }}>
-              Cancellation Policy
-            </Typography>
-            <Typography variant="body2" sx={{ lineHeight: 1.8, whiteSpace: 'pre-line' }}>
-              {policies.cancellation_policy}
-            </Typography>
-          </>
-        )}
-        {policies?.terms_and_conditions && (
-          <>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#D4AF37', mt: 3, mb: 1 }}>
-              Terms & Conditions
-            </Typography>
-            <Typography variant="body2" sx={{ lineHeight: 1.8, whiteSpace: 'pre-line' }}>
-              {policies.terms_and_conditions}
-            </Typography>
-          </>
-        )}
-      </Box>
-
-      <Box sx={{
-        bgcolor: '#fff',
-        p: 5,
-        borderRadius: 4,
-        boxShadow: '0 15px 50px rgba(0,0,0,0.1)',
-        pageBreakInside: 'avoid',
-        breakInside: 'avoid'
-      }}>
-        <Typography variant="h4" sx={{
-          fontWeight: 'bold',
-          color: '#D4AF37',
-          mb: 4,
-          fontFamily: 'Georgia, serif'
-        }}>
-          ðŸ’³ Payment Information
-        </Typography>
-        <Grid container spacing={3}>
-          {payment?.bank_name && (
-            <Grid item xs={6}>
-              <Typography variant="caption" color="text.secondary">Bank Name</Typography>
-              <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{payment.bank_name}</Typography>
-            </Grid>
-          )}
-          {payment?.account_number && (
-            <Grid item xs={6}>
-              <Typography variant="caption" color="text.secondary">Account Number</Typography>
-              <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{payment.account_number}</Typography>
-            </Grid>
-          )}
-          {payment?.ifsc_code && (
-            <Grid item xs={6}>
-              <Typography variant="caption" color="text.secondary">IFSC Code</Typography>
-              <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{payment.ifsc_code}</Typography>
-            </Grid>
-          )}
-          {payment?.upi_ids && payment.upi_ids[0] && (
-            <Grid item xs={6}>
-              <Typography variant="caption" color="text.secondary">UPI ID</Typography>
-              <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{payment.upi_ids[0]}</Typography>
-            </Grid>
-          )}
-        </Grid>
-
-        {payment?.qr_code_url && (
-          <Box sx={{ mt: 4, textAlign: 'center', p: 3, bgcolor: '#FFF8DC', borderRadius: 2, border: '1px dashed #D4AF37' }}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: '#8B4513' }}>
-              Scan to Pay
-            </Typography>
-            <img
-              src={payment.qr_code_url}
-              alt="Payment QR Code"
-              style={{ maxWidth: '220px', maxHeight: '220px', border: '3px solid #D4AF37', borderRadius: '12px' }}
-            />
-          </Box>
-        )}
-      </Box>
-
-      <Box sx={{
-        mt: 5,
-        textAlign: 'center',
-        p: 4,
-        bgcolor: '#8B4513',
-        color: '#fff',
-        borderRadius: 3,
-        pageBreakInside: 'avoid',
-        breakInside: 'avoid'
-      }}>
-        <Typography variant="h6" sx={{ mb: 1, color: '#D4AF37', fontFamily: 'Georgia, serif' }}>
-          Thank You for Choosing Excellence
-        </Typography>
-        <Typography variant="body2">
-          We look forward to crafting an unforgettable journey for you.
+        <Typography sx={{ fontSize: '0.7rem', mt: 0.5, opacity: 0.6 }}>
+          {company.address}
         </Typography>
       </Box>
     </Box>
@@ -938,517 +472,276 @@ export const LuxuryGoldTemplate = ({ quotation }) => {
 };
 
 // =========================================================
-// TEMPLATE 3: MINIMALIST CLASSIC (Redesigned — Clean & Elegant)
+// TEMPLATE 2: CORPORATE STRUCTURED (Clean & Detailed)
 // =========================================================
-export const MinimalistClassicTemplate = ({ quotation }) => {
-  const {
-    client_name, client_email, client_mobile, display_title, overview,
-    itinerary, costing, policies, payment, company,
-    __client_name, __client_email, __client_mobile, transport_details
-  } = quotation;
+export const CorporateStructuredTemplate = ({ quotation }) => {
+  const company = getCompany(quotation);
+  const clientName = getClientName(quotation);
+  const clientEmail = getClientEmail(quotation);
+  const clientMobile = getClientMobile(quotation);
+  const displayTitle = getDisplayTitle(quotation);
+  const overview = getOverview(quotation);
+  const galleryImages = getGalleryImages(quotation);
+  const itinerary = quotation.itinerary || [];
+  const costing = quotation.costing || {};
+  const policies = quotation.policies || {};
+  const payment = quotation.payment || {};
+  const costRows = getPackageCostRows(costing);
+  const totalAmount = costing.total_amount || quotation.amount || 0;
+  const inclusions = getInclusions(quotation);
+  const exclusions = getExclusions(quotation);
 
-  const clientName = __client_name || client_name || 'Valued Customer';
-  const clientEmail = __client_email || client_email || '';
-  const clientMobile = __client_mobile || client_mobile || '';
-  const heroImage = getImageUrl(quotation, 'hero_image');
-  const galleryImages = getImageUrl(quotation, 'gallery_images');
-  const hotelOptions = quotation.hotel_options || [];
-  const flightDetails = transport_details?.flight_details || null;
-  const groundTransport = transport_details?.ground_transport || null;
-
-  const ACC = '#2563EB'; // single blue accent
+  const ACCENT = '#1A3C40';   // IMR brand green
+  const GOLD = '#D4A017';     // IMR brand gold
+  const SECONDARY = '#334155';
+  const BORDER = '#E2E8F0';
+  const BG_HEAD = '#F1F5F9';
+  const GREEN = '#166534';
+  const RED = '#991b1b';
 
   return (
     <Box sx={{
-      bgcolor: '#FFFFFF',
-      fontFamily: "'Segoe UI', Arial, sans-serif",
-      minHeight: '100vh',
-      color: '#111'
+      bgcolor: '#fff', fontFamily: '"Inter", "Segoe UI", sans-serif',
+      color: '#1e293b', p: 5, width: '100%',
     }}>
-      <style>{`
-        @keyframes minFadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .min-fade { animation: minFadeIn 0.4s ease both; }
-        .min-fade-1 { animation-delay: 0.05s; }
-        .min-fade-2 { animation-delay: 0.1s; }
-        .min-fade-3 { animation-delay: 0.15s; }
-        @media print {
-          .min-fade { animation: none !important; opacity: 1 !important; }
-        }
-      `}</style>
 
       {/* ── HEADER ── */}
-      <Box sx={{
-        px: 5, py: 2.5,
-        borderBottom: `3px solid ${ACC}`,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        pageBreakInside: 'avoid', breakInside: 'avoid'
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          {company?.logo_url ? (
-            <img src={company.logo_url} alt="logo"
-              style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover' }} />
-          ) : (
-            <Box sx={{
-              width: 44, height: 44, borderRadius: 1, bgcolor: ACC,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontWeight: 900, fontSize: '1.1rem'
-            }}>
-              {(company?.name || 'IMR')[0]}
-            </Box>
-          )}
-          <Box>
-            <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#111' }}>
-              {company?.name || 'Indian Mountain Rovers'}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 5, borderBottom: `3px solid ${ACCENT}`, pb: 3 }}>
+        <Box>
+          {company.logo_url
+            ? <img src={company.logo_url} alt="Logo" style={{ height: 52, marginBottom: 8, objectFit: 'contain' }} />
+            : <Typography sx={{ fontSize: '1.6rem', fontWeight: 800, color: ACCENT, letterSpacing: '-0.02em' }}>
+              {company.name}
             </Typography>
-            {company?.address && (
-              <Typography sx={{ fontSize: '0.7rem', color: '#777' }}>{company.address}</Typography>
-            )}
-          </Box>
+          }
+          <Typography sx={{ fontSize: '0.8rem', color: SECONDARY, mt: 0.5 }}>{company.address}</Typography>
+          <Typography sx={{ fontSize: '0.8rem', color: SECONDARY }}>{company.email} · {company.mobile}</Typography>
+          <Typography sx={{ fontSize: '0.8rem', color: SECONDARY }}>{company.website}</Typography>
         </Box>
         <Box sx={{ textAlign: 'right' }}>
-          <Typography sx={{ fontSize: '0.72rem', color: '#555', fontWeight: 700 }}>
-            TRAVEL QUOTATION
+          <Typography sx={{ fontSize: '2.2rem', fontWeight: 700, color: '#cbd5e1', letterSpacing: '-0.03em', lineHeight: 1 }}>
+            QUOTATION
           </Typography>
-          <Typography sx={{ fontSize: '0.7rem', color: '#777' }}>
-            Ref: #{quotation.id || 'IMR-2025'}
+          <Typography sx={{ fontSize: '1rem', fontWeight: 700, color: ACCENT, mt: 0.5 }}>
+            #{quotation.id || 'DRAFT'}
           </Typography>
-          {company?.mobile && (
-            <Typography sx={{ fontSize: '0.7rem', color: '#777' }}>{company.mobile}</Typography>
-          )}
-          {company?.email && (
-            <Typography sx={{ fontSize: '0.7rem', color: '#777' }}>{company.email}</Typography>
+          <Typography sx={{ fontSize: '0.8rem', color: SECONDARY, mt: 0.5 }}>
+            Date: {quotation.date ? new Date(quotation.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* ── CLIENT & TRIP SUMMARY ── */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, mb: 5 }}>
+        <Box sx={{ p: 2.5, bgcolor: BG_HEAD, borderRadius: 1.5, border: `1px solid ${BORDER}` }}>
+          <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 1.5 }}>
+            Prepared For
+          </Typography>
+          <Typography sx={{ fontWeight: 700, fontSize: '1rem' }}>{clientName}</Typography>
+          {clientEmail && <Typography sx={{ fontSize: '0.85rem', color: SECONDARY, mt: 0.5 }}>📧 {clientEmail}</Typography>}
+          {clientMobile && <Typography sx={{ fontSize: '0.85rem', color: SECONDARY }}>📞 {clientMobile}</Typography>}
+        </Box>
+        <Box sx={{ p: 2.5, bgcolor: BG_HEAD, borderRadius: 1.5, border: `1px solid ${BORDER}` }}>
+          <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 1.5 }}>
+            Trip Summary
+          </Typography>
+          <Typography sx={{ fontWeight: 700, fontSize: '1rem' }}>{displayTitle}</Typography>
+          <Typography sx={{ fontSize: '0.85rem', color: SECONDARY, mt: 0.5 }}>
+            Duration: {itinerary.length > 0 ? `${itinerary.length} Days` : 'N/A'}
+          </Typography>
+          {costing.pax && (
+            <Typography sx={{ fontSize: '0.85rem', color: SECONDARY }}>Travelers: {costing.pax}</Typography>
           )}
         </Box>
       </Box>
 
-      {/* ── HERO IMAGE ── */}
-      {heroImage && (
-        <Box sx={{
-          height: 200, overflow: 'hidden',
-          backgroundImage: `url(${heroImage})`,
-          backgroundSize: 'cover', backgroundPosition: 'center',
-          position: 'relative',
-          pageBreakInside: 'avoid', breakInside: 'avoid'
-        }}>
-          <Box sx={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.65))',
-            display: 'flex', flexDirection: 'column',
-            justifyContent: 'flex-end', px: 5, pb: 2.5
-          }}>
-            <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: '1.6rem', lineHeight: 1.2 }}>
-              {display_title || 'Your Mountain Journey'}
-            </Typography>
-            {itinerary?.length > 0 && (
-              <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem', mt: 0.5 }}>
-                {itinerary.length} Days · {itinerary.length - 1} Nights
-              </Typography>
-            )}
+      {/* ── OVERVIEW ── */}
+      {overview && (
+        <Box sx={{ mb: 5, p: 3, bgcolor: BG_HEAD, borderRadius: 1.5, border: `1px solid ${BORDER}` }}>
+          <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: ACCENT, mb: 1.5 }}>Trip Overview</Typography>
+          <Typography sx={{ fontSize: '0.9rem', color: SECONDARY, lineHeight: 1.7, whiteSpace: 'pre-line' }}>
+            {overview}
+          </Typography>
+        </Box>
+      )}
+
+      {/* ── GALLERY ── */}
+      {galleryImages.length > 0 && (
+        <Box sx={{ mb: 5, pageBreakInside: 'avoid' }}>
+          <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: ACCENT, mb: 2 }}>Trip Highlights</Typography>
+          <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(galleryImages.length, 5)}, 1fr)`, gap: 1.5 }}>
+            {galleryImages.slice(0, 5).map((img, i) => (
+              <Box key={i} sx={{
+                height: 100, borderRadius: 1.5, bgcolor: '#e2e8f0',
+                backgroundImage: `url(${img})`,
+                backgroundSize: 'cover', backgroundPosition: 'center',
+              }} />
+            ))}
           </Box>
         </Box>
       )}
 
-      {/* ── BODY ── */}
-      <Box sx={{ px: 5, py: 3 }}>
-
-        {/* TITLE (if no hero image) */}
-        {!heroImage && (
-          <Box sx={{ mb: 3, pb: 2, borderBottom: '1px solid #E5E5E5' }}>
-            <Typography sx={{ fontWeight: 800, fontSize: '1.6rem', color: '#111' }}>
-              {display_title || 'Your Mountain Journey'}
-            </Typography>
-            {itinerary?.length > 0 && (
-              <Typography sx={{ fontSize: '0.85rem', color: '#777', mt: 0.5 }}>
-                {itinerary.length} Days · {itinerary.length - 1} Nights
-              </Typography>
-            )}
-          </Box>
-        )}
-
-        {/* CLIENT DETAILS */}
-        <Box className="min-fade min-fade-1" sx={{
-          border: '1px solid #E5E5E5', borderRadius: 2, p: 2.5, mb: 3,
-          display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2,
-          pageBreakInside: 'avoid', breakInside: 'avoid'
-        }}>
-          <Box>
-            <Typography sx={{ fontSize: '0.7rem', color: '#888', fontWeight: 600, mb: 0.3, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              Prepared For
-            </Typography>
-            <Typography sx={{ fontWeight: 800, fontSize: '1.15rem', color: '#111' }}>{clientName}</Typography>
-            {clientEmail && <Typography sx={{ fontSize: '0.8rem', color: '#555', mt: 0.3 }}>{clientEmail}</Typography>}
-            {clientMobile && <Typography sx={{ fontSize: '0.8rem', color: '#555' }}>{clientMobile}</Typography>}
-          </Box>
-          <Box sx={{ textAlign: 'right' }}>
-            <Typography sx={{ fontSize: '0.7rem', color: '#888', fontWeight: 600, mb: 0.3, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              Issued By
-            </Typography>
-            <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#111' }}>{company?.name || 'Indian Mountain Rovers'}</Typography>
-            {payment?.gst_number && <Typography sx={{ fontSize: '0.78rem', color: '#555', mt: 0.3 }}>GST: {payment.gst_number}</Typography>}
-          </Box>
-        </Box>
-
-        {/* OVERVIEW */}
-        {overview && (
-          <Box className="min-fade min-fade-1" sx={{
-            mb: 3, pb: 3, borderBottom: '1px solid #E5E5E5',
-            pageBreakInside: 'avoid', breakInside: 'avoid'
-          }}>
-            <Typography sx={{ fontWeight: 700, fontSize: '0.78rem', color: ACC, mb: 1, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-              Package Overview
-            </Typography>
-            <Typography sx={{ fontSize: '0.88rem', lineHeight: 1.8, color: '#444', whiteSpace: 'pre-line' }}>
-              {overview}
-            </Typography>
-          </Box>
-        )}
-
-        {/* ITINERARY */}
-        {itinerary?.length > 0 && (
-          <Box className="min-fade min-fade-2" sx={{ mb: 3 }}>
-            <Typography sx={{ fontWeight: 700, fontSize: '0.78rem', color: ACC, mb: 2, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-              Day-by-Day Itinerary
-            </Typography>
-            {itinerary.map((day, idx) => (
-              <Box key={idx} sx={{
-                display: 'flex', gap: 2.5, mb: 2.5,
-                pb: 2.5, borderBottom: idx < itinerary.length - 1 ? '1px solid #F0F0F0' : 'none',
-                pageBreakInside: 'avoid', breakInside: 'avoid'
+      {/* ── ITINERARY TABLE ── */}
+      {itinerary.length > 0 && (
+        <Box sx={{ mb: 5 }}>
+          <Typography sx={{ fontSize: '1rem', fontWeight: 700, color: ACCENT, mb: 2 }}>Itinerary Schedule</Typography>
+          <Box sx={{ border: `1px solid ${BORDER}`, borderRadius: 1.5, overflow: 'hidden' }}>
+            {/* Header */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: '55px 1fr 2fr', bgcolor: ACCENT, p: 1.5 }}>
+              <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff' }}>Day</Typography>
+              <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff' }}>Title</Typography>
+              <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff' }}>Details</Typography>
+            </Box>
+            {itinerary.map((day, i) => (
+              <Box key={i} sx={{
+                display: 'grid', gridTemplateColumns: '55px 1fr 2fr',
+                borderBottom: i < itinerary.length - 1 ? `1px solid ${BORDER}` : 'none',
+                p: 1.5, alignItems: 'start', pageBreakInside: 'avoid',
+                bgcolor: i % 2 === 0 ? '#fff' : BG_HEAD,
               }}>
-                <Box sx={{
-                  minWidth: 36, height: 36, borderRadius: '50%',
-                  border: `2px solid ${ACC}`, color: ACC,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 800, fontSize: '0.85rem', flexShrink: 0, mt: 0.2
-                }}>
-                  {day.day || idx + 1}
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: '50%', bgcolor: ACCENT }}>
+                  <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: '#fff' }}>{day.day}</Typography>
                 </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: '#111', mb: 0.5 }}>
-                    {day.title || `Day ${day.day || idx + 1}`}
-                  </Typography>
-                  <Typography sx={{ fontSize: '0.82rem', color: '#555', lineHeight: 1.7, mb: 1, whiteSpace: 'pre-line' }}>
-                    {day.description}
-                  </Typography>
-                  {(day.hotel || day.meal_plan || day.activities) && (
-                    <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                      {day.hotel && (
-                        <Typography sx={{ fontSize: '0.75rem', color: '#777' }}>
-                          <strong style={{ color: '#333' }}>Hotel:</strong> {day.hotel}
-                        </Typography>
-                      )}
-                      {day.meal_plan && (
-                        <Typography sx={{ fontSize: '0.75rem', color: '#777' }}>
-                          <strong style={{ color: '#333' }}>Meals:</strong> {day.meal_plan}
-                        </Typography>
-                      )}
-                      {day.activities && (
-                        <Typography sx={{ fontSize: '0.75rem', color: '#777' }}>
-                          <strong style={{ color: '#333' }}>Activities:</strong> {day.activities}
-                        </Typography>
-                      )}
-                    </Box>
-                  )}
+                <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, pt: 0.5 }}>{day.title}</Typography>
+                <Box>
+                  <Typography sx={{ fontSize: '0.82rem', color: SECONDARY, lineHeight: 1.6 }}>{day.description}</Typography>
+                  <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+                    {day.hotel && <Chip label={`🏨 ${day.hotel}`} size="small" variant="outlined" sx={{ borderRadius: 1, fontSize: '0.7rem', height: 22 }} />}
+                    {day.meal_plan && <Chip label={`🍽️ ${day.meal_plan}`} size="small" variant="outlined" sx={{ borderRadius: 1, fontSize: '0.7rem', height: 22 }} />}
+                  </Box>
                 </Box>
               </Box>
             ))}
           </Box>
-        )}
-
-        {/* HOTEL OPTIONS */}
-        {hotelOptions.length > 0 && (
-          <Box className="min-fade min-fade-2" sx={{
-            mb: 3, pb: 3, borderBottom: '1px solid #E5E5E5',
-            pageBreakInside: 'avoid', breakInside: 'avoid'
-          }}>
-            <Typography sx={{ fontWeight: 700, fontSize: '0.78rem', color: ACC, mb: 2, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-              Accommodation Options
-            </Typography>
-            <Grid container spacing={2}>
-              {hotelOptions.map((hotel, idx) => (
-                <Grid item xs={12} sm={6} key={idx}>
-                  <Box sx={{ border: '1px solid #E5E5E5', borderRadius: 2, overflow: 'hidden' }}>
-                    {hotel.image_url ? (
-                      <img src={hotel.image_url} alt={hotel.name}
-                        style={{ width: '100%', height: 110, objectFit: 'cover' }} />
-                    ) : (
-                      <Box sx={{
-                        height: 110, bgcolor: '#F5F5F5', display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', color: '#999', fontSize: '0.8rem'
-                      }}>
-                        Hotel Option {idx + 1}
-                      </Box>
-                    )}
-                    <Box sx={{ p: 1.5 }}>
-                      <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#111' }}>{hotel.name}</Typography>
-                      {hotel.description && (
-                        <Typography sx={{ fontSize: '0.75rem', color: '#666', mt: 0.3, lineHeight: 1.5 }}>
-                          {hotel.description}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
-
-        {/* INCLUSIONS / EXCLUSIONS */}
-        <Box className="min-fade min-fade-2" sx={{
-          mb: 3, pb: 3, borderBottom: '1px solid #E5E5E5',
-          pageBreakInside: 'avoid', breakInside: 'avoid'
-        }}>
-          <Grid container spacing={4}>
-            <Grid item xs={12} sm={6}>
-              <Typography sx={{ fontWeight: 700, fontSize: '0.78rem', color: '#16A34A', mb: 1.5, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                Inclusions
-              </Typography>
-              <Typography component="div" sx={{ fontSize: '0.82rem', color: '#444', lineHeight: 2 }}>
-                {policies?.inclusions ? (
-                  policies.inclusions.split('\n').map((line, i) => line.trim() && <div key={i}>✓ {line.trim()}</div>)
-                ) : (
-                  <>
-                    <div>✓ Accommodation as per itinerary</div>
-                    <div>✓ Daily breakfast & specified meals</div>
-                    <div>✓ All transfers & sightseeing</div>
-                    <div>✓ Entry fees to mentioned attractions</div>
-                    <div>✓ Dedicated tour manager</div>
-                  </>
-                )}
-              </Typography>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography sx={{ fontWeight: 700, fontSize: '0.78rem', color: '#DC2626', mb: 1.5, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                Exclusions
-              </Typography>
-              <Typography component="div" sx={{ fontSize: '0.82rem', color: '#444', lineHeight: 2 }}>
-                {policies?.exclusions ? (
-                  policies.exclusions.split('\n').map((line, i) => line.trim() && <div key={i}>✗ {line.trim()}</div>)
-                ) : (
-                  <>
-                    <div>✗ Airfare / train tickets</div>
-                    <div>✗ Visa & travel insurance</div>
-                    <div>✗ Personal expenses & tips</div>
-                    <div>✗ Meals not mentioned</div>
-                    <div>✗ Optional activities</div>
-                  </>
-                )}
-              </Typography>
-            </Grid>
-          </Grid>
         </Box>
+      )}
 
-        {/* TRANSPORT */}
-        {(flightDetails || groundTransport) && (
-          <Box className="min-fade min-fade-2" sx={{
-            mb: 3, pb: 3, borderBottom: '1px solid #E5E5E5',
-            pageBreakInside: 'avoid', breakInside: 'avoid'
-          }}>
-            <Typography sx={{ fontWeight: 700, fontSize: '0.78rem', color: ACC, mb: 1.5, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-              Transport Details
-            </Typography>
-            <Grid container spacing={3}>
-              {flightDetails && (
-                <Grid item xs={12} sm={6}>
-                  <Typography sx={{ fontWeight: 700, fontSize: '0.82rem', color: '#333', mb: 0.5 }}>Flight Details</Typography>
-                  {flightDetails.airline && <Typography sx={{ fontSize: '0.8rem', color: '#555' }}><strong>Airline:</strong> {flightDetails.airline}</Typography>}
-                  {flightDetails.flight && <Typography sx={{ fontSize: '0.8rem', color: '#555' }}><strong>Flight:</strong> {flightDetails.flight}</Typography>}
-                  {flightDetails.departure && <Typography sx={{ fontSize: '0.8rem', color: '#555' }}><strong>Departure:</strong> {flightDetails.departure}</Typography>}
-                  {flightDetails.arrival && <Typography sx={{ fontSize: '0.8rem', color: '#555' }}><strong>Arrival:</strong> {flightDetails.arrival}</Typography>}
-                </Grid>
-              )}
-              {groundTransport && (
-                <Grid item xs={12} sm={6}>
-                  <Typography sx={{ fontWeight: 700, fontSize: '0.82rem', color: '#333', mb: 0.5 }}>Ground Transport</Typography>
-                  <Typography sx={{ fontSize: '0.8rem', color: '#555' }}>{groundTransport}</Typography>
-                </Grid>
-              )}
-            </Grid>
-          </Box>
-        )}
+      {/* ── INCLUSIONS / EXCLUSIONS ── */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, mb: 5, pageBreakInside: 'avoid' }}>
+        <Box sx={{ p: 2.5, bgcolor: '#f0fdf4', borderRadius: 1.5, border: '1px solid #bbf7d0' }}>
+          <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: GREEN, mb: 2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            ✓ Included
+          </Typography>
+          {inclusions.length > 0
+            ? inclusions.map((line, i) => (
+              <Typography key={i} sx={{ fontSize: '0.82rem', color: '#14532d', mb: 0.5 }}>✓ {line}</Typography>
+            ))
+            : <Typography sx={{ fontSize: '0.82rem', color: '#14532d', opacity: 0.7 }}>As per standard package</Typography>
+          }
+        </Box>
+        <Box sx={{ p: 2.5, bgcolor: '#fef2f2', borderRadius: 1.5, border: '1px solid #fecaca' }}>
+          <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: RED, mb: 2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            ✗ Excluded
+          </Typography>
+          {exclusions.length > 0
+            ? exclusions.map((line, i) => (
+              <Typography key={i} sx={{ fontSize: '0.82rem', color: '#7f1d1d', mb: 0.5 }}>✗ {line}</Typography>
+            ))
+            : <Typography sx={{ fontSize: '0.82rem', color: '#7f1d1d', opacity: 0.7 }}>As per standard package</Typography>
+          }
+        </Box>
+      </Box>
 
-        {/* COST BREAKDOWN */}
-        {costing && (
-          <Box className="min-fade min-fade-3" sx={{
-            mb: 3, pb: 3, borderBottom: '1px solid #E5E5E5',
-            pageBreakInside: 'avoid', breakInside: 'avoid'
-          }}>
-            <Typography sx={{ fontWeight: 700, fontSize: '0.78rem', color: ACC, mb: 2, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-              Cost Breakdown
-            </Typography>
-            {costing.items?.length > 0 && (
-              <Box sx={{ border: '1px solid #E5E5E5', borderRadius: 2, overflow: 'hidden', mb: 2 }}>
-                {/* Header */}
-                <Box sx={{ display: 'flex', bgcolor: '#F8F9FA', px: 2, py: 1.2, borderBottom: '1px solid #E5E5E5' }}>
-                  <Typography sx={{ flex: 3, fontSize: '0.75rem', fontWeight: 700, color: '#333', textTransform: 'uppercase' }}>Description</Typography>
-                  <Typography sx={{ flex: 1, fontSize: '0.75rem', fontWeight: 700, color: '#333', textAlign: 'center', textTransform: 'uppercase' }}>Qty</Typography>
-                  <Typography sx={{ flex: 1.5, fontSize: '0.75rem', fontWeight: 700, color: '#333', textAlign: 'right', textTransform: 'uppercase' }}>Unit Price</Typography>
-                  <Typography sx={{ flex: 1.5, fontSize: '0.75rem', fontWeight: 700, color: '#333', textAlign: 'right', textTransform: 'uppercase' }}>Total</Typography>
-                </Box>
-                {costing.items.map((item, idx) => (
-                  <Box key={idx} sx={{
-                    display: 'flex', px: 2, py: 1.2,
-                    bgcolor: idx % 2 === 0 ? '#fff' : '#FAFAFA',
-                    borderBottom: '1px solid #F0F0F0'
-                  }}>
-                    <Typography sx={{ flex: 3, fontSize: '0.82rem', color: '#333' }}>{item.name}</Typography>
-                    <Typography sx={{ flex: 1, fontSize: '0.82rem', color: '#555', textAlign: 'center' }}>{item.quantity}</Typography>
-                    <Typography sx={{ flex: 1.5, fontSize: '0.82rem', color: '#555', textAlign: 'right' }}>
-                      ₹{item.unit_price?.toLocaleString('en-IN')}
-                    </Typography>
-                    <Typography sx={{ flex: 1.5, fontSize: '0.82rem', fontWeight: 600, color: '#111', textAlign: 'right' }}>
-                      ₹{(item.quantity * item.unit_price)?.toLocaleString('en-IN')}
-                    </Typography>
-                  </Box>
-                ))}
-                {/* Total row */}
-                <Box sx={{
-                  display: 'flex', px: 2, py: 1.5,
-                  bgcolor: '#F8F9FA', borderTop: `2px solid ${ACC}`
-                }}>
-                  <Typography sx={{ flex: 5.5, fontSize: '0.88rem', fontWeight: 800, color: '#111' }}>Total Package Cost</Typography>
-                  <Typography sx={{ flex: 1.5, fontSize: '1rem', fontWeight: 900, color: ACC, textAlign: 'right' }}>
-                    ₹{costing.total_amount?.toLocaleString('en-IN')}
-                  </Typography>
-                </Box>
-              </Box>
-            )}
-            {/* If no items, show just total */}
-            {(!costing.items || costing.items.length === 0) && costing.total_amount && (
-              <Box sx={{
-                border: `1px solid ${ACC}`, borderRadius: 2, p: 2.5,
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-              }}>
+      {/* ── COST BREAKDOWN TABLE ── */}
+      {costRows.length > 0 && (
+        <Box sx={{ mb: 5, pageBreakInside: 'avoid' }}>
+          <Typography sx={{ fontSize: '1rem', fontWeight: 700, color: ACCENT, mb: 2 }}>Cost Breakdown</Typography>
+          <Box sx={{ border: `1px solid ${BORDER}`, borderRadius: 1.5, overflow: 'hidden' }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr', bgcolor: ACCENT, p: 1.5 }}>
+              <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff' }}>Description</Typography>
+              <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', textAlign: 'center' }}>Qty</Typography>
+              <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', textAlign: 'right' }}>Amount</Typography>
+            </Box>
+            {costRows.map((row, i) => (
+              <Box key={i} sx={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr', borderBottom: `1px solid ${BORDER}`, p: 1.5, bgcolor: i % 2 === 0 ? '#fff' : BG_HEAD }}>
                 <Box>
-                  <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#111' }}>Total Package Cost</Typography>
-                  {costing.pax && <Typography sx={{ fontSize: '0.78rem', color: '#777' }}>For {costing.pax} Pax</Typography>}
+                  <Typography sx={{ fontSize: '0.88rem', fontWeight: 600 }}>{row.name}</Typography>
+                  {row.desc && <Typography sx={{ fontSize: '0.78rem', color: SECONDARY }}>{row.desc}</Typography>}
                 </Box>
-                <Typography sx={{ fontWeight: 900, fontSize: '1.5rem', color: ACC }}>
-                  ₹{costing.total_amount?.toLocaleString('en-IN')}
-                </Typography>
+                <Typography sx={{ fontSize: '0.88rem', textAlign: 'center', pt: 0.3 }}>{row.qty}</Typography>
+                <Typography sx={{ fontSize: '0.88rem', fontWeight: 600, textAlign: 'right', pt: 0.3 }}>{formatINR(row.price)}</Typography>
+              </Box>
+            ))}
+            {/* Total Row */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr', bgcolor: ACCENT, p: 2 }}>
+              <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff', gridColumn: '1 / 3' }}>
+                Total Package Cost
+              </Typography>
+              <Typography sx={{ fontSize: '1rem', fontWeight: 700, color: '#fff', textAlign: 'right' }}>
+                {formatINR(totalAmount)}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      )}
+
+      {/* If no cost rows but we have a total */}
+      {costRows.length === 0 && totalAmount > 0 && (
+        <Box sx={{ mb: 5, p: 3, bgcolor: ACCENT, borderRadius: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography sx={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>Total Package Cost</Typography>
+          <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff' }}>{formatINR(totalAmount)}</Typography>
+        </Box>
+      )}
+
+      {/* ── TERMS & BANK DETAILS ── */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, mb: 4, pageBreakInside: 'avoid' }}>
+        {/* Bank Details + QR */}
+        <Box>
+          <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: ACCENT, mb: 1.5 }}>Bank Details</Typography>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+            <Box sx={{ p: 2, border: `1px solid ${BORDER}`, borderRadius: 1.5, flex: 1 }}>
+              {payment.bank_name
+                ? <>
+                  <Typography sx={{ fontSize: '0.82rem', mb: 0.5 }}><strong>Bank:</strong> {payment.bank_name}</Typography>
+                  {payment.account_number && <Typography sx={{ fontSize: '0.82rem', mb: 0.5 }}><strong>Account:</strong> {payment.account_number}</Typography>}
+                  {payment.ifsc_code && <Typography sx={{ fontSize: '0.82rem', mb: 0.5 }}><strong>IFSC:</strong> {payment.ifsc_code}</Typography>}
+                  {payment.branch_name && <Typography sx={{ fontSize: '0.82rem', mb: 0.5 }}><strong>Branch:</strong> {payment.branch_name}</Typography>}
+                  {payment.upi_ids?.[0] && <Typography sx={{ fontSize: '0.82rem' }}><strong>UPI:</strong> {payment.upi_ids[0]}</Typography>}
+                </>
+                : <Typography sx={{ fontSize: '0.82rem', color: SECONDARY }}>Contact us for payment details.</Typography>
+              }
+            </Box>
+            {payment.qr_code_url && (
+              <Box sx={{ textAlign: 'center', flexShrink: 0 }}>
+                <img src={payment.qr_code_url} alt="Pay via QR" style={{ width: 90, height: 90, objectFit: 'contain', border: `1px solid ${BORDER}`, borderRadius: 8, padding: 4 }} />
+                <Typography sx={{ fontSize: '0.65rem', color: SECONDARY, mt: 0.5 }}>Scan to Pay</Typography>
               </Box>
             )}
           </Box>
-        )}
-
-        {/* PAYMENT DETAILS */}
-        {(payment?.bank_name || payment?.account_number || payment?.qr_code_url) && (
-          <Box className="min-fade min-fade-3" sx={{
-            mb: 3, pb: 3, borderBottom: '1px solid #E5E5E5',
-            pageBreakInside: 'avoid', breakInside: 'avoid'
-          }}>
-            <Typography sx={{ fontWeight: 700, fontSize: '0.78rem', color: ACC, mb: 2, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-              Payment Details
-            </Typography>
-            <Grid container spacing={3} alignItems="flex-start">
-              <Grid item xs={12} sm={payment?.qr_code_url ? 7 : 12}>
-                <Box sx={{ border: '1px dashed #CCC', borderRadius: 2, p: 2 }}>
-                  {payment?.bank_name && <Typography sx={{ fontSize: '0.82rem', mb: 0.5 }}><strong>Bank:</strong> {payment.bank_name}</Typography>}
-                  {payment?.bank_address && <Typography sx={{ fontSize: '0.82rem', mb: 0.5 }}><strong>Address:</strong> {payment.bank_address}</Typography>}
-                  {payment?.account_name && <Typography sx={{ fontSize: '0.82rem', mb: 0.5 }}><strong>A/C Name:</strong> {payment.account_name}</Typography>}
-                  {payment?.account_number && <Typography sx={{ fontSize: '0.82rem', mb: 0.5 }}><strong>A/C No:</strong> {payment.account_number}</Typography>}
-                  {payment?.ifsc_code && <Typography sx={{ fontSize: '0.82rem', mb: 0.5 }}><strong>IFSC:</strong> {payment.ifsc_code}</Typography>}
-                  {payment?.upi_ids?.[0] && <Typography sx={{ fontSize: '0.82rem' }}><strong>UPI:</strong> {payment.upi_ids[0]}</Typography>}
-                </Box>
-              </Grid>
-              {payment?.qr_code_url && (
-                <Grid item xs={12} sm={5}>
-                  <Box sx={{ textAlign: 'center', border: '1px dashed #CCC', borderRadius: 2, p: 2 }}>
-                    <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: '#333', mb: 1 }}>Scan to Pay</Typography>
-                    <img src={payment.qr_code_url} alt="QR"
-                      style={{ width: 100, height: 100, objectFit: 'contain' }} />
-                    {payment.upi_ids?.[0] && (
-                      <Typography sx={{ fontSize: '0.72rem', color: '#777', mt: 0.5 }}>{payment.upi_ids[0]}</Typography>
-                    )}
-                  </Box>
-                </Grid>
-              )}
-            </Grid>
-          </Box>
-        )}
-
-        {/* POLICIES */}
-        {(policies?.payment_terms || policies?.cancellation_policy || policies?.terms_and_conditions) && (
-          <Box className="min-fade min-fade-3" sx={{
-            mb: 3, pb: 3, borderBottom: '1px solid #E5E5E5',
-            pageBreakInside: 'avoid', breakInside: 'avoid'
-          }}>
-            <Typography sx={{ fontWeight: 700, fontSize: '0.78rem', color: ACC, mb: 2, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-              Policies & Terms
-            </Typography>
-            {policies.payment_terms && (
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ fontWeight: 700, fontSize: '0.82rem', color: '#333', mb: 0.5 }}>Payment Terms</Typography>
-                <Typography sx={{ fontSize: '0.8rem', color: '#555', lineHeight: 1.7, whiteSpace: 'pre-line' }}>{policies.payment_terms}</Typography>
-              </Box>
-            )}
-            {policies.cancellation_policy && (
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ fontWeight: 700, fontSize: '0.82rem', color: '#333', mb: 0.5 }}>Cancellation Policy</Typography>
-                <Typography sx={{ fontSize: '0.8rem', color: '#555', lineHeight: 1.7, whiteSpace: 'pre-line' }}>{policies.cancellation_policy}</Typography>
-              </Box>
-            )}
-            {policies.terms_and_conditions && (
-              <Box>
-                <Typography sx={{ fontWeight: 700, fontSize: '0.82rem', color: '#333', mb: 0.5 }}>Terms & Conditions</Typography>
-                <Typography sx={{ fontSize: '0.8rem', color: '#555', lineHeight: 1.7, whiteSpace: 'pre-line' }}>{policies.terms_and_conditions}</Typography>
-              </Box>
-            )}
-          </Box>
-        )}
-
-        {/* GALLERY */}
-        {galleryImages?.length > 0 && (
-          <Box className="min-fade min-fade-3" sx={{
-            mb: 3, pb: 3, borderBottom: '1px solid #E5E5E5',
-            pageBreakInside: 'avoid', breakInside: 'avoid'
-          }}>
-            <Typography sx={{ fontWeight: 700, fontSize: '0.78rem', color: ACC, mb: 2, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-              Gallery
-            </Typography>
-            <Grid container spacing={1.5}>
-              {galleryImages.slice(0, 6).map((img, idx) => (
-                <Grid item xs={4} key={idx}>
-                  <Box sx={{ height: 100, borderRadius: 1.5, overflow: 'hidden', bgcolor: '#F5F5F5' }}>
-                    <img src={img} alt={`Gallery ${idx + 1}`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
-
-        {/* AGENT */}
-        {(quotation.agent?.name || quotation.agent?.contact || quotation.agent?.email) && (
-          <Box sx={{ mb: 3, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-            <Typography sx={{ fontWeight: 700, fontSize: '0.78rem', color: ACC, mb: 1, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-              Your Travel Specialist
-            </Typography>
-            {quotation.agent.name && <Typography sx={{ fontSize: '0.82rem', color: '#333' }}><strong>Name:</strong> {quotation.agent.name}</Typography>}
-            {quotation.agent.contact && <Typography sx={{ fontSize: '0.82rem', color: '#333' }}><strong>Phone:</strong> {quotation.agent.contact}</Typography>}
-            {quotation.agent.email && <Typography sx={{ fontSize: '0.82rem', color: '#333' }}><strong>Email:</strong> {quotation.agent.email}</Typography>}
-          </Box>
-        )}
+        </Box>
+        {/* Terms */}
+        <Box>
+          <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: ACCENT, mb: 1.5 }}>Terms & Conditions</Typography>
+          <Typography sx={{ fontSize: '0.78rem', color: SECONDARY, lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+            {policies.terms_and_conditions || 'Standard terms apply. Subject to availability.'}
+          </Typography>
+          {policies.payment_terms && (
+            <Box sx={{ mt: 2 }}>
+              <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: ACCENT, mb: 0.5 }}>Payment Terms</Typography>
+              <Typography sx={{ fontSize: '0.78rem', color: SECONDARY, lineHeight: 1.6 }}>{policies.payment_terms}</Typography>
+            </Box>
+          )}
+          {policies.cancellation_policy && (
+            <Box sx={{ mt: 2 }}>
+              <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: ACCENT, mb: 0.5 }}>Cancellation Policy</Typography>
+              <Typography sx={{ fontSize: '0.78rem', color: SECONDARY, lineHeight: 1.6 }}>{policies.cancellation_policy}</Typography>
+            </Box>
+          )}
+        </Box>
       </Box>
 
       {/* ── FOOTER ── */}
-      <Box sx={{
-        px: 5, py: 2, borderTop: `3px solid ${ACC}`,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        pageBreakInside: 'avoid', breakInside: 'avoid'
-      }}>
-        <Typography sx={{ fontSize: '0.75rem', color: '#777' }}>
-          {company?.mobile && `${company.mobile}  ·  `}
-          {company?.email && `${company.email}  ·  `}
-          {company?.website && company.website}
-        </Typography>
-        <Typography sx={{ fontSize: '0.72rem', color: '#AAA' }}>
-          © {new Date().getFullYear()} {company?.name || 'Indian Mountain Rovers'}
-        </Typography>
+      <Box sx={{ mt: 4, pt: 3, borderTop: `2px solid ${ACCENT}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box>
+          <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: ACCENT }}>{company.name}</Typography>
+          <Typography sx={{ fontSize: '0.75rem', color: SECONDARY }}>{company.address}</Typography>
+        </Box>
+        <Box sx={{ textAlign: 'right' }}>
+          <Typography sx={{ fontSize: '0.78rem', color: SECONDARY }}>{company.email}</Typography>
+          <Typography sx={{ fontSize: '0.78rem', color: SECONDARY }}>{company.mobile}</Typography>
+          <Typography sx={{ fontSize: '0.78rem', color: SECONDARY }}>{company.website}</Typography>
+        </Box>
       </Box>
     </Box>
   );
 };
-

@@ -10,16 +10,16 @@ import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { ModernProfessionalTemplate, LuxuryGoldTemplate, MinimalistClassicTemplate } from './QuotationPDFTemplates';
+import { MagazineModernTemplate, CorporateStructuredTemplate } from './QuotationPDFTemplates';
 import ReactDOMServer from 'react-dom/server';
 
 const ActionMenu = ({
   quotation = {},
-  onDelete = () => {},
-  onRestore = () => {},
-  onExport = () => {},
-  onView = () => {},
-  onEdit = () => {},
+  onDelete = () => { },
+  onRestore = () => { },
+  onExport = () => { },
+  onView = () => { },
+  onEdit = () => { },
 }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [generating, setGenerating] = useState(false);
@@ -118,14 +118,12 @@ const ActionMenu = ({
     };
 
     switch (q.design) {
-      case 'Modern Professional':
-        return <ModernProfessionalTemplate quotation={finalQuotation} />;
-      case 'Luxury Gold':
-        return <LuxuryGoldTemplate quotation={finalQuotation} />;
-      case 'Minimalist Classic':
-        return <MinimalistClassicTemplate quotation={finalQuotation} />;
+      case 'Corporate Structured':
+        return <CorporateStructuredTemplate quotation={finalQuotation} />;
+      case 'Magazine Modern':
       default:
-        return <ModernProfessionalTemplate quotation={finalQuotation} />;
+        // Default fallthrough to Magazine Modern
+        return <MagazineModernTemplate quotation={finalQuotation} />;
     }
   };
 
@@ -171,7 +169,7 @@ const ActionMenu = ({
                 try {
                   img.removeEventListener('load', onDone);
                   img.removeEventListener('error', onDone);
-                } catch (e) {}
+                } catch (e) { }
                 resolve();
               }, 5000);
             })
@@ -364,7 +362,7 @@ Quotation ID: #${quotation.id || 'DRAFT'}
       </IconButton>
 
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-        
+
         {/* View Option */}
         {onView && (
           <MenuItem
@@ -396,9 +394,9 @@ Quotation ID: #${quotation.id || 'DRAFT'}
 
         {/* Export PDF */}
         {onExport && (
-          <MenuItem 
-            onClick={() => { 
-              handleClose(); 
+          <MenuItem
+            onClick={() => {
+              handleClose();
               onExport(quotation);
             }}
             disabled={generating}
