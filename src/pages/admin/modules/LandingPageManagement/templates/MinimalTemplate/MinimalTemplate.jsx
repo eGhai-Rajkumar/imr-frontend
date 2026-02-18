@@ -318,6 +318,7 @@ const FooterTrustBadges = ({ pageData }) => {
 const TripCard = ({ trip, onEnquire }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const price = getTripPrice(trip);
+  const originalPrice = price > 0 ? Math.round(price * 1.4) : 0;
   const searchText = `${trip.title} ${trip.inclusions || ""} ${trip.highlights || ""}`.toLowerCase();
   const checkActive = (keywords) => keywords.some((k) => searchText.includes(k));
 
@@ -329,33 +330,214 @@ const TripCard = ({ trip, onEnquire }) => {
     { label: "Transfers", icon: Car, active: checkActive(["transfer", "cab", "taxi", "drive", "volvo"]) },
   ];
 
+  const tripSlug = trip.slug || `trip-${trip._id || trip.id}`;
+  const tripId = trip._id || trip.id;
+  const tripPath = `/trip-preview/${tripSlug}/${tripId}`;
+  const whatsappNumber = CONTACT_NUMBER.replace(/[^0-9]/g, "");
+  const whatsappMsg = encodeURIComponent(`Hi, I'm interested in the trip: ${trip.title}. Please share more details.`);
+
+  // Parse itinerary days from trip data
+  const itineraryDays = trip.itinerary?.days || trip.itinerary || [];
+  const itineraryPreview = Array.isArray(itineraryDays)
+    ? itineraryDays.slice(0, 2).map((d, i) => ({
+      day: d.day_number || i + 1,
+      title: d.title || d.day_title || `Day ${i + 1}`,
+    }))
+    : [];
+
+  // Parse inclusions
+  const inclusionsList = (() => {
+    if (Array.isArray(trip.inclusions)) return trip.inclusions.slice(0, 3);
+    if (typeof trip.inclusions === "string") {
+      return trip.inclusions.split(/[\n,•]/).map(s => s.trim()).filter(Boolean).slice(0, 3);
+    }
+    return [];
+  })();
+
   return (
-    <div className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 rounded-none flex flex-col h-full relative group">
-      <div className="relative h-64 overflow-hidden">
-        <img src={trip.hero_image || trip.image || DEFAULT_HERO_IMAGE} alt={trip.title} loading="lazy" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 grayscale-[0.2] group-hover:grayscale-0" />
-        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
-        <div className="absolute top-4 left-4 bg-[#2C6B4F] text-white text-[10px] font-bold px-3 py-1 uppercase tracking-widest shadow-sm">{trip.days} Days</div>
+    <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 flex flex-col border border-slate-100">
+      {/* ── Image ── */}
+      <div className="relative h-52 overflow-hidden">
+        <img
+          src={trip.hero_image || trip.image || DEFAULT_HERO_IMAGE}
+          alt={trip.title}
+          loading="lazy"
+          className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+        />
+        {/* Star badge */}
+        <div className="absolute top-3 right-3 w-9 h-9 bg-[#F4C430] rounded-full flex items-center justify-center shadow-lg">
+          <Star size={16} className="text-white fill-white" />
+        </div>
       </div>
-      <div className="p-6 flex-1 flex flex-col">
-        <h2 className="text-xl font-serif font-bold text-[#1A1A1A] leading-tight mb-2 min-h-[56px] line-clamp-2 group-hover:text-[#2C6B4F] transition-colors">{trip.title}</h2>
-        <div className="flex items-center gap-4 mb-4 border-b border-slate-100 pb-4">
-          {amenities.slice(0, 3).map((item, i) => (
-            <div key={i} className={`flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider ${item.active ? 'text-[#D4AF37]' : 'text-slate-300'}`}><item.icon size={12} /> {item.label}</div>
+
+      {/* ── Body ── */}
+      <div className="p-4 flex flex-col flex-1">
+
+        {/* Title */}
+        <h2 className="text-base font-bold text-[#1A1A1A] leading-snug mb-1 line-clamp-2">
+          {trip.title}
+        </h2>
+
+        {/* Duration */}
+        <p className="text-xs font-bold text-[#2C6B4F] mb-3">
+          Duration: {trip.days} Days / {trip.nights} Nights
+        </p>
+
+        {/* Amenity Icons */}
+        <div className="flex items-center justify-between mb-4 border-t border-b border-slate-100 py-3">
+          {amenities.map((item, i) => (
+            <div key={i} className="flex flex-col items-center gap-1">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center border ${item.active ? 'border-[#2C6B4F]/30 bg-[#2C6B4F]/8 text-[#2C6B4F]' : 'border-slate-200 bg-slate-50 text-slate-300'}`}>
+                <item.icon size={15} />
+              </div>
+              <span className={`text-[9px] font-bold uppercase tracking-wider ${item.active ? 'text-[#2C6B4F]' : 'text-slate-300'}`}>
+                {item.label}
+              </span>
+            </div>
           ))}
         </div>
-        <div className="mt-auto">
-          <div className="flex items-baseline justify-between mb-4">
-            <div><span className="text-[10px] text-slate-400 font-bold uppercase block mb-1">Starting From</span><div className="flex items-baseline gap-2"><span className="text-2xl font-serif font-bold text-[#2C6B4F]">{price > 0 ? `₹${price.toLocaleString()}` : "Request"}</span>{price > 0 && <span className="text-xs text-slate-400 line-through">₹{(price * 1.4).toLocaleString()}</span>}</div></div>
+
+        {/* Itinerary Preview */}
+        {itineraryPreview.length > 0 && (
+          <div className="mb-3">
+            <p className="text-[10px] font-bold text-[#2C6B4F] uppercase tracking-wider flex items-center gap-1 mb-1.5">
+              <Calendar size={11} /> Itinerary
+            </p>
+            {itineraryPreview.map((d) => (
+              <p key={d.day} className="text-xs text-slate-600 leading-relaxed">
+                Day {d.day} {d.title}
+              </p>
+            ))}
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <button onClick={() => onEnquire(trip)} className="bg-[#2C6B4F] hover:bg-[#1B4D3E] text-white text-xs font-bold px-4 py-3 uppercase tracking-wider transition-colors">Enquire</button>
-            <button onClick={() => setIsExpanded(v => !v)} className="border border-[#2C6B4F] text-[#2C6B4F] hover:bg-[#2C6B4F] hover:text-white text-xs font-bold px-4 py-3 uppercase tracking-wider transition-all">{isExpanded ? "Close" : "Details"}</button>
+        )}
+
+        {/* Inclusions Preview */}
+        {inclusionsList.length > 0 && (
+          <div className="mb-3">
+            <p className="text-[10px] font-bold text-[#2C6B4F] uppercase tracking-wider flex items-center gap-1 mb-1.5">
+              <CheckCircle size={11} /> Inclusions
+            </p>
+            {inclusionsList.map((inc, i) => (
+              <p key={i} className="text-xs text-slate-600 flex items-start gap-1.5 leading-relaxed">
+                <span className="text-[#2C6B4F] mt-0.5 flex-shrink-0">•</span>
+                {inc}
+              </p>
+            ))}
           </div>
+        )}
+
+        {/* Read More Toggle */}
+        <button
+          onClick={() => setIsExpanded(v => !v)}
+          className="w-full flex items-center justify-center gap-1 text-xs font-semibold text-slate-500 border border-slate-200 rounded-lg py-2 hover:bg-slate-50 transition-colors mb-4"
+        >
+          {isExpanded ? (
+            <><ChevronUp size={13} /> Show Less</>
+          ) : (
+            <><ChevronDown size={13} /> Read More Details</>
+          )}
+        </button>
+
+        {/* Expanded Details */}
+        {isExpanded && (
+          <div className="mb-4 space-y-3" style={{ animation: 'fadeInDown 0.2s ease-out' }}>
+            {/* All amenities */}
+            <div>
+              <p className="text-[10px] font-bold text-[#2C6B4F] uppercase tracking-wider mb-2">All Inclusions</p>
+              <div className="flex flex-wrap gap-1.5">
+                {amenities.map((item, i) => (
+                  <span
+                    key={i}
+                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold border ${item.active
+                      ? 'bg-[#2C6B4F]/10 text-[#2C6B4F] border-[#2C6B4F]/20'
+                      : 'bg-slate-100 text-slate-400 border-slate-200 line-through'
+                      }`}
+                  >
+                    <item.icon size={10} /> {item.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+            {/* Highlights */}
+            {trip.highlights && (() => {
+              const pts = trip.highlights
+                .replace(/•\s*/g, '')
+                .split(/\n|;|(?<=\.)\s+/)
+                .map(s => s.trim().replace(/^[-•]\s*/, ''))
+                .filter(s => s.length > 2);
+              return pts.length > 0 ? (
+                <div>
+                  <p className="text-[10px] font-bold text-[#2C6B4F] uppercase tracking-wider mb-1.5">Highlights</p>
+                  <ul className="space-y-1">
+                    {pts.map((pt, i) => (
+                      <li key={i} className="flex items-start gap-1.5 text-xs text-slate-600 leading-relaxed">
+                        <span className="text-[#2C6B4F] mt-0.5 flex-shrink-0">•</span>
+                        {pt}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null;
+            })()}
+
+            <a
+              href={tripPath}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-[#2C6B4F] text-xs font-bold hover:text-[#D4AF37] transition-colors"
+            >
+              View Full Trip Details <ArrowRight size={11} />
+            </a>
+          </div>
+        )}
+
+        {/* ── Price Row ── */}
+        <div className="flex items-end justify-between mb-3 mt-auto">
+          <div>
+            {originalPrice > 0 && (
+              <span className="text-xs text-slate-400 line-through block">₹{originalPrice.toLocaleString()}</span>
+            )}
+            <span className="text-2xl font-black text-[#1A1A1A]">
+              {price > 0 ? `₹${price.toLocaleString()}` : "Request Quote"}
+            </span>
+            {price > 0 && <span className="text-[10px] text-slate-400 block">PER PERSON</span>}
+          </div>
+          {price > 0 && (
+            <span className="bg-[#FF4757] text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wide shadow-sm">
+              SAVE UPTO 50%
+            </span>
+          )}
         </div>
+
+        {/* ── CTA Buttons ── */}
+        <div className="grid grid-cols-2 gap-2 mb-2">
+          <button
+            onClick={() => onEnquire(trip)}
+            className="flex items-center justify-center gap-1.5 bg-[#D4AF37] hover:bg-[#B89020] text-white text-xs font-bold py-3 rounded-lg transition-colors shadow-sm"
+          >
+            <Mail size={13} /> Enquire
+          </button>
+          <a
+            href={`https://wa.me/${whatsappNumber}?text=${whatsappMsg}`}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1da851] text-white text-xs font-bold py-3 rounded-lg transition-colors shadow-sm"
+          >
+            <MessageCircle size={13} /> WhatsApp
+          </a>
+        </div>
+
+        {/* Trust line */}
+        <p className="text-center text-[10px] text-slate-400 flex items-center justify-center gap-1">
+          <CheckCircle size={11} className="text-[#2C6B4F]" />
+          Instant Confirmation • No Hidden Charges
+        </p>
       </div>
     </div>
   );
 };
+
+
 
 // =============================================================================
 // MAIN COMPONENT

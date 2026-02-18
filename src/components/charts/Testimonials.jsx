@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Star, Quote } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star, Quote, MapPin } from "lucide-react";
 
 const MOCK_TESTIMONIALS = [
   {
@@ -41,7 +41,7 @@ export default function Testimonials() {
     setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % MOCK_TESTIMONIALS.length);
       setIsAnimating(false);
-    }, 500);
+    }, 400);
   }, [isAnimating]);
 
   const prevTestimonial = () => {
@@ -50,7 +50,7 @@ export default function Testimonials() {
     setTimeout(() => {
       setCurrentIndex((prev) => (prev === 0 ? MOCK_TESTIMONIALS.length - 1 : prev - 1));
       setIsAnimating(false);
-    }, 500);
+    }, 400);
   };
 
   useEffect(() => {
@@ -61,91 +61,150 @@ export default function Testimonials() {
   const current = MOCK_TESTIMONIALS[currentIndex];
 
   return (
-    <section className="relative py-24 bg-primary overflow-hidden">
-      {/* Background Image / Texture */}
-      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-10"></div>
-      <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/90 to-primary/80"></div>
+    <section className="relative py-20 bg-[#1F4D39] overflow-hidden">
+      {/* Subtle mountain texture */}
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-8"
+        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')" }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1F4D39]/95 via-[#2C6B4F]/90 to-[#1F4D39]/95" />
 
-      {/* Decorative Blur */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-accent/5 rounded-full blur-3xl pointer-events-none"></div>
+      {/* Gold glow blob */}
+      <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#D4AF37]/8 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-1/4 w-64 h-64 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
 
-          {/* Header */}
-          <div className="mb-12">
-            <div className="flex items-center justify-center gap-2 text-accent/80 font-bold tracking-widest uppercase text-xs mb-4">
-              <span className="w-8 h-px bg-accent/50"></span>
-              <span>Guest Diaries</span>
-              <span className="w-8 h-px bg-accent/50"></span>
-            </div>
-            <Quote className="w-12 h-12 text-accent mx-auto mb-6 opacity-80" />
-          </div>
-
-          {/* Testimonial Content */}
-          <div className={`transition-all duration-500 transform ${isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
-            <h2 className="text-3xl md:text-5xl font-serif font-medium text-white italic leading-relaxed mb-10">
-              "{current.review}"
-            </h2>
-
-            <div className="flex flex-col items-center">
-              {/* Avatar */}
-              <div className="w-16 h-16 rounded-full border-2 border-accent p-1 mb-4">
-                <img
-                  src={current.image}
-                  alt={current.name}
-                  className="w-full h-full object-cover rounded-full"
-                />
-              </div>
-
-              {/* Author Info */}
-              <h3 className="text-xl font-bold text-white mb-1">{current.name}</h3>
-              <p className="text-accent text-sm uppercase tracking-wide font-medium mb-4">{current.trip}</p>
-
-              {/* Rating */}
-              <div className="flex gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className={`w-4 h-4 ${i < current.rating ? "text-accent fill-accent" : "text-gray-500"}`} />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="flex justify-center items-center gap-4 mt-12">
-            <button
-              onClick={prevTestimonial}
-              className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all hover:scale-110"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-
-            <div className="flex gap-2">
-              {MOCK_TESTIMONIALS.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    if (isAnimating) return;
-                    setIsAnimating(true);
-                    setTimeout(() => {
-                      setCurrentIndex(idx);
-                      setIsAnimating(false);
-                    }, 500);
-                  }}
-                  className={`transition-all duration-300 rounded-full h-2 ${idx === currentIndex ? 'w-8 bg-accent' : 'w-2 bg-white/20 hover:bg-white/40'}`}
-                />
-              ))}
-            </div>
-
-            <button
-              onClick={nextTestimonial}
-              className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all hover:scale-110"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-
+        {/* Section label */}
+        <div className="flex items-center justify-center gap-3 mb-10">
+          <span className="w-10 h-px bg-[#D4AF37]/60" />
+          <span className="text-[#D4AF37] text-xs font-bold tracking-[0.25em] uppercase">Guest Diaries</span>
+          <span className="w-10 h-px bg-[#D4AF37]/60" />
         </div>
+
+        {/* Cards row — show all 3, highlight current */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto">
+          {MOCK_TESTIMONIALS.map((t, idx) => {
+            const isActive = idx === currentIndex;
+            return (
+              <button
+                key={t.id}
+                onClick={() => {
+                  if (isAnimating || idx === currentIndex) return;
+                  setIsAnimating(true);
+                  setTimeout(() => { setCurrentIndex(idx); setIsAnimating(false); }, 400);
+                }}
+                className="text-left w-full focus:outline-none"
+              >
+                <div
+                  className="rounded-2xl p-5 flex flex-col gap-4 transition-all duration-500 cursor-pointer"
+                  style={{
+                    background: isActive
+                      ? "rgba(255,255,255,0.12)"
+                      : "rgba(255,255,255,0.04)",
+                    border: isActive
+                      ? "1px solid rgba(212,175,55,0.5)"
+                      : "1px solid rgba(255,255,255,0.08)",
+                    transform: isActive ? "translateY(-4px)" : "translateY(0)",
+                    boxShadow: isActive
+                      ? "0 16px 40px rgba(0,0,0,0.25)"
+                      : "none",
+                  }}
+                >
+                  {/* Quote icon */}
+                  <Quote
+                    className="w-6 h-6 flex-shrink-0"
+                    style={{ color: isActive ? "#D4AF37" : "rgba(212,175,55,0.35)" }}
+                  />
+
+                  {/* Review text */}
+                  <p
+                    className="text-sm leading-relaxed flex-1 transition-colors duration-300"
+                    style={{ color: isActive ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.45)" }}
+                  >
+                    "{t.review}"
+                  </p>
+
+                  {/* Stars */}
+                  <div className="flex gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className="w-3.5 h-3.5"
+                        style={{
+                          fill: i < t.rating ? "#D4AF37" : "transparent",
+                          color: i < t.rating ? "#D4AF37" : "rgba(255,255,255,0.2)",
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Author */}
+                  <div className="flex items-center gap-3 pt-2 border-t border-white/10">
+                    <img
+                      src={t.image}
+                      alt={t.name}
+                      className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                      style={{
+                        border: isActive ? "2px solid #D4AF37" : "2px solid rgba(255,255,255,0.15)",
+                      }}
+                    />
+                    <div>
+                      <p
+                        className="text-sm font-bold leading-tight transition-colors duration-300"
+                        style={{ color: isActive ? "#ffffff" : "rgba(255,255,255,0.5)" }}
+                      >
+                        {t.name}
+                      </p>
+                      <p
+                        className="text-[11px] transition-colors duration-300"
+                        style={{ color: isActive ? "#D4AF37" : "rgba(212,175,55,0.4)" }}
+                      >
+                        {t.trip}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Navigation arrows */}
+        <div className="flex justify-center items-center gap-4 mt-8">
+          <button
+            onClick={prevTestimonial}
+            className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:text-white hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all duration-300"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          <div className="flex gap-1.5">
+            {MOCK_TESTIMONIALS.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  if (isAnimating) return;
+                  setIsAnimating(true);
+                  setTimeout(() => { setCurrentIndex(idx); setIsAnimating(false); }, 400);
+                }}
+                className="transition-all duration-300 rounded-full h-1.5"
+                style={{
+                  width: idx === currentIndex ? "24px" : "6px",
+                  background: idx === currentIndex ? "#D4AF37" : "rgba(255,255,255,0.2)",
+                }}
+              />
+            ))}
+          </div>
+
+          <button
+            onClick={nextTestimonial}
+            className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:text-white hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all duration-300"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
       </div>
     </section>
   );

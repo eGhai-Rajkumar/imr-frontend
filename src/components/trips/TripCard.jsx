@@ -1,109 +1,171 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Clock, ArrowUpRight, Star } from "lucide-react";
+import { MapPin, Clock, Star, ArrowUpRight, Zap, Users } from "lucide-react";
 
+/**
+ * TripCard — Magazine / Editorial Style
+ * Completely different from the previous full-bleed overlay design.
+ * White card body, image top-half, bold typography, accent strip, hover lift.
+ */
 const TripCard = ({ trip, onSendQuery }) => {
-    const [isHovered, setIsHovered] = useState(false);
+    const [hovered, setHovered] = useState(false);
 
     if (!trip) return null;
 
-    // --- Data Extraction ---
     const tripSlug = trip.slug || `trip-${trip._id || trip.id}`;
     const tripId = trip._id || trip.id;
     const tripPath = `/trip-preview/${tripSlug}/${tripId}`;
     const finalPriceDisplay = trip.final_price_display || "N/A";
     const displayDiscount = trip.discount || 0;
-    const priceType = trip.pricing?.customized?.pricing_type === 'Price Per Package'
-        ? "per package"
-        : "per person";
-    const durationText = `${trip.days}D / ${trip.nights}N`;
-    const locationTag = trip.destination_type || trip.pickup_location;
+    const priceType =
+        trip.pricing?.customized?.pricing_type === "Price Per Package"
+            ? "pkg"
+            : "pp";
+    const days = trip.days || "—";
+    const nights = trip.nights || "—";
+    const locationTag = trip.destination_type || trip.pickup_location || "India";
     const heroImage = trip.hero_image || trip.image;
-
-    // --- Styling Variables ---
-    // Dynamic height based on content or fixed for consistency
-    const cardHeight = "h-[480px]";
+    const rating = trip.rating || 4.8;
 
     return (
-        <Link to={tripPath} className="block group relative w-full">
+        <Link to={tripPath} className="block group w-full focus:outline-none">
             <div
-                className={`relative ${cardHeight} w-full rounded-[2rem] overflow-hidden bg-gray-900 shadow-lg cursor-pointer transform transition-all duration-700 hover:-translate-y-2 hover:shadow-2xl`}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+                className="relative w-full rounded-2xl overflow-hidden flex flex-col bg-white transition-all duration-500"
+                style={{
+                    boxShadow: hovered
+                        ? "0 24px 60px -8px rgba(44,107,79,0.28), 0 8px 24px -4px rgba(0,0,0,0.12)"
+                        : "0 4px 20px -4px rgba(0,0,0,0.10)",
+                    transform: hovered ? "translateY(-6px)" : "translateY(0)",
+                }}
             >
-                {/* --- 1. Background Image (Immersive) --- */}
-                <img
-                    src={heroImage}
-                    alt={trip.title}
-                    className={`absolute inset-0 w-full h-full object-cover transition-transform duration-1000 ease-out ${isHovered ? 'scale-110' : 'scale-100'}`}
-                    loading="lazy"
-                />
+                {/* ══════════════════════════════════════
+                    IMAGE SECTION  (top 55%)
+                ══════════════════════════════════════ */}
+                <div className="relative overflow-hidden" style={{ height: "220px" }}>
+                    <img
+                        src={heroImage}
+                        alt={trip.title}
+                        loading="lazy"
+                        className="w-full h-full object-cover transition-transform duration-700"
+                        style={{ transform: hovered ? "scale(1.1)" : "scale(1)" }}
+                    />
 
-                {/* --- 2. Gradient Overlays --- */}
-                {/* Base gradient for text readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80" />
+                    {/* Dark scrim at bottom of image */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
-                {/* Hover gradient effect */}
-                <div className={`absolute inset-0 bg-primary/20 mix-blend-overlay transition-opacity duration-700 ${isHovered ? 'opacity-100' : 'opacity-0'}`} />
-
-                {/* --- 3. Top Badges (Location & Discount) --- */}
-                <div className="absolute top-6 left-6 right-6 flex justify-between items-start z-10">
-                    {locationTag && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 backdrop-blur-md border border-white/10 rounded-full text-xs font-bold text-white uppercase tracking-wider shadow-sm">
-                            <MapPin className="w-3 h-3 text-accent" />
+                    {/* ── Location tag ── */}
+                    <div className="absolute top-3 left-3">
+                        <span
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-white"
+                            style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(8px)" }}
+                        >
+                            <MapPin className="w-2.5 h-2.5 text-[#D4AF37]" />
                             {locationTag}
                         </span>
-                    )}
+                    </div>
 
+                    {/* ── Discount badge ── */}
                     {displayDiscount > 0 && (
-                        <div className="flex flex-col items-end">
-                            <span className="bg-accent text-primary-dark px-3 py-1 rounded-full text-xs font-bold shadow-glow mb-1">
-                                Save ₹{displayDiscount}
+                        <div className="absolute top-3 right-3">
+                            <span
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black text-[#1A1A1A]"
+                                style={{ background: "#D4AF37" }}
+                            >
+                                Save ₹{Number(displayDiscount).toLocaleString()}
                             </span>
                         </div>
                     )}
+
+                    {/* ── Duration pill — bottom-left of image ── */}
+                    <div className="absolute bottom-3 left-3">
+                        <span
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white"
+                            style={{ background: "rgba(44,107,79,0.85)", backdropFilter: "blur(6px)" }}
+                        >
+                            <Clock className="w-3 h-3" />
+                            {days}D / {nights}N
+                        </span>
+                    </div>
                 </div>
 
-                {/* --- 4. Content Area (Bottom) --- */}
-                <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
+                {/* ══════════════════════════════════════
+                    ACCENT DIVIDER
+                ══════════════════════════════════════ */}
+                <div className="flex h-1 w-full">
+                    <div className="flex-1 bg-[#2C6B4F]" />
+                    <div className="flex-1 bg-[#D4AF37]" />
+                </div>
 
-                    {/* Title & Metadata */}
-                    <div className={`transform transition-all duration-500 ${isHovered ? '-translate-y-2' : 'translate-y-0'}`}>
-                        {/* Rating Star (Fixed logic) */}
-                        <div className="flex items-center gap-1 mb-2">
-                            <Star className="w-3 h-3 text-accent fill-accent" />
-                            <span className="text-xs font-medium text-gray-300">
-                                {trip.rating || 4.8} (25+ Reviews)
-                            </span>
+                {/* ══════════════════════════════════════
+                    CONTENT SECTION
+                ══════════════════════════════════════ */}
+                <div className="flex flex-col flex-1 p-4 gap-3">
+
+                    {/* Rating */}
+                    <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => (
+                            <Star
+                                key={i}
+                                className="w-3 h-3"
+                                style={{
+                                    fill: i < Math.round(rating) ? "#D4AF37" : "#e5e7eb",
+                                    color: i < Math.round(rating) ? "#D4AF37" : "#e5e7eb",
+                                }}
+                            />
+                        ))}
+                        <span className="text-[10px] text-slate-400 ml-1">{rating} · 25+ reviews</span>
+                    </div>
+
+                    {/* Title */}
+                    <h3
+                        className="text-base font-bold leading-snug line-clamp-2 transition-colors duration-300"
+                        style={{ color: hovered ? "#2C6B4F" : "#1A1A1A" }}
+                    >
+                        {trip.title}
+                    </h3>
+
+                    {/* ── Price row ── */}
+                    <div className="flex items-end justify-between mt-auto pt-3 border-t border-slate-100">
+                        <div>
+                            <p className="text-[9px] text-slate-400 uppercase tracking-widest mb-0.5">Starting From</p>
+                            <div className="flex items-baseline gap-1">
+                                <span
+                                    className="text-2xl font-black transition-colors duration-300"
+                                    style={{ color: hovered ? "#2C6B4F" : "#1A1A1A" }}
+                                >
+                                    ₹{finalPriceDisplay}
+                                </span>
+                                <span className="text-[10px] text-slate-400">/{priceType}</span>
+                            </div>
                         </div>
 
-                        <h3 className="text-2xl md:text-3xl font-serif font-bold text-white mb-2 leading-tight drop-shadow-lg group-hover:text-accent transition-colors duration-300 line-clamp-2">
-                            {trip.title}
-                        </h3>
-
-                        <div className="flex items-center gap-4 text-white/80 text-sm font-medium mb-4">
-                            <div className="flex items-center gap-1.5">
-                                <Clock className="w-4 h-4 text-accent" />
-                                {durationText}
-                            </div>
+                        {/* CTA button */}
+                        <div
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-300"
+                            style={{
+                                background: hovered ? "#2C6B4F" : "#f1f5f9",
+                                color: hovered ? "#ffffff" : "#2C6B4F",
+                            }}
+                        >
+                            View
+                            <ArrowUpRight
+                                className="w-3.5 h-3.5 transition-transform duration-300"
+                                style={{ transform: hovered ? "translate(2px,-2px)" : "translate(0,0)" }}
+                            />
                         </div>
                     </div>
 
-                    {/* Price & CTA - Reveal on Hover / Always visible but optimized */}
-                    <div className="border-t border-white/20 pt-4 flex items-end justify-between">
-                        <div>
-                            <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-0.5">Starting From</p>
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-xl md:text-2xl font-bold text-white tracking-tight">₹{finalPriceDisplay}</span>
-                                <span className="text-xs text-gray-400 font-light">{priceType}</span>
-                            </div>
-                        </div>
-
-                        <button
-                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${isHovered ? 'bg-accent text-primary-dark rotate-45 scale-110' : 'bg-white/20 text-white backdrop-blur-md'}`}
-                        >
-                            <ArrowUpRight className="w-5 h-5" />
-                        </button>
+                    {/* ── Instant confirm (hover reveal) ── */}
+                    <div
+                        className="flex items-center justify-center gap-1.5 transition-all duration-300 overflow-hidden"
+                        style={{ maxHeight: hovered ? "20px" : "0px", opacity: hovered ? 1 : 0 }}
+                    >
+                        <Zap className="w-3 h-3 text-[#2C6B4F]" />
+                        <span className="text-[10px] text-slate-500 font-medium">
+                            Instant Confirmation · No Hidden Charges
+                        </span>
                     </div>
                 </div>
             </div>

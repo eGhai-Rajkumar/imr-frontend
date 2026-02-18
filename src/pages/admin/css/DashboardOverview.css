@@ -18,15 +18,18 @@
 
 /* Specific KPI Colors - Based on screenshot */
 .kpi-card-packages {
-    background: linear-gradient(45deg, #1E3A8A, #3B82F6); /* Blue */
+    background: linear-gradient(45deg, #1A3A28, #2C6B4F);
+    /* Forest Green */
 }
 
 .kpi-card-hotels {
-    background: linear-gradient(45deg, #047857, #10B981); /* Green */
+    background: linear-gradient(45deg, #047857, #10B981);
+    /* Green */
 }
 
 .kpi-card-activities {
-    background: linear-gradient(45deg, #9D174D, #EC4899); /* Pink/Purple */
+    background: linear-gradient(45deg, #9D174D, #EC4899);
+    /* Pink/Purple */
 }
 
 /* Quick Actions */
@@ -57,12 +60,42 @@
 }
 
 /* Quick Action Colors - Based on screenshot colors */
-.qa-add-trip { background-color: #e0f2f1; color: #008080; } /* Teal */
-.qa-manage-leads { background-color: #f0fff4; color: #059669; } /* Emerald */
-.qa-view-bookings { background-color: #fff1f2; color: #e11d48; } /* Rose */
-.qa-email-campaigns { background-color: #fffbeb; color: #f59e0b; } /* Amber */
-.qa-page-builder { background-color: #ede9fe; color: #7c3aed; } /* Violet */
-.qa-settings { background-color: #f3f4f6; color: #4b5563; } /* Gray */
+.qa-add-trip {
+    background-color: #e0f2f1;
+    color: #008080;
+}
+
+/* Teal */
+.qa-manage-leads {
+    background-color: #f0fff4;
+    color: #059669;
+}
+
+/* Emerald */
+.qa-view-bookings {
+    background-color: #fff1f2;
+    color: #e11d48;
+}
+
+/* Rose */
+.qa-email-campaigns {
+    background-color: #fffbeb;
+    color: #f59e0b;
+}
+
+/* Amber */
+.qa-page-builder {
+    background-color: #ede9fe;
+    color: #7c3aed;
+}
+
+/* Violet */
+.qa-settings {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+/* Gray */
 
 /* Recent Leads */
 .lead-item {
@@ -85,7 +118,22 @@
 }
 
 /* Lead Status Colors */
-.status-new { background-color: #38bdf8; color: #fff; }
-.status-interested { background-color: #f59e0b; color: #fff; }
-.status-booked { background-color: #10b981; color: #fff; }
-.status-pending { background-color: #94a3b8; color: #fff; }
+.status-new {
+    background-color: #2C6B4F;
+    color: #fff;
+}
+
+.status-interested {
+    background-color: #f59e0b;
+    color: #fff;
+}
+
+.status-booked {
+    background-color: #10b981;
+    color: #fff;
+}
+
+.status-pending {
+    background-color: #94a3b8;
+    color: #fff;
+}

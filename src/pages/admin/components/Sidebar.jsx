@@ -92,16 +92,19 @@ export default function Sidebar({ isOpen, toggleSidebar, onLogout }) {
             )}
 
             <div className={`sidebar-container ${isOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-                {/* LOGO SECTION */}
+                {/* BRAND HEADER */}
                 <div className="sidebar-header">
-                    <div className="sidebar-logo-wrapper">
-                        <a href="/" className="sidebar-logo-link">
+                    <div className="sidebar-brand">
+                        <div className="sidebar-brand-icon">
                             <img
                                 src="/logo-indian-mountain-rovers.png"
-                                alt='Indian Mountain Rovers Logo'
-                                className="sidebar-logo"
+                                alt="IMR"
                             />
-                        </a>
+                        </div>
+                        <div className="sidebar-brand-text">
+                            <span className="brand-name">Indian Mountain</span>
+                            <span className="brand-sub">Rovers Admin</span>
+                        </div>
                     </div>
                 </div>
 
@@ -128,8 +131,19 @@ export default function Sidebar({ isOpen, toggleSidebar, onLogout }) {
                     ))}
                 </nav>
 
-                {/* LOGOUT BUTTON */}
+                {/* FOOTER */}
                 <div className="sidebar-footer">
+                    {/* Small Logo */}
+                    <a href="/" className="sidebar-footer-logo">
+                        <img
+                            src="/logo-indian-mountain-rovers.png"
+                            alt="Indian Mountain Rovers"
+                        />
+                        <div className="footer-logo-text">
+                            indianmountainrovers.com
+                            <span>Visit Website</span>
+                        </div>
+                    </a>
                     <button className="logout-btn" onClick={onLogout} title="Logout">
                         <LogOut className="menu-icon" />
                         {isOpen && <span>Logout</span>}

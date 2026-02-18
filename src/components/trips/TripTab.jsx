@@ -38,17 +38,18 @@ const BOOKING_ENDPOINT = API_CONFIG.BOOKING_ENDPOINT;
 // --- UTILITY FUNCTIONS (Unchanged) ---
 
 const parseListField = (fieldString) => {
-    if (!fieldString) return [];
-    let cleanedString = fieldString.replace(/•\s*/g, '');
-    return cleanedString
-        .split(/[\n;]/)
-        .map(item => item.trim())
-        .filter(item => item.length > 0);
+  if (!fieldString) return [];
+  return fieldString
+    .replace(/•\s*/g, '')
+    .split(/\n|;|(?<=\.)\s+/)
+    .map(item => item.trim().replace(/^[-•]\s*/, ''))
+    .filter(item => item.length > 2);
 };
 
+
 const formatDate = (dateString) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
 
@@ -67,7 +68,7 @@ export default function TripTab({ tripId }) {
   // Booking form states
   const [formData, setFormData] = useState({
     departureDate: '',
-    sharingOption: 'double', 
+    sharingOption: 'double',
     adults: 1,
     children: 0,
     fullName: '',
@@ -128,7 +129,7 @@ export default function TripTab({ tripId }) {
     generateCaptcha();
     generateEnquiryCaptcha();
   }, []);
-  
+
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (showBookingModal || showEnquiryModal || showEnquiryMessage) {
@@ -328,13 +329,13 @@ export default function TripTab({ tripId }) {
       // Handle successful booking request
       console.log("Booking Request Sent:", res.data);
       setShowSuccess(true);
-      
+
     } catch (error) {
       console.error("Booking submission failed:", error.response?.data || error.message);
       setErrors({ api: "Submission failed. Please check details or contact support." });
       generateCaptcha(); // Refresh CAPTCHA on failure
       setShowSuccess(false);
-      
+
       // Keep modal open and show generic error
       setTimeout(() => setErrors({}), 5000);
 
@@ -375,7 +376,7 @@ export default function TripTab({ tripId }) {
       setIsSubmitting(false);
       return;
     }
-    
+
     // 2. Prepare API Data
     const adults = parseInt(enquiryData.adults) || 1;
     const childrenCount = childAges.length;
@@ -405,7 +406,7 @@ export default function TripTab({ tripId }) {
       });
 
       console.log("Enquiry Request Sent:", res.data);
-      
+
       // 3. Show Success Message
       setEnquiryMessage({
         title: 'Inquiry Sent!',
@@ -419,7 +420,7 @@ export default function TripTab({ tripId }) {
       setEnquiryData(prev => ({ ...prev, adults: 1, fullName: '', email: '', phone: '', captchaInput: '' }));
       setChildAges([]);
       generateEnquiryCaptcha();
-      
+
     } catch (error) {
       console.error("Enquiry submission failed:", error.response?.data || error.message);
       setEnquiryMessage({
@@ -736,9 +737,8 @@ export default function TripTab({ tripId }) {
                             <select
                               value={formData.departureDate}
                               onChange={(e) => handleInputChange('departureDate', e.target.value)}
-                              className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all ${
-                                errors.departureDate ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                              } disabled:bg-gray-100`}
+                              className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all ${errors.departureDate ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                } disabled:bg-gray-100`}
                               required
                               disabled={isSubmitting}
                             >
@@ -775,19 +775,16 @@ export default function TripTab({ tripId }) {
                                     className="sr-only"
                                     disabled={isSubmitting}
                                   />
-                                  <div className={`p-2 border-2 rounded-lg text-center transition-all ${
-                                    formData.sharingOption === pkg.title
+                                  <div className={`p-2 border-2 rounded-lg text-center transition-all ${formData.sharingOption === pkg.title
                                       ? 'border-cyan-500 bg-cyan-50 shadow-md'
                                       : 'border-gray-300 hover:border-cyan-300'
-                                  }`}>
-                                    <div className={`font-bold text-xs capitalize ${
-                                      formData.sharingOption === pkg.title ? 'text-cyan-700' : 'text-gray-700'
                                     }`}>
+                                    <div className={`font-bold text-xs capitalize ${formData.sharingOption === pkg.title ? 'text-cyan-700' : 'text-gray-700'
+                                      }`}>
                                       {pkg.title}
                                     </div>
-                                    <div className={`text-sm font-bold ${
-                                      formData.sharingOption === pkg.title ? 'text-cyan-600' : 'text-gray-900'
-                                    }`}>
+                                    <div className={`text-sm font-bold ${formData.sharingOption === pkg.title ? 'text-cyan-600' : 'text-gray-900'
+                                      }`}>
                                       ₹{(pkg.final_price / 1000).toFixed(0)}k
                                     </div>
                                   </div>
@@ -806,16 +803,15 @@ export default function TripTab({ tripId }) {
                                 max="10"
                                 value={formData.adults}
                                 onChange={(e) => handleInputChange('adults', e.target.value)}
-                                className={`w-full px-3 py-2 border-2 rounded-lg text-center font-bold focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all ${
-                                  errors.adults ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                                } disabled:bg-gray-100`}
+                                className={`w-full px-3 py-2 border-2 rounded-lg text-center font-bold focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all ${errors.adults ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                  } disabled:bg-gray-100`}
                                 disabled={isSubmitting}
                               />
                               {errors.adults && (
                                 <p className="text-red-600 text-xs mt-1">{errors.adults}</p>
                               )}
                             </div>
-                            
+
                             {/* <div>
                               <label className="text-gray-700 font-semibold text-sm mb-1.5 block">Children (2-11)</label>
                               <input
@@ -849,9 +845,8 @@ export default function TripTab({ tripId }) {
                                   placeholder="Full Name"
                                   value={formData.fullName}
                                   onChange={(e) => handleInputChange('fullName', e.target.value)}
-                                  className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all ${
-                                    errors.fullName ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                                  } disabled:bg-gray-100`}
+                                  className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all ${errors.fullName ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                    } disabled:bg-gray-100`}
                                   required
                                   disabled={isSubmitting}
                                 />
@@ -867,9 +862,8 @@ export default function TripTab({ tripId }) {
                                   placeholder="Email ID"
                                   value={formData.email}
                                   onChange={(e) => handleInputChange('email', e.target.value)}
-                                  className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all ${
-                                    errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                                  } disabled:bg-gray-100`}
+                                  className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all ${errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                    } disabled:bg-gray-100`}
                                   required
                                   disabled={isSubmitting}
                                 />
@@ -885,9 +879,8 @@ export default function TripTab({ tripId }) {
                                   placeholder="Phone Number (10+ digits)"
                                   value={formData.phone}
                                   onChange={(e) => handleInputChange('phone', e.target.value)}
-                                  className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all ${
-                                    errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                                  } disabled:bg-gray-100`}
+                                  className={`w-full px-3 py-2 text-sm border-2 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all ${errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                    } disabled:bg-gray-100`}
                                   required
                                   disabled={isSubmitting}
                                   pattern="[0-9]{10,}"
@@ -914,9 +907,8 @@ export default function TripTab({ tripId }) {
                                 placeholder="Answer"
                                 value={formData.captcha}
                                 onChange={(e) => handleInputChange('captcha', e.target.value)}
-                                className={`flex-1 px-3 py-2 border-2 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all ${
-                                  errors.captcha ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                                } disabled:bg-gray-100`}
+                                className={`flex-1 px-3 py-2 border-2 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all ${errors.captcha ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                  } disabled:bg-gray-100`}
                                 required
                                 disabled={isSubmitting}
                               />
@@ -928,11 +920,11 @@ export default function TripTab({ tripId }) {
                               </p>
                             )}
                           </div>
-                          
+
                           {/* API Error Message */}
                           {errors.api && (
                             <div className="p-3 bg-red-100 border border-red-400 rounded-lg text-red-700 text-sm flex items-start gap-2">
-                              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0"/>
+                              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                               <span>{errors.api}</span>
                             </div>
                           )}
@@ -940,11 +932,10 @@ export default function TripTab({ tripId }) {
                           <button
                             type="submit"
                             disabled={isSubmitting}
-                            className={`w-full py-3 rounded-lg font-bold text-white transition-all duration-300 transform ${
-                              isSubmitting
+                            className={`w-full py-3 rounded-lg font-bold text-white transition-all duration-300 transform ${isSubmitting
                                 ? 'bg-gray-400 cursor-not-allowed'
                                 : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 hover:scale-[1.02] hover:shadow-xl active:scale-95'
-                            }`}
+                              }`}
                           >
                             {isSubmitting ? (
                               <span className="flex items-center justify-center gap-2">
@@ -980,11 +971,10 @@ export default function TripTab({ tripId }) {
                       <button
                         key={tab.id}
                         onClick={() => handleTabChange(tab.id)}
-                        className={`relative px-6 py-5 font-semibold whitespace-nowrap transition-all duration-500 flex-shrink-0 group ${
-                          activeTab === tab.id
+                        className={`relative px-6 py-5 font-semibold whitespace-nowrap transition-all duration-500 flex-shrink-0 group ${activeTab === tab.id
                             ? "text-cyan-700 bg-white shadow-lg"
                             : "text-gray-600 hover:text-cyan-600 hover:bg-white/50"
-                        }`}
+                          }`}
                         style={{ animationDelay: `${index * 0.1}s` }}
                       >
                         {tab.label}
@@ -998,11 +988,10 @@ export default function TripTab({ tripId }) {
 
                 {/* Tab Content (Unchanged) */}
                 <div
-                  className={`bg-white rounded-2xl shadow-2xl mt-6 p-8 border border-gray-100 transition-all duration-300 ${
-                    isAnimating
+                  className={`bg-white rounded-2xl shadow-2xl mt-6 p-8 border border-gray-100 transition-all duration-300 ${isAnimating
                       ? "opacity-0 translate-y-4"
                       : "opacity-100 translate-y-0 animate-fade-in-up"
-                  }`}
+                    }`}
                 >
                   {/* ---------------- OVERVIEW ---------------- */}
                   {activeTab === "overview" && (
@@ -1034,15 +1023,15 @@ export default function TripTab({ tripId }) {
                             : `${tripData.overview?.slice(0, 400)}...`}
                         </p>
                         {(tripData.overview?.length || 0) > 400 && (
-                            <button
-                              onClick={() => setShowFullOverview(!showFullOverview)}
-                              className="inline-flex items-center gap-2 text-cyan-600 font-semibold hover:text-cyan-700 transition-all duration-300 hover:gap-3 group"
-                            >
-                              {showFullOverview ? "Read Less" : "Read More"}
-                              <span className="group-hover:translate-x-1 transition-transform">
-                                {showFullOverview ? "←" : "→"}
-                              </span>
-                            </button>
+                          <button
+                            onClick={() => setShowFullOverview(!showFullOverview)}
+                            className="inline-flex items-center gap-2 text-cyan-600 font-semibold hover:text-cyan-700 transition-all duration-300 hover:gap-3 group"
+                          >
+                            {showFullOverview ? "Read Less" : "Read More"}
+                            <span className="group-hover:translate-x-1 transition-transform">
+                              {showFullOverview ? "←" : "→"}
+                            </span>
+                          </button>
                         )}
                       </div>
 
@@ -1058,7 +1047,7 @@ export default function TripTab({ tripId }) {
                               <li
                                 key={index}
                                 className="flex items-start gap-2 text-gray-700 bg-yellow-50 rounded-lg px-3 py-2 border border-yellow-100 hover:shadow-md transition-all animate-scale-in"
-                                style={{animationDelay: `${index * 0.05}s`}}
+                                style={{ animationDelay: `${index * 0.05}s` }}
                               >
                                 <Star className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-1" fill="currentColor" />
                                 <span>{highlight}</span>
@@ -1131,7 +1120,7 @@ export default function TripTab({ tripId }) {
                           <div
                             key={index}
                             className="flex items-start gap-4 p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl hover:shadow-lg transition-all duration-300 border border-green-100 hover:border-green-300 animate-scale-in group"
-                            style={{animationDelay: `${index * 0.05}s`}}
+                            style={{ animationDelay: `${index * 0.05}s` }}
                           >
                             <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
                             <span className="text-gray-800 leading-relaxed font-medium">
@@ -1157,7 +1146,7 @@ export default function TripTab({ tripId }) {
                           <div
                             key={index}
                             className="flex items-start gap-4 p-4 bg-gradient-to-br from-red-50 to-rose-50 rounded-xl hover:shadow-lg transition-all duration-300 border border-red-100 hover:border-red-300 animate-scale-in group"
-                            style={{animationDelay: `${index * 0.05}s`}}
+                            style={{ animationDelay: `${index * 0.05}s` }}
                           >
                             <XCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
                             <span className="text-gray-800 leading-relaxed font-medium">
@@ -1182,15 +1171,15 @@ export default function TripTab({ tripId }) {
                       {policies.map((policy, index) => {
                         const Icon = policy.icon;
                         let iconColorClass = policy.color === 'blue' ? 'text-blue-600' :
-                              policy.color === 'green' ? 'text-green-600' : 'text-red-600';
+                          policy.color === 'green' ? 'text-green-600' : 'text-red-600';
                         let borderColorClass = policy.color === 'blue' ? 'border-l-blue-600' :
-                              policy.color === 'green' ? 'border-l-green-600' : 'border-l-red-600';
+                          policy.color === 'green' ? 'border-l-green-600' : 'border-l-red-600';
 
                         return (
                           <div
                             key={index}
                             className={`relative overflow-hidden bg-white border-l-4 ${borderColorClass} rounded-r-xl p-6 shadow-md animate-fade-in-up`}
-                            style={{animationDelay: `${index * 0.15}s`}}
+                            style={{ animationDelay: `${index * 0.15}s` }}
                           >
                             <div className="flex items-center gap-3 mb-3">
                               <Icon className={`w-5 h-5 ${iconColorClass} flex-shrink-0`} />

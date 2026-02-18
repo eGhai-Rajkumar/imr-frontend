@@ -495,10 +495,7 @@ const TripDetails = () => {
         </div>
 
         {/* Related Trips */}
-        <div className="mt-16 md:mt-24 border-t border-gray-200 pt-12 md:pt-16">
-          <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#1A1A1A] mb-8 md:mb-10 text-center">
-            Similar <span className="text-[#2C6B4F]">Adventures</span>
-          </h2>
+        <div className="mt-8 md:mt-12 border-t border-gray-200 pt-6 md:pt-8">
           <RelatedTrips currentTripId={id} />
         </div>
       </div>

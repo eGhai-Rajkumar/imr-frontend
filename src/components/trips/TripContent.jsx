@@ -12,8 +12,14 @@ const TripContent = ({ tripData }) => {
     // --- Helpers ---
     const parseList = (text) => {
         if (!text) return [];
-        return text.replace(/•\s*/g, '').split(/[\n;]/).map(s => s.trim()).filter(Boolean);
+        // Split by newlines, semicolons, OR full-stop followed by space/end
+        return text
+            .replace(/•\s*/g, '')
+            .split(/\n|;|(?<=\.)\s+/)
+            .map(s => s.trim().replace(/^[-•]\s*/, ''))
+            .filter(s => s.length > 2);
     };
+
 
     const itinerary = tripData.itinerary || [];
     const highlights = parseList(tripData.highlights);
